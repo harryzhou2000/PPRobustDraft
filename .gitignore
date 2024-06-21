@@ -1,0 +1,13 @@
+# outputfiles
+*.out
+*.pdf
+*.bbl
+*.aux
+*.blg
+*.log
+*.spl
+*.fls
+*.fdb_*
+*.gz
+*.lyx~
+# *.lyx
