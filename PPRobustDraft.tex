@@ -48,7 +48,7 @@
 %% The amsthm package provides extended theorem environments
 %% \usepackage{amsthm}
 \usepackage{physics}
-
+\usepackage{graphicx}
 %% The lineno packages adds line numbers. Start line numbering with
 %% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
 %% for the whole article with \linenumbers.
@@ -1016,13 +1016,15 @@ with the equation being inviscid and using $\gamma=1.4$.
 Exact solution of the double rarefaction problem produces a vacuum 
 in the middle adjacent with the end of two rarefaction waves.
 In the numerical tests, using 4th order variational reconstruction from \ref{ssec:VR},
+and ESDIRK4 time marching, 
 the double rarefaction problem is solved using a $\inc x = 1/400$ mesh 
 on $[0,1]$ and $\inc t_{max} = 5\times 10^{-3}$. 
 Time integration is performed until $t=0.1$.
  The relaxing parameters used 
 for positivity-preserving are $\eta_t= 0.8, \eta_\tau=0.5, \eta_\inc=0.9$.
 Internal CFL number $\CFLtau$ initiates as $0.1$ at each stage, and 
-increases exponentially to $10$ at the 10th iteration. 
+increases to $10$ at the 10th iteration. 
+Convergence threshold for internal pseudo time iteration is $10^{-3}$. 
 
 \begin{figure}[htbp]
     \centering
@@ -1062,9 +1064,13 @@ The initial conditions are:
 with $\gamma = 5/3$.
 The computational mesh is in $[0,9]$ and $\inc x =9/400$.
 Spacial discretization is 4th order variational reconstruction
-as described in \ref{ssec:VR}. 
+as described in \ref{ssec:VR} and time marching scheme is ESDIRK4. 
 The positivity-preserving relation parameters are the same as 
 those in double rarefaction problem, $\eta_t= 0.8, \eta_\tau=0.5, \eta_\inc=0.9$.
+Same as double rarefaction, 
+internal CFL number $\CFLtau$ initiates as $0.1$ at each stage, and 
+increases to $10$ at the 10th iteration. 
+Convergence threshold for pseudo time iteration is $10^{-3}$. 
 Two different maximum time steps are used, with $\inc t_{max} = 0.1$ and $\inc t_{max} = 0.01$.
 Solutions at $t=6$ are inspected.
 When using $\inc t_{max} = 0.01$, the calculation lasted 600 time steps;
@@ -1095,13 +1101,259 @@ basically agree with the exact solution,
 and no negative values of pressure and density are detected. 
 
 
-\subsection{Two Dimensional Sedov Blast}
+\subsection{Two-Dimensional Sedov Blast}
 
-\subsection{Ma 2000 Jet}
+The two-dimensional Sedov blast problem from \cite{zhang2010positivity}
+is also a popular
+case to test positivity-preserving properties of 
+numerical schemes. 
+The Euler equation with $\gamma = 1.4$ is solved.
+The initial conditions 
+are 
+\begin{equation}
+    (\rho,u,v,p) = \left\{
+        \begin{array}{ll}
+            (1,0,0,4\times 10 ^{-13}),\ \ & \text{if } x > \inc x, y > \inc y \\
+            (1,0,0,\frac{1}{\inc x\inc y}9.79264\times10^{4}),\ \ & \text{else}\\
+        \end{array}
+    \right.
+\end{equation}
+and a square mesh with $\inc x = \inc y = 1.1/160$ on domain $[0,1.1]\times[0,1.1]$
+is used. The final computational time is $t = 1\times10^{-3}$,
+when the exact solution has the shock wave at radius of $1$. 
+All boundaries are inviscid walls.
+Fourth order variational reconstruction finite volume with ESDIRK4
+ discretization is used. 
+The relaxation parameters and internal CFL number are the same as 1-D problems.
+Convergence threshold for pseudo time iteration is $10^{-3}$. 
+Maximum time step sizes of $\inc t_{max}=10^{-6}$ and $\inc t_{max}=10^{-5}$
+are tested. 
+The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
+and 297 steps with $\inc t_{max}=10^{-5}$.
 
-\subsection{Shock Diffraction around a Step}
 
-\subsection{Shock Reflection and Diffraction around a Wedge}
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_SedovDT1.png}
+        \caption[]{$\inc t_{max}=10^{-6}$}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_SedovDT10.png}
+        \caption[]{$\inc t_{max}=10^{-5}$}
+    \end{subfigure}
+    \caption{Density distributions of the 2-D Sedov blast, contours are 10 lines from 0 to 6}
+    \label{fig:sedov}
+\end{figure}
+
+Figure \ref{fig:sedov} illustrates the density distributions
+obtained with different maximum time steps. 
+With larger time step limit $\inc t_{max}=10^{-5}$, the 
+solution appears slightly distorted, but the overall 
+position and strength of the shock front is correct.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{pics/PPRobust_Sedov.pdf}
+    \caption{Density distributions of Sedov blast along the diagonal line}
+    \label{fig:sedovLine}
+\end{figure}
+
+Figure \ref{fig:sedovLine} demonstrates the computed  
+density distribution on the diagonal line compared with analytic solution.
+Both solutions agree well with the analytic solution,
+while the one with the larger time step $\inc t_{max}=10^{-5}$
+has more oscillations in the low density area.
+
+
+
+
+\subsection{Mach 2000 jet}
+
+The Mach 2000 jet problem \cite{zhang2010positivity}
+has extreme discontinuities and requires the 
+scheme to be robust and positivity-preserving.
+Following the practice of \cite{huang2024general}, 
+the current paper studies both  cases where 
+$Re=\infty$ and $Re=100$ to illustrate 
+the capacity of positivity-preserving with viscous terms.
+
+N-S equation with $\gamma=5/3$ is solved.
+The computational domain is $[0,1]\times[-0.25,0.25]$ is initially the 
+uniform state $(\rho,u,v,p)=(0.5,0,0,0.4127)$.
+The upper, lower and right boundaries are treated as 
+far-field conditions and the left boundary is inflow
+condition with inflow state being 
+\begin{equation}
+    (\rho,u,v,p) = \left\{
+        \begin{array}{ll}
+            (5,800,0,0,4127),\ \ & \text{if } y\in[-0.05,0.05] \\
+            (0.5,0,0,0.4127),\ \ & \text{else}\\
+        \end{array}
+    \right.
+\end{equation}
+
+Variational reconstruction of 4th order and ESDIRK4 is used.
+The mesh is composed of square cells with $\inc x = \inc y = 1/800$.
+Maximum time step is set to $\inc t_{max} = 1\times10^{-6}$. 
+Convergence in the Mach 2000 jet problem is worse than
+previous cases, and stronger restrictions with relaxation 
+parameters being 
+$\eta_t= 0.8, \eta_\tau=0.5, \eta_\inc=0.9$ is used.
+$\CFLtau$ is initially $0.1$ at the beginning of each stage,
+and reaches $2.0$ at the 10th pseudo time iteration. 
+Pseudo time iteration's convergence threshold is $10^{-3}$. 
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_R.png}
+    \caption{$\log_{10}(\rho)$ of $Re=\infty$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5}
+    \label{fig:M2000_ReInf_R}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_R.png}
+    \caption{$\log_{10}(\rho)$ of $Re=100$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5}
+    \label{fig:M2000_Re1E2_R}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_P.png}
+    \caption{$\log_{10}(p)$ of $Re=\infty$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3}
+    \label{fig:M2000_ReInf_P}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_P.png}
+    \caption{$\log_{10}(p)$ of $Re=100$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3}
+    \label{fig:M2000_Re1E2_P}
+\end{figure}
+
+Figures \ref{fig:M2000_ReInf_R},\ref{fig:M2000_Re1E2_R},\ref{fig:M2000_ReInf_P},\ref{fig:M2000_Re1E2_P}
+demonstrate the solution of Mach 2000 jet at $t=1\times10^{-3}$ with 
+logarithmic values of density and pressure. 
+It is shown that no negative density or pressure exists.
+The viscous $Re=100$ case smears out small structures more than 
+the inviscid $Re=\infty$ case.
+
+
+\subsection{Shock diffraction around a step}
+
+The case of shock diffraction around a backward facing step 
+from \cite{zhang2010positivity} is tested. 
+The governing equation is inviscid Euler equation with $\gamma = 1.4$.
+The computational domain is $[0,1]\times[6,11]\cup [1,13]\times[0,11]$,
+and the initial condition is a vertical single right-moving Mach 5.09
+shock located at $x=0.5$.
+The undisturbed are at the right of the shock has $(\rho, u, v, p)=(1.4,0,0,1)$.
+The boundary at $x=0$ is set to match the left state of the shock, and 
+all other boundaries are set as inviscid wall.
+
+
+
+A square-celled mesh with $\inc x = \inc y = 1/80$ is used. 
+Maximum time step $\inc t_{max}=1\times 10^{-3}$, and the computation ends at 
+$t=2.3$. 
+Spacial discretization is 4th order variational reconstruction finite volume
+and time marching scheme is ESDIRK4. 
+The relaxing parameters are the same as 
+1-D cases $\eta_t= 0.8, \eta_\tau=0.5, \eta_\inc=0.9$.
+The pseudo time CFL number is set to $\CFLtau = 1$. 
+Convergence threshold of each stage is $10^{-3}$. 
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Corner_R.png}
+        \caption[]{$\log_{10}(\rho)$, 40 contour lines from -0.8 to 0.8}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Corner_P.png}
+        \caption[]{$\log_{10}(p)$, 40 contour lines from -0.6 to 1.6}
+    \end{subfigure}
+    \caption{Logarithmic distributions of density and pressure in the shock diffraction}
+    \label{fig:Corner}
+\end{figure}
+
+In Figure \ref{fig:Corner}, 
+the logarithmic distributions of density and pressure in the shock diffraction
+are demonstrated. 
+
+
+\subsection{Shock reflection and diffraction around a wedge}
+
+The shock reflection and diffraction testing case from \cite{zhang2017positivity}
+is similar with the shock diffraction case, with the 
+corner replaced with a wedge having a backward end face.
+The computational domain is $[0,3]\times[0,2]$ with 
+a $30^\circ$ wedge placed at $x\in[0.2,1.2]$, while the 
+tip of the wedge is at $(x,y) = (1.2, 1/\sqrt{3})$. 
+The initial condition is constant state with $(\rho, u, v, p) = (1.4,0,0,1)$, 
+and there is a Mach 10 shock located at $x = 0.2$. The $x=0$ boundary on 
+the left matches the downstream state of the shock, and all other boundaries 
+are inviscid walls. Numeric solutions at $t=0.245$ are investigated. 
+Before the diffraction of the shock, the development
+of this test case should be identical with a Mach 10 double Mach reflection \cite{woodward1984dmr}
+test case. Similar with the Mach 2000 jet case, $\Re=\infty$ and $\Re=100$ cases 
+are tested to illustrate the ability to handle viscous terms 
+with the positivity-preserving measures.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.6\textwidth]{pics/PPRobust_WedgeMesh.png}
+    \caption{Mesh around the tip of wedge used in shock refraction and diffraction case}
+    \label{fig:wedgeMesh}
+\end{figure}
+
+Spacial discretization is 4th order variational reconstruction and 
+time integration is ESDIRK4. 
+Different from previous cases,
+the shock reflection and diffraction test case uses a triangular mesh with $h = 1/160$,
+which is illustrated in Figure around the tip of the wedge.
+$\inc t_{max}$ is taken as $2\times10^{-4}$ here.
+The relaxation parameters are $\eta_t= 0.8, \eta_\tau=0.5, \eta_\inc=0.9$
+which are the same as those in 1-D cases and the shock diffraction case.
+$\CFLtau$ starts at $0.01$ each stage and reaches 1 at the 10th iteration.
+Convergence threshold each stage is $10^{-3}$. 
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_R.png}
+        \caption[]{$\rho$, 60 contour lines from 0 to 22}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_P.png}
+        \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
+    \end{subfigure}
+    \caption{Density and pressure in the shock reflection and diffraction problem, $Re=\infty$}
+    \label{fig:wedgeReInf}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_R.png}
+        \caption[]{$\rho$, 60 contour lines from 0 to 22}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_P.png}
+        \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
+    \end{subfigure}
+    \caption{Density and pressure in the shock reflection and diffraction problem, $Re=100$}
+    \label{fig:wedgeRe1E2}
+\end{figure}
+
+Figures \ref{fig:wedgeReInf} \ref{fig:wedgeRe1E2} illustrate 
+the solutions obtained. 
+Figure \ref{fig:wedgeReInf} is the inviscid case, where 
+K-H instability is induced in the shear layer. 
+Figure  \ref{fig:wedgeRe1E2} is the viscous case, where 
+the shear layer is smeared and some shock structures
+behind the wedge disappears due to physical viscosity.
 
 
 
