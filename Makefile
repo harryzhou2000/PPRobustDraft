@@ -1,6 +1,6 @@
 
 
-targets=PPRobustDraft PPRobustDraft_ICCFD
+targets=main
 
 all: $(addsuffix .pdf, $(targets))
 
