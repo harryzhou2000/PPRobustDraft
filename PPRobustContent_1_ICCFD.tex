@@ -605,33 +605,39 @@ has density or internal energy above zero.
 Due to $\rho(\uu)$ being linear and $e(\uu)$ being convex:
 \begin{equation}
     \begin{aligned}
-        \rho(\uu_1 + \uu_2) & = \rho(\uu_1) + \rho(\uu_2) \\
-        e(\uu_1 + \uu_2)    & \geq e(\uu_1) + e(\uu_2)    \\
+        \rho(\uu + \alpha \inc \uu) & = \rho(\uu) + \alpha (\rho(\uu + \inc \uu) - \rho(\uu))\\
+        e(\uu + \alpha\inc \uu) & \geq e(\uu) + \alpha(e(\uu + \inc \uu) - e(\uu))    \\
+        & \forall \alpha \in [0,1]
     \end{aligned}
 \end{equation}
-a sufficient condition of \eeqref{eq:ppLimitDt} is
+where $\rho$ is assumed to be positive for each input of $e$ in
+the in the inequality. 
+Then a sufficient condition of \eeqref{eq:ppLimitDt} is
 \begin{equation}
     \inc t^n_{pp} = \alpha_t \inc t_0 
 \end{equation}
 where
 \begin{equation}
     \begin{aligned}
-        \alpha_t     & = \min_i(\alpha_{t,i}), \\
-        \alpha_{t,i} & = \min\left(
-        \eta_t\frac{\rho(\uu_i^n)}{-\rho_-(\inc t_0 \R_i^n)},
-        \eta_t\frac{e(\uu_i^n)}{-e_-(\inc t_0 \R_i^n)},
+        \alpha_t     & = \min_i(\alpha_{t,i,e}), \\
+        \alpha_{t,i,\rho} & = \min\left(
+        \eta_t\frac{\rho(\uu_i^n)}{-[\rho(\uu_i^n+\inc t_0 \R_i^n)-\rho(\uu_i^n)]_-},
+        1
+        \right)\\
+        \alpha_{t,i,e} & = \min\left(
+        \eta_t\frac{e(\uu_i^n)}{-[e(\uu_i^n+\alpha_{t,i,\rho}\inc t_0\alpha \R_i^n)-e(\uu_i^n)]_-},
         1
         \right)
     \end{aligned}
 \end{equation}
-and the negative only versions of $\rho(\uu)$, $e(\uu)$
+and the negative only increments of $\rho(\uu)$, $e(\uu)$
 are calculated with
 \begin{equation}
-    f_-(\uu) =
+    [x]_-=
     \left\{
     \begin{array}{ll}
-        f(\uu)  & ,\ \   f(\uu) < 0    \\
-        -\infty & ,\ \   f(\uu) \geq 0 \\
+        x  & ,\ \   x < 0    \\
+        -\infty & ,\ \   x \geq 0 \\
     \end{array}
     \right.
 \end{equation}
