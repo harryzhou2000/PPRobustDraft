@@ -61,6 +61,7 @@ Numerical results are given in Section \ref{sec:Results} and concluding remarks 
 
 \newcommand{\trans}{^\mathrm{T}}
 \newcommand{\U}{\mathbf{U}}
+\newcommand{\Ulim}{\widetilde{\mathbf{U}}}
 \newcommand{\F}{\mathbf{F}}
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\OO}{\mathbf{\Omega}}
@@ -347,7 +348,9 @@ By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function}
     =
     \sum_{j \in S_i, j \neq i} \mathbf{B}^j_{i} \us_j + \mathbf{b}_{i}, \quad i=1, \cdots, N,
 \end{equation}
-where the elements of matrices $\mathbf{A}_i$, $\mathbf{B}^j_i \in \mathbb{R}^{\mathrm{N_b}(k) \times \mathrm{N_b}(k)}$ and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathrm{N_b}(k)}$ are
+where the elements of matrices
+$\mathbf{A}_i$, $\mathbf{B}^j_i \in \mathbb{R}^{\mathrm{N_b}(k) \times \mathrm{N_b}(k)}$
+and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathrm{N_b}(k)}$ are
 \begin{equation}
     \label{eq:vrCoeffs}
     \begin{aligned}
@@ -502,17 +505,32 @@ In compressible flow simulations, density and pressure need to be preserved posi
 
 The set of admissible states is defined by
 \begin{equation}
-    G= \left\{\U =  \begin{pmatrix}
+    G= \left\{
+    \U =  \begin{pmatrix}
         \rho \\ \rho \mathbf{u} \\ \rho E
-    \end{pmatrix} \middle| \rho>0 \ \mathrm{and} \ p=
-    \left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) >0 \right\}.
+    \end{pmatrix} \middle|
+    \rho \geq \varepsilon_\rho
+    \text{ and }
+    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) \geq \varepsilon_p
+    \right\}.
 \end{equation}
-The density $\rho$ is a linear function of $\U$, and satisfies
+The parameters $\varepsilon_\rho, \varepsilon_p$
+are sufficiently small positive density and pressure values
+defined for each flow.
+The choice of the small density and pressure parameters
+depends on the flow characteristics, and can be generally set as
+$$
+    \varepsilon_\rho=\varepsilon \rho_0, \varepsilon_p=\varepsilon p_0,
+$$
+where $\rho_0, p_0$ are reference values taken from the initial field or estimated average flow,
+and $\varepsilon\ll 1$ can be chosen to be $10^{-11}$ to force the $\varepsilon_\rho,\varepsilon_p$ parameters negligible
+compared to the primary flow.
+Density $\rho$ is a linear function of $\U$, and satisfies
 \begin{equation}
     \label{eq:density-linear}
     \rho\left(w\U_1+(1-w)\U_2\right) = w\rho\left(\U_1\right) + (1-w) \rho \left(\U_2\right) , \quad 0 \leq w \leq 1.
 \end{equation}
-The pressure $p$ is a concave function of $\U$ if $\rho\left(\U\right) \geq 0$, and satisfies Jensen's inequality
+Pressure $p$ is a concave function of $\U$ if $\rho\left(\U\right) \geq 0$, and satisfies Jensen's inequality
 \begin{equation}
     \label{eq:pressure-Jensen}
     p \left(w\U_1+(1-w)\U_2\right)  \geq w p\left(\U_1\right) + (1-w) p \left(\U_2\right), \quad 0 \leq w \leq 1, \quad \mathrm{if} \ \rho\left(\U_1\right) \geq 0, \ \rho\left(\U_2\right) \geq 0.
@@ -556,8 +574,8 @@ The positivity-preserving difficulty may be overcome by reducing the time step s
 \begin{equation}
     \label{eq:ppLimit}
     %		\begin{aligned}
-    \rho\left(\uu_i^{n+1} \right)>0, \quad
-    p\left(\uu_i^{n+1}\right)>0 ,
+    \rho\left(\uu_i^{n+1} \right)  \geq \varepsilon_\rho, \quad
+    p\left(\uu_i^{n+1}\right) \geq \varepsilon_p ,
     %		\end{aligned}
 \end{equation}
 for all cells $i=1, \cdots,N$.
@@ -573,41 +591,51 @@ A time step size $ \inc t^{n}_{pp}$ satisfying the positivity-preserving princip
         \rho\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right)
          & \geq
         (1- \eta_t)
-        \rho\left(\uu_i^n\right)>0, \\
+        \rho\left(\uu_i^n\right)
+        +
+        \eta_t \varepsilon_\rho
+        > \varepsilon_\rho, \\
         p\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right)
          & \geq
         (1- \eta_t)
-        p\left(\uu_i^n\right)>0,
+        p\left(\uu_i^n\right)
+        +
+        \eta_t \varepsilon_p
+        > \varepsilon_p,
     \end{aligned}
 \end{equation}
 for all cells $i=1, \cdots,N$, where $\eta_t\in(0,1)$ is the parameter used to control the relative solution changes. It is noted that the forward Euler scheme is first-order accurate, and thus the error of the estimation in \eqref{eq:estimation-dt} is $\mathcal{O}(\inc t^2)$. As the allowable solution changes in \eqref{eq:ppLimitDt} are $\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1)$ and $\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1)$, the positivity of $\UM_i^{n+1}$  can be preserved, provided that $\eta_t$ is not overly large.
 
-The allowable time step size for cell $i$ can be determined in two steps according to \eqref{eq:ppLimitDt}. First, we assume an allowable time step size $\alpha_{t,i,\rho} \inc t_{max}$, with $\alpha_{t,i,\rho} \in (0,1]$, to preserve positivity of density. According to \eqref{eq:density-linear} and \eqref{eq:ppLimitDt}, we have
+The allowable time step size for cell $i$ can be determined in two steps according to \eqref{eq:ppLimitDt}.
+First, we assume an allowable time step size
+$\alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{\rho} \in (0,1]$, to preserve positivity of density. According to \eqref{eq:density-linear} and \eqref{eq:ppLimitDt}, we have
 \begin{equation}
-    \rho\left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i,\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i,\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
+    \rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
     (1- \eta_t)
     \rho\left(\uu_i^n\right),
 \end{equation}
 and thus obtain
 \begin{equation}
-    \alpha_{t,i,\rho} = \begin{dcases}
+    \alpha_{t,i}^{\rho} = \begin{dcases}
         1,                                                                                                                                         & \ \mathrm{if} \ \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) \geq  \rho\left(\UM^n_i\right), \\
         \min\left(1, \dfrac{-\eta_t \rho\left(\UM^n_i\right)}{\rho \left(\UM^n_i + \inc t_{max} \R^n_i\right)-  \rho\left(\UM^n_i\right)} \right), & \
         %\mathrm{if} \ \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)<  \rho\left(\UM^n_i\right).
         \mathrm{else}.
     \end{dcases}
 \end{equation}
-Second, we assume an allowable time step size $\alpha_{t,i,p}  \alpha_{t,i,\rho} \inc t_{max}$, with $\alpha_{t,i,p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
+Second, we assume an allowable time step size
+$\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$,
+to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
 \begin{equation}
-    p\left(\UM^n_i +  \alpha_{t,i,p} \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i,p}\right)p\left(\UM^n_i\right) + \alpha_{t,i,p} p\left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq
+    p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
     (1- \eta_t)
     p\left(\uu_i^n\right),
 \end{equation}
 and thus obtain a sufficient condition
 \begin{equation}
-    \alpha_{t,i,p} = \begin{dcases}
-        1,                                                                                                                                                     & \ \mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq  p \left(\UM^n_i\right), \\
-        \min\left(1, \dfrac{-\eta_t p \left(\UM^n_i\right)}{p \left(\UM^n_i +  \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right)-  p \left(\UM^n_i\right)} \right), & \                                                                                                            %\mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right)<  p\left(\UM^n_i\right).
+    \alpha_{t,i}^{p} = \begin{dcases}
+        1,                                                                                                                                                       & \ \mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq  p \left(\UM^n_i\right), \\
+        \min\left(1, \dfrac{-\eta_t p \left(\UM^n_i\right)}{p \left(\UM^n_i +  \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)-  p \left(\UM^n_i\right)} \right), & \                                                                                                              %\mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)<  p\left(\UM^n_i\right).
         \mathrm{else}.
     \end{dcases}
 \end{equation}
@@ -617,7 +645,7 @@ The global time step size is computed by
 \end{equation}
 where
 \begin{equation}
-    \alpha_t = \min_i(\alpha_{t,i,\rho}\alpha_{t,i,p}).
+    \alpha_t = \min_i(\alpha_{t,i}^{\rho}\alpha_{t,i}^{p}).
 \end{equation}
 It can be observed from the above equations that $\inc t^n \leq \inc t_{max}$, as $0<\alpha_t \leq 1$.
 
@@ -651,45 +679,51 @@ A pseudo-time step size $ \inc \tau_{i,pp}$ satisfying the positivity-preserving
         \rho\left(\uu_i^{n,s,m} +  \inc \tau_{i,pp} \tilde{\R}_i^{n,s,m}\right)
          & \geq
         (1- \eta_\tau)
-        \rho\left(\uu_i^{n,s.m}\right)>0, \\
+        \rho\left(\uu_i^{n,s.m}\right)
+        + \eta_\tau \varepsilon_\rho
+        >\varepsilon_\rho, \\
         p\left(\uu_i^{n,s,m} + \inc  \tau_{i,pp} \tilde{\R}_i^{n,s,m}\right)
          & \geq
         (1- \eta_\tau)
-        p\left(\uu_i^{n,s,m}\right)>0,
+        p\left(\uu_i^{n,s,m}\right)
+        + \eta_\tau \varepsilon_p
+        >\varepsilon_p,
     \end{aligned}
 \end{equation}
 where $\eta_\tau\in(0,1)$ is the parameter used to control the relative solution changes.
 
-The allowable pseudo-time step size for cell $i$ can be determined according to \eqref{eq:ppLimitDtau} using the same two-step procedure in Section \ref{ssec:physical-limiting}. The allowable time step size is $\inc \tau_{i,pp}= \alpha_{\tau,i,p}\alpha_{\tau,i,\rho} \inc  \tau_{i}$,
-%with $\alpha_{\tau,i,\rho}$, $\alpha_{\tau,i,p} \in (0,1]$, 
+The allowable pseudo-time step size for cell $i$ can be determined according to \eqref{eq:ppLimitDtau}
+using the same two-step procedure in Section \ref{ssec:physical-limiting}.
+The allowable time step size is $\inc \tau_{i,pp}= \alpha_{\tau,i}^{p}\alpha_{\tau,i}^{\rho} \inc  \tau_{i}$,
+%with $\alpha_{\tau,i}^{\rho}$, $\alpha_{\tau,i}^{p} \in (0,1]$, 
 where
 %\begin{equation}
-%	\rho\left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i,\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i,\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
+%	\rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
 %	(1- \eta_t)
 %	\rho\left(\uu_i^n\right),
 %\end{equation}
 %and thus obtain
 \begin{equation}
-    \alpha_{\tau,i,\rho} = \begin{dcases}
+    \alpha_{\tau,i}^{\rho} = \begin{dcases}
         1,                                                                                                                                                                             & \mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) \geq  \rho\left(\UM^{n,s,m}_i\right), \\
         \min\left(1, \dfrac{-\eta_\tau \rho\left(\UM^{n,s,m}_i\right)}{\rho \left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)-  \rho\left(\UM^{n,s,m}_i\right)} \right), &
         %\mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) <  \rho\left(\UM^{n,s,m}_i\right).
         \mathrm{else},
     \end{dcases}
 \end{equation}
-%Second, we assume an allowable time step size $\alpha_{t,i,p}  \alpha_{t,i,\rho} \inc t_{max}$, with $\alpha_{t,i,p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
+%Second, we assume an allowable time step size $\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
 %\begin{equation}
-%	p\left(\UM^n_i +  \alpha_{t,i,p} \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i,p}\right)p\left(\UM^n_i\right) + \alpha_{t,i,p} p\left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq
+%	p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
 %	(1- \eta_t)
 %	p\left(\uu_i^n\right),
 %\end{equation}
 %and thus obtain
 and
 \begin{equation}
-    \alpha_{\tau,i,p} = \begin{dcases}
-        1,                                                                                                                                                                                            & \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i,\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\tau p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\tau,i,\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i,\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)<  p\left(\UM^{n,s,m}_i\right).
+    \alpha_{\tau,i}^{p} = \begin{dcases}
+        1,                                                                                                                                                                                              & \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
+        \min\left(1, \dfrac{-\eta_\tau p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
+        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)<  p\left(\UM^{n,s,m}_i\right).
         \mathrm{else}.
     \end{dcases}
 \end{equation}
@@ -756,40 +790,42 @@ The increment correction is based on the following conditions
         \rho\left(\uu_i^{n,s,m} + \alpha_{\inc,i} \inc \uu_i^{n,s,m}\right)
          & \geq
         (1- \eta_\inc)
-        \rho\left(\uu_i^{n,s,m}\right), \\
+        \rho\left(\uu_i^{n,s,m}\right)
+        + \eta_\inc \varepsilon_\rho, \\
         p\left(\uu_i^{n,s,m} + \alpha_{\inc,i} \inc \uu_i^{n,s,m}\right)
          & \geq
         (1- \eta_\inc)
-        p\left(\uu_i^{n,s,m}\right),
+        p\left(\uu_i^{n,s,m}\right)
+        + \eta_\inc \varepsilon_p,
     \end{aligned}
 \end{equation}
 where $\eta_\inc \in (0,1)$ is a relaxation parameter to control the relative solution changes.
 By using the same two-step approach used in physical/pseudo time step limiting, the relaxation parameter is computed by
 \begin{equation}
-    \alpha_{\inc,i}= \alpha_{\inc,i,\rho} \alpha_{\inc,i,p},
+    \alpha_{\inc,i}= \alpha_{\inc,i}^{\rho} \alpha_{\inc,i}^{p},
 \end{equation}
 where
 \begin{equation}
-    \alpha_{\inc,i,\rho} = \begin{dcases}
+    \alpha_{\inc,i}^{\rho} = \begin{dcases}
         1,                                                                                                                                                             & \mathrm{if} \ \rho\left(\UM^{n,s,m}_i +\inc \uu_i^{n,s,m}\right) \geq  \rho\left(\UM^{n,s,m}_i\right), \\
         \min\left(1, \dfrac{-\eta_\inc \rho\left(\UM^{n,s,m}_i\right)}{\rho \left(\UM^{n,s,m}_i +\inc \uu_i^{n,s,m} \right)-  \rho\left(\UM^{n,s,m}_i\right)} \right), &
         %\mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \uu_i^{n,s,m}\right) <  \rho\left(\UM^{n,s,m}_i\right).
         \mathrm{else},
     \end{dcases}
 \end{equation}
-%Second, we assume an allowable time step size $\alpha_{t,i,p}  \alpha_{t,i,\rho} \inc t_{max}$, with $\alpha_{t,i,p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
+%Second, we assume an allowable time step size $\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
 %\begin{equation}
-%	p\left(\UM^n_i +  \alpha_{t,i,p} \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i,p}\right)p\left(\UM^n_i\right) + \alpha_{t,i,p} p\left(\UM^n_i + \alpha_{t,i,\rho} \inc t_{max} \R^n_i\right) \geq
+%	p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
 %	(1- \eta_t)
 %	p\left(\uu_i^n\right),
 %\end{equation}
 %and thus obtain
 and
 \begin{equation}
-    \alpha_{\inc,i,p} = \begin{dcases}
-        1,                                                                                                                                                                            & \ \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i,\rho} \inc \uu_i^{n,s,m}\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\inc p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\inc,i,\rho} \inc \uu_i^{n,s,m}\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i,\rho} \inc \uu_i^{n,s,m}\right)<  p\left(\UM^{n,s,m}_i\right).
+    \alpha_{\inc,i}^{p} = \begin{dcases}
+        1,                                                                                                                                                                              & \ \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
+        \min\left(1, \dfrac{-\eta_\inc p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
+        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right)<  p\left(\UM^{n,s,m}_i\right).
         \mathrm{else}.
     \end{dcases}
 \end{equation}
@@ -799,7 +835,17 @@ A solution $\uu^{n,s,m+1}_i \in G$ is then computed by
 \end{equation}
 
 
-The positivity-preserving algorithm developed in this paper is based on the scaling limiter \cite{zhang2010positivity}, physical time step limiting, pseudo time step limiting and pseudo time increment correction. The scaling limiter is accuracy-preserving \cite{zhang2010positivity}. It is known that reducing physical time step sizes does not affect the order of accuracy of the time integration. Furthermore, reducing pseudo time step sizes and increments at intermediate steps do not affect the accuracy of the converged solutions of the inner iterations. Therefore, the proposed positivity-preserving approach is accuracy-preserving. Furthermore, it is noted that the proposed positivity-preserving algorithm is applicable to general finite volume methods with implicit dual-time stepping, not limited to finite volume methods with high-order variational reconstruction or high-order ESDIRK time discretization.
+The positivity-preserving algorithm developed in this paper is based on the scaling limiter \cite{zhang2010positivity},
+physical time step limiting,
+pseudo time step limiting and pseudo time increment correction.
+The scaling limiter is accuracy-preserving \cite{zhang2010positivity}.
+It is known that reducing physical time step sizes does not affect the order of accuracy of the time integration.
+Furthermore, reducing pseudo time step sizes and increments at intermediate steps do not affect the accuracy
+of the converged solutions of the inner iterations.
+Therefore, the proposed positivity-preserving approach is accuracy-preserving.
+Furthermore, it is noted that the proposed positivity-preserving algorithm
+is applicable to general finite volume methods with implicit dual-time stepping,
+not limited to finite volume methods with high-order variational reconstruction or high-order ESDIRK time discretization.
 
 \subsection{Positivity Preserving Limiting of Reconstruction}
 
@@ -812,53 +858,55 @@ even if the mean values $\uu_i$ are positivity-preserving.
 Assuming after reconstruction and shock-capturing limiter,
 the reconstructed quadrature point value of conservative quantities are
 \begin{equation}
-    \U_{i,g} = \uu_{i} + \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}
+    \Ulim_{i,g} = \uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
 \end{equation}
-where $\U_i^l$ are reconstruction coefficients
-handled with shock-capturing limiter,
-$g$ is the index of quadrature point and $\x_g$ is the coordinate of
+where $\Ulim_i^l$ are reconstruction coefficients
+produced by shock-capturing limiter,
+and subscript $g$ is the index of quadrature point and $\x_g$ is the coordinate of
 the quadrature point.
+The current research takes all quadrature points for each face integral
+and the volume integral into consideration of positivity preserving.
 Therefore, in order to preserve the positivity on
-quadrature points, a simple compression using $\beta_i\in[0,1]$ is defined as 
+quadrature points, a simple compression using $\beta_i\in[0,1]$ is defined as
 \begin{equation}
-    \U_{i,g}^{pp} = \uu_{i} + \beta_i \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}
+    \Ulim_{i,g}^{pp} = \uu_{i} + \beta_i \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
 \end{equation}
 
 The compression factor $\beta_i$ should satisfy
 \begin{equation}
     \begin{aligned}
-        \rho(\U_{i,g}) & \geq \varepsilon_\rho,\ \ p(\U_{i,g}^{pp}) \geq \varepsilon_p ,\ \ \forall i,g
+        \rho(\Ulim_{i,g}^{pp}) & \geq \varepsilon_\rho,\ \ p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p ,\ \ \forall i,g
     \end{aligned}
     \label{eq:pointwisePP}
 \end{equation}
 in order to enforce positivity-preserving on each quadrature point.
 
-When $\beta_i = 0$, $\U_{i,g}^{pp} = \uu_{i}$, 
-then the condition \eeqref{eq:pointwisePP} can be definitely achieved,
+When $\beta_i = 0$, $\Ulim_{i,g}^{pp} = \uu_{i}$,
+the condition \eeqref{eq:pointwisePP} can be definitely achieved,
 because $\uu_{i}$ is guaranteed to be positivity preserving in the increment correction process.
 However, when $\beta_i$ is too close to 0, the reconstructed solution
 approaches 0-th order reconstruction, and the accuracy of reconstruction is lost.
 
-In order to calculate a proper $\beta_i$ that preserves as much accuracy as possible, 
+In order to calculate a proper $\beta_i$ that preserves as much accuracy as possible,
 a limiting method derived from
 that of Zhang et al. \cite{zhang2010positivity}
 is introduced.
-Density limiting is first considered, 
+Density limiting is first considered,
 a limiting factor $\beta_{i}^\rho$ is calculated with
 \begin{equation}
-    \beta_{i}^\rho = \min\left\{\frac{\rho(\uu_{i}) - \varepsilon_\rho}{\rho(\uu_{i}) - \rho_{min}} \right\},\ \ 
-    \rho_{min} = \min_{g}\{\rho(\U_{i,g})\} = 
-    \min_{g}\{\uu_{i} + \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}\}.
+    \beta_{i}^\rho = \min\left\{\frac{\rho(\uu_{i}) - \varepsilon_\rho}{\rho(\uu_{i}) - \rho_{min}} \right\},\ \
+    \rho_{min} = \min_{g}\{\rho(\Ulim_{i,g})\} =
+    \min_{g}\{\uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}\}.
 \end{equation}
 
-Clearly, now 
+Clearly, now
 \begin{equation}
-    \rho(\U_{i,g}^{\rho,pp})\geq\varepsilon_\rho,\ \ 
-     \forall i,g,\ \  
-     \U_{i,g}^{\rho,pp} = \uu_{i} + \beta_{i}^\rho \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}
+    \rho(\Ulim_{i,g}^{\rho,pp})\geq\varepsilon_\rho,\ \
+    \forall i,g,\ \
+    \Ulim_{i,g}^{\rho,pp} = \uu_{i} + \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
 \end{equation}
-is guaranteed. 
-Here $\U_{i,g}^{\rho,pp}$ has allowable density, 
+is guaranteed.
+Here $\Ulim_{i,g}^{\rho,pp}$ has admissible density,
 but its pressure could still be unallowable and needs further limiting.
 
 Next, for each quadrature point, consider
@@ -866,38 +914,38 @@ Next, for each quadrature point, consider
     \label{eq:point-beta}
     \beta_{i,g}^p = \left\{
     \begin{array}{ll}
-        1&,\text{if } p(\U_{i,g}^{\rho,pp}) \geq \varepsilon_p\\
+        1                                   & ,\text{if } p(\Ulim_{i,g}^{\rho,pp}) \geq \varepsilon_p \\
         \text{solution of }
-         p(\uu_{i} + \beta_{i,g}^p\beta_{i}^\rho \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}) = \varepsilon_p 
-         \text{ with } \beta_{i,g}^p\in[0,1)&, otherwise 
+        p(\uu_{i} + \beta_{i,g}^p\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}) = \varepsilon_p
+        \text{ with } \beta_{i,g}^p\in[0,1) & , otherwise
     \end{array}
     \right.
 \end{equation}
 The existence of the solution is proven with continuity of the pressure function in \cite{zhang2010positivity}.
-Using ideal gas relations, the equation to be solved in \eeqref{eq:point-beta} can be written as 
+Using ideal gas relations, the equation to be solved in \eeqref{eq:point-beta} can be written as
 \begin{equation}
     \label{eq:p-beta-function-sol}
-    p(\uu_{i}+\beta_{i,g}^p\inc \uu_{i}) = (\gamma - 1) \left(
-        \rho E + \beta_{i,g}^p\inc \rho E - \frac{1}{2} 
-        \frac{||\rho \mathbf{u} + \beta_{i,g}^p\inc\rho\mathbf{u}||_2^2}
-        {\rho + \beta_{i,g}^p\inc\rho}
+    p(\uu_{i}+\beta_{i,g}^p\inc \Ulim_{i}) = (\gamma - 1) \left(
+    \rho E + \beta_{i,g}^p\inc \rho E - \frac{1}{2}
+    \frac{||\rho \mathbf{u} + \beta_{i,g}^p\inc\rho\mathbf{u}||_2^2}
+    {\rho + \beta_{i,g}^p\inc\rho}
     \right) = \varepsilon_p
 \end{equation}
-where 
+where
 $$
-\inc \uu_{i} = \begin{bmatrix}
-    \inc \uu_{i} \\ \inc\rho\mathbf{u} \\ \inc \rho E
-\end{bmatrix} = \beta_{i}^\rho \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}
+    \inc \Ulim_{i} = \begin{bmatrix}
+        \inc \rho \\ \inc\rho\mathbf{u} \\ \inc \rho E
+    \end{bmatrix} = \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
 $$
-is the reconstructed portion of point value.
-\eeqref{eq:p-beta-function-sol} is a quadratic equation of scalar $\beta_{i,g}^p$ 
+is the reconstructed portion of the point value.
+\eeqref{eq:p-beta-function-sol} is a quadratic equation of scalar $\beta_{i,g}^p$
 and can be solved analytically.
 
-Further, Zhang et al. \cite{zhang2010positivity} has also proven 
+Further, Zhang et al. \cite{zhang2010positivity} has also proven
 \begin{equation}
-    p(\U_{i,g}^{pp}) \geq \varepsilon_p,\ \ 
-    \forall i,g,\ \ 
-    \U_{i,g}^{pp} = \uu_{i} + \min_g\{\beta_{i,g}^p\}\beta_{i}^\rho \sum_{l}^{\mathrm{NDOF}}{\U_i^l\varphi_{i,l}(\x_g)}
+    p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p,\ \
+    \forall i,g,\ \
+    \Ulim_{i,g}^{pp} = \uu_{i} + \min_g\{\beta_{i,g}^p\}\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
 \end{equation}
 is satisfied because it is a convex combination of admissible states.
 
@@ -907,10 +955,10 @@ Therefore, the final limiting factor is
 \end{equation}
 and guarantees the condition \eeqref{eq:pointwisePP}.
 
-The discussion from Zhang et al. \cite{zhang2010positivity} has also proven 
-that $1-\beta_{i} = O(\Delta x^{k+1})$ due to the assumption that 
+The discussion from Zhang et al. \cite{zhang2010positivity} has also proven
+that $1-\beta_{i} = O(\Delta x^{k+1})$ due to the assumption that
 the reconstructed solution before limiting
-is a $(k+1)$-th order approximation of the real value. 
+is a $(k+1)$-th order approximation of the real value.
 As a result, the current limiter does not destroy the accuracy of reconstruction.
 
 
@@ -935,7 +983,7 @@ As a result, the current limiter does not destroy the accuracy of reconstruction
 % \end{equation}
 % where notation $\inc_{R,g} \uu_i^{n,s,m}$ is
 % \begin{equation}
-%     \inc_{R,g} \uu_i^{n,s,m} = \sum_{l}^{\mathrm{NDOF}}{\U_i^{l,n,s,m}\varphi_{i,l}(\x_g)}
+%     \inc_{R,g} \uu_i^{n,s,m} = \sum_{l}^{\mathrm{N_b}(k)}{\U_i^{l,n,s,m}\varphi_{i,l}(\x_g)}
 % \end{equation}
 % which is the reconstructed part of conservative value on the quadrature.
 % Usually $p_\beta=1$ but for hard to calculate problems you can set $p_\beta>1$
@@ -1001,7 +1049,8 @@ the $L_1$ norm of the pseudo time derivative decreases by three orders of magnit
 
 \subsection{Accuracy Test}
 
-Consider the classic two-dimensional isentropic vortex problem \cite{hu1999weighted_WENO}.
+Consider the classic two-dimensional isentropic vortex problem \cite{hu1999weighted_WENO}
+and modify it to have a vacuum point.
 A mean flow
 with $(\rho, u, v, p)=(1,1,1,1)$ is perturbed in $(u,v)$
 with an isentropic vortex centered at $(x_0,y_0)$.
@@ -1014,7 +1063,8 @@ with $r^2=(x-x_0)^2+(y-y_0)^2$, $T=p/\rho$.
 Following \cite{zhang2012positivity},
 we set $\gamma=1.4$ and the vortex strength $\epsilon = 10.0828$ so that
 the lowest density and pressure in the exact solution are nearly zero,
-which challenges the simulation of this problem with in positivity preserving.
+which challenges the simulation of this problem with a vacuum point.
+The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-20}$.
 
 The calculating domain is set to be $[0,10]\times[0,10]$ and the initial center of
 the vortex is $(x_0,y_0)=(5,5)$, and periodic boundary conditions in $x$ and $y$ directions are used.
@@ -1022,7 +1072,9 @@ In the calculations, the pseudo time step limiting from Section \ref{ssec:pseudo
 increment correction from Section \ref{ssec:increment-correction},
 and reconstruction limiting from Section \ref{ssec:rec-pp-limiter} are applied
 while the physical time limiting from Section \ref{ssec:physical-limiting}
-is disabled to apply constant time step size $\Delta t = \Delta x/50$. 
+is disabled to apply constant time step size $\Delta t = \Delta x/50$.
+The time step size is proportional to the grid size, because both the
+spacial and temporal schemes have fourth order accuracy.
 The CFL number for pseudo-time step is $\CFLtau = 100$.
 Table \ref{tab:ivResults} demonstrates the results of the accuracy test, and
 fourth order accuracy can be observed.
@@ -1045,7 +1097,7 @@ fourth order accuracy can be observed.
         1/32       & 1.848e-09   & 3.96  & 7.139e-07        & 4.23  \\
         \hline
     \end{tabular}
-    \caption{Density error and order of the accuracy test at $t=0.01$ }
+    \caption{Density error and accuracy order at $t=0.01$, isentropic vortex with vacuum point}
     \label{tab:ivResults}
 \end{table}
 
@@ -1068,8 +1120,9 @@ The flow is inviscid and the ratio of specific heat is $\gamma=1.4$.
 In this problem, a vacuum lies in in the middle, adjacent to the ends of two rarefaction waves.
 The computational domain is $[0,1]$.
 We perform a numerical simulation on a uniform mesh with grid size $\inc x = 1/400$, up to $t=0.1$ using a user-specified time step size $\inc t_{max}= 5 \times 10 ^{-3}$.
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and 
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and
 increased gradually up to its maximum $10$ at the tenth iteration.
+The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-14}$.
 %The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
 The numerical results are shown in Figure \ref{fig:doubleRare}. It is observed from Figure \ref{fig:doubleRare} that, the numerical solution is essentially oscillation-free and agrees well with the reference solution.
 
@@ -1141,10 +1194,14 @@ The governing equations are the Euler equations and the ratio of specific heat i
         (1,0,0,\dfrac{\left(\gamma-1\right)\varepsilon^0}{\inc x\inc y}),\ \  & \text{else},                                      \\
     \end{dcases}
 \end{equation}
-where $\varepsilon^0$ is the total amount of release energy. By choosing $\varepsilon^0= 2.44816\times 10^5$, the solution consists of a diverging infinite strength shock wave whose front is located at radius $r=1$ at $t=10^{-3}$, with a peak density reaching $6$.
+where $\varepsilon^0$ is the total amount of release energy.
+By choosing $\varepsilon^0= 2.44816\times 10^5$,
+the solution consists of a diverging infinite strength shock wave
+whose front is located at radius $r=1$ at $t=10^{-3}$, with a peak density reaching $6$.
 %The final computational time is $t = 1\times10^{-3}$,
 %when the exact solution has the shock wave at radius of $1$. 
 All boundaries are slip walls.
+The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-11}$.
 %Fourth order variational reconstruction finite volume with ESDIRK4
 % discretization is used. 
 %The relaxation parameters and internal CFL number are the same as 1-D problems.
@@ -1154,8 +1211,8 @@ All boundaries are slip walls.
 %are tested. 
 %The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
 %and 297 steps with $\inc t_{max}=10^{-5}$.
-Two simulations are performed up to $t=10^{-3}$, 
-using $1020$ time steps with $\inc t_{max} = 10^{-6}$ 
+Two simulations are performed up to $t=10^{-3}$,
+using $1020$ time steps with $\inc t_{max} = 10^{-6}$
 and  $189$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
 
 
@@ -1212,8 +1269,10 @@ The initial conditions are $(\rho,u,v,p)=(0.5,0,0,0.4127)$.
 The numerical simulations are performed on a uniform rectangular mesh with $800 \times 800$ cells, up to $t=10^{-3}$ using a user-specified time step size $\inc t_{max} = 1\times10^{-6}$.
 %$\CFLtau$ is initially $0.1$ at the beginning of each stage,
 %and reaches $2.0$ at the 10th pseudo time iteration. 
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ 
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
+The small pressure and density parameters are chosen to be
+$\varepsilon_\rho = 0.5\times10^{-11},\ \varepsilon_p = 0.4127\times10^{-11}$.
 
 The computed density and pressure contours at $t=10^{-3}$ in logarithmic scales are shown in Figure \ref{fig:M2000_ReInf_R}, \ref{fig:M2000_Re1E2_R}, \ref{fig:M2000_ReInf_P} and \ref{fig:M2000_Re1E2_P}.
 It is observed from these figures that the numerical results are essentially non-oscillatory, and small-scale structures are smeared out in the $Re=100$ case due to the viscous effect.
@@ -1263,6 +1322,8 @@ The simulation is performed on a rectangular mesh with grid size $\inc x = \inc 
 up to $t=2.3$ using a user-specified time step size $\inc t_{max}=1\times 10^{-3}$.
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
+The small pressure and density parameters are chosen to be
+$\varepsilon_\rho = 1.4\times10^{-11},\ \varepsilon_p = 1\times10^{-11}$.
 
 \begin{figure}[htbp]
     \centering
@@ -1301,6 +1362,8 @@ The simulations are performed up to $t=0.245$ using
 a user-specified time step size $\inc t_{max}= 2\times10^{-4}$.
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
+The small pressure and density parameters are chosen to be
+$\varepsilon_\rho = 1.4\times10^{-11},\ \varepsilon_p = 1\times10^{-11}$.
 
 \begin{figure}[htbp]
     \centering
