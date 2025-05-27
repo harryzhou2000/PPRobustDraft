@@ -1415,6 +1415,92 @@ The $L^1$ and $L^\infty$ errors in density, along with the corresponding converg
     \end{tabular}
 \end{table}
 
+\subsection{Le Blanc Shock Tube}
+
+\added[id=harry]{
+The Le Blanc shock tube problem is a one-dimensional Riemann problem described by the Euler equations and 
+generates an extremely strong shockwave \cite{toro2013riemann}. 
+As a result, the Le Blanc problem is often used as 
+a test case for positivity preserving schemes \cite{hu2013positivity, chan2021positivity, huang2024general}. 
+The initial conditions are listed in \eeqref{eq:leBlancCond}.
+}
+\begin{equation}
+   (\rho,u,p) = \left\{
+       \begin{array}{ll}
+           (1,0,2/3\times10^{-1}),\ \ & x < 3\\
+           (10^{-3},0,2/3\times10^{-10}),\ \ & x \geq 3\\
+       \end{array}
+   \right.
+   \label{eq:leBlancCond}
+\end{equation}
+\added[id=harry]{
+The ratio of specific heat is $\gamma = 5/3$.
+The computational domain is in $[0,9]$, partitioned into $N=800$ or $N=3200$ uniform cells.
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.5$ and increased gradually up to its maximum $10$ at the 10th iteration. 
+The convergence criterion for inner iteration is that the norm of residual decreases by 3 orders of magnitude. 
+For both the $N=800$ and $3200$ grids, 
+two simulations are performed up to $t=6$ using 
+$\inc t_{max} = 0.01$ and $\inc t_{max} = 0.1$ respectively.
+}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_R.pdf}
+       \caption[]{Density}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_U.pdf}
+       \caption[]{Velocity}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_P.pdf}
+       \caption[]{Pressure}
+   \end{subfigure}
+   \caption{Results of the Le Blanc shock tube problem at $t=6$}
+   \label{fig:leBlanc}
+\end{figure}
+
+\added[id=harry]{
+The numerical results of the two simulations are shown in Figure \ref{fig:leBlanc}. 
+It can be observed that the numerical solutions with both time step sizes and both grids basically 
+agree with the exact solution, and no negative values of pressure and density are detected.
+Positions of the shockwave and contact discontinuity in the finer $N=3200$ grid are significantly 
+closer to the exact solution compared with those in the $N=800$ grid. 
+On both grids, using larger $\inc t_{max}$ produces more oscillations near the shockwave. 
+}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_dt.pdf}
+       \caption[]{Time step}
+   \end{subfigure}
+%    \hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_res.pdf}
+       \caption[]{Density residual (partial view)}
+   \end{subfigure}
+   \caption{Time step and convergence history of the Le Blanc problem}
+   \label{fig:leBlanc1}
+\end{figure}
+
+\added[id=harry]{
+Figure \ref{fig:leBlanc1} illustrates history of time step size and density residual in the Le Blanc problem.
+Using smaller $\inc t_{max}$, the actual $\inc t$ often reaches $\inc t_{max}=0.01$ on both grids. 
+With larger $\inc t_{max}=0.1$, the actual time step $\inc t$ is constrained by the grid size near strong discontinuities.
+Figure \ref{fig:leBlanc1}(a) shows that smaller grid size imposes smaller time step size upper bound 
+in physical time step size limiting.
+The convergence history shown in Figure \ref{fig:leBlanc1}(b) indicates the residuals converge rapidly in 
+each step.
+In a few steps, the residuals struggle to further reduce to 3 orders of magnitude lower than the initial level. 
+Convergence difficulties in these few steps might be the result of oscillations generated 
+in using high order spacial discretization to resolve the 
+extreme discontinuities.
+}
+
+
+
 \subsection{Double rarefaction}
 
 The one-dimensional double rarefaction problem \cite{hu2004kineticDoubleRare}
@@ -1458,43 +1544,7 @@ The numerical results are presented in Figure \ref{fig:doubleRare}, which shows 
     \label{fig:doubleRare}
 \end{figure}
 
-%\subsection{Le Blanc Shock-Tube}
-%
-%The Le Blanc shock-tube problem \cite{hu2013positivity} is also a one-dimensional Riemann problem that can be described by the Euler equations. 
-%The initial conditions are
-%\begin{equation}
-%    (\rho,u,p) = \left\{
-%        \begin{array}{ll}
-%            (1,0,2/3\times10^{-1}),\ \ & x < 3\\
-%            (10^{-3},0,2/3\times10^{-10}),\ \ & x \geq 3\\
-%        \end{array}
-%    \right.
-%\end{equation}
-%The ratio of specific heat is $\gamma = 5/3$.
-%The computational domain is in $[0,9]$, partitioned into $400$ uniform cells.
-%In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and increased gradually up to its maximum $10$ at the tenth iteration. 
-%%The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
-%Two simulations are performed up to $t=6$, using $600$ time steps with $\inc t_{max} = 0.01$ and  $64$ time steps with $\inc t_{max} = 0.1$, respectively.
-%
-%\begin{figure}[htbp]
-%    \centering
-%    \begin{subfigure}{0.33\textwidth}
-%        \includegraphics[width=\textwidth]{pics/PPRobust_LB_R.pdf}
-%        \caption[]{Density}
-%    \end{subfigure}\hfill
-%    \begin{subfigure}{0.33\textwidth}
-%        \includegraphics[width=\textwidth]{pics/PPRobust_LB_U.pdf}
-%        \caption[]{Velocity}
-%    \end{subfigure}\hfill
-%    \begin{subfigure}{0.33\textwidth}
-%        \includegraphics[width=\textwidth]{pics/PPRobust_LB_P.pdf}
-%        \caption[]{Pressure}
-%    \end{subfigure}
-%    \caption{Results of the Le Blanc shock-tube problem at $t=6$}
-%    \label{fig:leBlanc}
-%\end{figure}
-%
-%The numerical results of the two simulations are shown in Figure \ref{fig:leBlanc}. It is observed that the numerical solutions with both time step sizes basically agree with the exact solution, and no negative values of pressure and density are detected. 
+
 
 
 \subsection{Sedov blast wave}
