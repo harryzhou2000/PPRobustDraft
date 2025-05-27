@@ -1387,12 +1387,61 @@ The computational domain is defined as $[0,10]\times[0,10]$, with the vortex ini
 Pseudo-time step limiting, increment correction, and reconstruction polynomial scaling are applied during the simulations. Physical-time step limiting is disabled to maintain constant time step sizes of $\Delta t = h/50$.
 % The time step size is proportional to the grid size, because both the
 % spacial and temporal schemes have fourth order accuracy.
-The CFL number for the pseudo-time step is $\CFLtau = 100$. The convergence criterion for inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by nine orders of magnitude.
-The $L^1$ and $L^\infty$ errors in density, along with the corresponding convergence rates, are listed in Table \ref{tab:ivResults}. The results demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
+
+The CFL number for the pseudo-time step is $\CFLtau = 100$. 
+The convergence criterion for inner iteration is that the $L^1$ norm of the pseudo-time derivative 
+decreases by nine orders of magnitude.
+\added[id=harry]
+{
+Accuracy test is conducted using 4th order VFV and 4th order ESDIRK4 time marching. 
+}
+The $L^1$ and $L^\infty$ errors in density, 
+along with the corresponding convergence rates, 
+are listed in Table \ref{tab:ivResults}. 
+The results demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
+
+\added[id=harry]
+{
+In addition to accuracy test, efficiency of the current method is compared with a 2nd order counterpart.
+The 2nd order test uses 2nd order FV and 2nd order trapezoid rule time marching. 
+In the 2nd order scheme, the face flux integration uses midpoint rule. 
+All positivity preserving algorithms are in the same form.
+All the tests are conducted on the same machine with the same parameters, and wall time is recorded 
+for each test run. 
+Figure \ref{fig:IVeff} displays convergence and efficiency of the 2nd and 4th order methods. 
+$N_x$ in Figure \ref{fig:IVeff} means number of grids in one direction, or $10/h$ in other words.
+In Figure \ref{fig:IVeff}(a), the 4th order method displays 4th or higher order of accuracy, while the 2nd order 
+method displays 2nd order accuracy. 
+On the same $160\times160$ grid, 4th order method produces only 
+less than $1/100$ of the error 2nd order method produces.
+Figure \ref{fig:IVeff}(b) indicates the efficiency of 4th order methods overtakes that of 2nd when 
+the error demand is strict. 
+When $10^-4$ density error is needed, 2nd order method uses less time,
+but when $10^-6$ density error is needed, 4th order method uses significantly less time.
+Therefore, it is demonstrated in the isentropic vortex test that
+high order positivity preserving methods has two advantages: 
+(1) high order methods can resolve the same structure better on the same grid; 
+(2) high order methods consumes less time when demanding small error. 
+}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_err1.pdf}
+       \caption[]{Error vs. grid size}
+   \end{subfigure}
+%    \hfill
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_eff1.pdf}
+       \caption[]{Error vs. wall time}
+   \end{subfigure}
+   \caption{Convergence and efficiency comparison of the 4th and 2nd order methods in isentropic vortex problem}
+   \label{fig:IVeff}
+\end{figure}
 
 \begin{table}[htbp!]
     \centering
-    \caption{Accuracy test results for the isentropic vortex problem.}
+    \caption{Accuracy test results for the isentropic vortex problem, \added[id=harry]{4th order VFV and 4th order ESDIRK4}}
     \label{tab:ivResults}
     % \footnotesize
     % \begin{tabular}{|c|c|c|c|c|}
@@ -1491,9 +1540,14 @@ Using smaller $\inc t_{max}$, the actual $\inc t$ often reaches $\inc t_{max}=0.
 With larger $\inc t_{max}=0.1$, the actual time step $\inc t$ is constrained by the grid size near strong discontinuities.
 Figure \ref{fig:leBlanc1}(a) shows that smaller grid size imposes smaller time step size upper bound 
 in physical time step size limiting.
-The convergence history shown in Figure \ref{fig:leBlanc1}(b) indicates the residuals converge rapidly in 
-each step.
-In a few steps, the residuals struggle to further reduce to 3 orders of magnitude lower than the initial level. 
+}
+
+\added[id=harry]{
+In Figure \ref{fig:leBlanc1}(b), the $x$ axis represents total iteration numbers
+across each stage of each ESDIRK time step.
+The convergence history shown in Figure \ref{fig:leBlanc1}(b) indicates the residuals 
+reduce rapidly in each stage and step.
+In a few stages, the residuals struggle to further reduce to 3 orders of magnitude lower than the initial level. 
 Convergence difficulties in these few steps might be the result of oscillations generated 
 in using high order spacial discretization to resolve the 
 extreme discontinuities.
