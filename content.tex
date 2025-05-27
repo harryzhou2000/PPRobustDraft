@@ -4,14 +4,12 @@
 \section{Introduction}
 \label{sec:intro}
 
-Computational fluid dynamics (CFD) simulation
-has been an efficient tool for investigation of flow problems,
-due to the fast development of computer hardware as well as numerical methods,
-such as finite difference (FD), finite volume (FV), finite element (FE) and spectral methods.
+Computational fluid dynamics (CFD) has become a powerful tool for investigating flow problems of scientific or industrial significance, driven by advancements in computer hardware and the development of numerical methods such as finite difference (FD), finite volume (FV), finite element (FE), and spectral methods.
 Second-order FV method on unstructured grids \cite{van1979towards}
+%\cite{van1979towards,jameson1981numerical,aftosmis1995behavior,hubbard1999multidimensional,haselbacher2000accurate,diskin2010comparison}
 is widely used in commercial and open-source CFD codes, thus being the workhorse of engineering
 flow simulations. Over recent decades, various high-order methods on unstructured grids have been developed,
-such as the high-order FV \cite{ollivier1997quasi_ENO,dumbser2007quadrature_WENO,wang2017compact_VR},
+such as the high-order FV \cite{ollivier1997quasi_ENO,dumbser2007quadrature_WENO,wang2017compact_VR,nishikawa2023efficient},
 discontinuous Galerkin (DG) \cite{reed1973triangularDG,cockburn2001rungeDG},
 hybrid FV/DG \cite{dumbser2008unified,li2022reconstructed,zhang2012class1},
 residual distribution (RD)  \cite{abgrall2003construction} and
@@ -19,44 +17,45 @@ flux reconstruction (FR) \cite{huynh2007flux,vincent2011new,wang2009unifying}.
 Such methods, compared with their second-order counterparts,
 have higher-order accuracy and lower dissipation/dispersion,
 while maintaining the capability of handling complex geometries.
-However, CFD solvers suffers from the deterioration of robustness when applied
-to challenging flow problems, even on high-quality computational meshes.
-A commonly encountered robustness issue in compressible flow simulation is the failure to
-preserve positivity of the density or pressure, which leads to nonphysical solutions or numerical instabilities.
+However, numerical methods, particularly high-order ones, often experience reduced robustness when applied to complex flow problems, even on high-quality computational meshes.
+A frequently encountered robustness issue in compressible flow simulations is the failure to
+preserve positivity of density or pressure, which leads to nonphysical solutions or numerical instabilities.
 
-Tremendous efforts have been made on developing positivity-preserving algorithms to improve robustness of numerical methods,
-especially high-order numerical methods, for compressible flow simulations.
-For the numerical methods based on explicit time integration, popular positivity-preserving
-algorithms can be categorized into two types \cite{xu2017bound}.
-The first type is the positivity-preserving scaling limiter \cite{zhang2010maximum,zhang2010positivity},
-which compresses the solution polynomials to obtain positive density and pressure distributions,
+Tremendous efforts have been made on developing positivity-preserving algorithms to enhance the robustness of numerical methods,
+especially high-order methods, for compressible flow simulations.
+For numerical methods employing explicit time integration, commonly used positivity-preserving algorithms can be broadly classified into two categories \cite{xu2017bound}.
+The first category includes positivity-preserving scaling limiters \cite{zhang2010maximum,zhang2010positivity,wang2012robust,cheng2014positivity,du2022high},
+which compress the solution polynomials to obtain positive density and pressure distributions,
 while being accuracy-preserving.
 It is proved that, by using the scaling limiter,
-a monotone numerical flux and a certain CFL condition,
-the FV and DG methods with strong stability preserving (SSP) Runge-Kutta
-time discretizations are positivity-preserving \cite{zhang2010positivity}.
+a monotone numerical flux and a suitable CFL condition,
+the FV and DG methods using strong stability preserving (SSP) Runge-Kutta
+time integrations are positivity-preserving \cite{zhang2010positivity}.
 This approach has also been extended to FD methods \cite{zhang2012positivity,fan2022positivity}.
-The second type is the positivity-preserving flux limiter \cite{hu2013positivity,christlieb2015high,kuzmin2022bound},
-which seeks a convex combination of the first-order monotone flux with the high-order flux that
-can achieve the positivity-preserving property under certain conditions. Compared with the scaling limiter,
-the advantage of the flux limiter is the easy application to high-order FD methods solving conservation laws and high-order schemes
-solving convection-diffusion problems \cite{xu2017bound}.
-However, the accuracy-preserving property of the flux limiters are often demonstrated
+The second category encompasses positivity-preserving flux limiters \cite{hu2013positivity,christlieb2015high,kuzmin2022bound},
+which construct a convex combination of the first-order monotone flux and the high-order flux to ensure positivity under certain conditions. Compared to scaling limiters,
+flux limiters offer the advantage of straightforward applicability to high-order FD methods for conservation laws and to high-order schemes
+for convection-diffusion problems \cite{xu2017bound}.
+However, the accuracy-preserving property of the flux limiter is often demonstrated
 by extensive numerical results \cite{xiong2013parametrized},
-as it is difficult to be proved for general cases.
+as it is difficult to be proved for general cases \cite{xu2017bound}.
 
 Explicit time stepping methods suffer from the CFL constraint that restricts the time step sizes.
-For problems with very small allowable time step sizes, such as the high Reynolds number flows with large aspect ratio grids in the boundary layer region,  implicit time stepping methods are much more efficient.
-Although most of the effort has been made for increasing accuracy of the time discretization and for increasing the efficiency of the nonlinear solver, only a few works exist in the literature concerning the positivity-preserving property of implicit methods \cite{qin2018implicit}, as it is difficult to verify if an implicit numerical scheme is positivity-preserving, even for a low-order one \cite{huang2024general}. This difficulty comes from the fact that, in implicit time stepping, the solutions are updated by solving a system of nonlinear equations iteratively. Parent \cite{parent2018positivity} developed a positivity-preserving dual-time stepping scheme for FV methods on structured grids solving Euler equations based on a Cauchy-Kowalevski procedure. Lian et al. \cite{lian2009solution} proposed a solution-limited time stepping scheme to enhance the reliability in steady-state compressible flow simulations. Qin et al. \cite{qin2018implicit} developed an implicit high-order positivity-preserving DG method for steady-state compressible Euler equations. Recently, Huang et al. \cite{huang2024general} proposed a positivity-preserving algorithm based on an iterative flux correction procedure, for finite volume methods simulating compressible flows on unstructured grids with a second-order backward difference (BDF2) dual-time stepping.
+For simulations with very small allowable time step sizes, such as the high Reynolds number turbulent flow simulations with large aspect ratio grids in the near-wall region, implicit time stepping methods are significantly more efficient.
+Although most of the effort has been made for increasing accuracy of the time discretization and for increasing the efficiency of the nonlinear solver, only a few works exist in the literature concerning the positivity-preserving property of implicit methods \cite{qin2018implicit}, as it is difficult to verify if an implicit numerical scheme is positivity-preserving, even for a low-order one \cite{huang2024general}. This difficulty comes from the fact that, in implicit time stepping, the solutions are updated by solving a system of nonlinear equations iteratively. Batten et al. \cite{batten1997average} developed a positive FD scheme employing the Patankar trick \cite{patankar2018numerical} for compressible turbulent flows. Moryossef and Levy \cite{moryossef2006unconditionally,mor2009unconditionally} developed implicit unconditional positive FV schemes for unsteady turbulent flows by constructing $M$-matrix Jacobians. These methods are low-order accurate and are complicated to generalize to high order \cite{qin2018implicit}. Parent \cite{parent2018positivity} developed a positivity-preserving dual-time stepping scheme for high-resolution FV methods on structured grids solving Euler equations based on a Cauchy-Kowalevski procedure. Lian et al. \cite{lian2009solution} proposed a solution-limited time stepping scheme for FV methods on unstructured grids to enhance the reliability in steady-state compressible flow simulations. Qin et al. \cite{qin2018implicit} developed an implicit high-order positivity-preserving DG method for steady-state compressible Euler equations. Recently, Huang et al. \cite{huang2024general} proposed a positivity-preserving algorithm based on an iterative flux correction procedure, for finite volume methods simulating compressible flows on unstructured grids with a second-order backward difference (BDF2) dual-time stepping.
 %Based on the literature survey, it is found that it is of great interest to develop positivity-preserving algorithms for general high-order numerical methods on unstructured grids for unsteady compressible flow simulations.
 
-In this paper, we develop a positivity-preserving algorithm for finite volume methods on unstructured grids with an implicit dual-time stepping, towards robust and efficient simulations of unsteady compressible flows.
-In the positivity-preserving algorithm, admissible cell-averages are obtained by controlling physical and pseudo time step sizes which results in limited solution changes. To overcome the difficulty of unknown solution changes in time step limiting, we propose to use explicit time discretizations to obtain efficient estimations of future states. The allowable time step sizes are determined by limiting the relative solution changes to ensure positivity of updated solutions. Given positive cell-averages, admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter \cite{zhang2010positivity}. The positivity-preserving algorithm is applied to a high-order variational finite volume method \cite{wang2017compact_VR} with an explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration \cite{bijl2002implicitBDFvESDIRK}, and verified using a series of benchmark test cases. Numerical results demonstrate the robustness and high resolution of the positivity-preserving implicit high-order finite volume method.
+In this paper, we develop a positivity-preserving algorithm for arbitrary high-order finite volume schemes on unstructured grids with implicit time integration, towards robust and efficient simulations of unsteady compressible flows.
+In the positivity-preserving algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution changes. To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states. 
+% The allowable time step sizes are determined by limiting the relative solution changes to ensure positivity of updated solutions. At each stage of the implicit Runge-Kutta time integration, the solution is obtained by solving an implicit nonlinear equation system iteratively using dual-time stepping technique, forming an inner iteration process in the pseudo-time direction. Physical and pseudo time step sizes limiting are performed to ensure admissible converged and intermediate solutions of the inner iteration process, respectively.
+The allowable time step sizes are determined by constraining the relative solution changes, ensuring the positivity of the updated solutions. At each stage of the implicit Runge-Kutta time integration, the solution is obtained by iteratively solving an implicit nonlinear equation system using the dual-time stepping technique, which forms an inner iteration process in the pseudo-time direction. Both physical and pseudo-time step size limitations are applied to ensure the admissibility of converged and intermediate solutions during the inner iteration process, respectively.
+Given positive cell-averages, admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter \cite{zhang2010positivity}. It is well-established that limiting time step sizes does not compromise the order of accuracy. Furthermore, as previously mentioned, the scaling limiter has been proven to preserve accuracy. Consequently, the proposed positivity-preserving algorithm is inherently accuracy-preserving. 
+The positivity-preserving algorithm is applied to a high-order variational finite volume method \cite{wang2017compact_VR} with an explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration \cite{bijl2002implicitBDFvESDIRK}, and verified using a series of benchmark test cases. Numerical results demonstrate the high accuracy, high resolution and robustness of the implicit positivity-preserving high-order finite volume method.
 
 The remainder of this paper is organized as follows. Section \ref{sec:CFV} presents the high-order finite volume method on unstructured grids using implicit time stepping. Section \ref{sec:PP} presents the positivity-preserving algorithm for implicit finite volume methods.
-Numerical results are given in Section \ref{sec:Results} and concluding remarks are given in Section \ref{sec:Conclusions}.
+Section \ref{sec:Results} presents the numerical results for benchmark test cases. Section \ref{sec:Conclusions} gives concluding remarks.
 
-\section{Implicit Finite Volume Method}
+\section{Implicit finite volume method}
 \label{sec:CFV}
 
 \newcommand{\trans}{^\mathrm{T}}
@@ -77,7 +76,7 @@ Numerical results are given in Section \ref{sec:Results} and concluding remarks 
 
 \newcommand{\CFLt}{\text{CFL}_t}
 \newcommand{\CFLtau}{\text{CFL}_\tau}
-
+\newcommand{\CFL}{\text{CFL}}
 \newcommand{\eeqref}[1]{Eq.\eqref{#1}}
 \newcommand{\um}{\overline{u}}
 \newcommand{\us}{\mathbf{u}}
@@ -86,11 +85,13 @@ Numerical results are given in Section \ref{sec:Results} and concluding remarks 
 \newcommand{\FF}{\mathcal{F}}
 
 \newcommand{\eye}{\mathbf{I}}
+\newcommand{\uv}{\mathbf{u}}
 
-\subsection{Governing Equations}
+
+\subsection{Governing equations}
 \label{ssec:GovEq}
 
-The Navier-Stokes equations governing unsteady compressible viscous flows can be expressed as
+The Navier-Stokes equations describing compressible viscous flows can be expressed as
 \begin{equation}
     \label{eq:NS}
     \dfrac{\partial \U}{\partial t} +
@@ -126,9 +127,9 @@ with $\mu$ being the dynamic viscosity. The heat conductivity is computed by $\k
     p= \rho R T,
 \end{equation}
 where $R= \left(\gamma-1\right) C_p/\gamma$.
-Neglecting viscous effects, i.e., $\mu=0$, the Navier-Stokes equations reduce to the Euler equations governing unsteady compressible inviscid flows.
+Neglecting viscous effects, i.e., $\mu=0$, the Navier-Stokes equations reduce to the Euler equations describing compressible inviscid flows.
 
-\subsection{High-order Finite Volume Spatial Discretization}
+\subsection{Semi-discrete finite volume scheme}
 \label{ssec:FV}
 
 This subsection presents the general framework of high-order cell-centered finite volume method on unstructured grids for compressible flows.
@@ -147,7 +148,8 @@ is the degree of freedom (DOF) of the finite volume method on cell $\OO_i$.
 The flux integral in \eqref{eq:Semi-FV} is computed by using a Gauss quadrature
 \begin{equation}
     \label{eq:Flux-Integral}
-    \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A \approx \sum_{f \in \partial \OO_i} \sum_{g=1}^{N_g} w_g \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f \ A_f,
+    % \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A \approx \sum_{f \in \partial \OO_i} \sum_{g=1}^{N_g} w_g \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f \ A_f,
+    \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A \approx \sum_{f \in \partial \OO_i} \sum_{g=1}^{N_g} w_g \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f \ A_f,
 \end{equation}
 where $\n_f$ and $A_f$ are the outward unit normal and area of element interface $f$, respectively. $N_g$ is the number of quadrature points. $\x_{f,g}$ and $w_g$ are the position and weight of the $g$-th quadrature point on $f$, respectively.
 
@@ -166,27 +168,28 @@ Given known cell-averages, a reconstruction is performed to obtain an approximat
 \end{equation}
 where $k$ is the degree of the polynomial, $\{\varphi_{i,l}(\x)\}$ are the polynomial basis functions and $\mathrm{N_b}(k)$ is the number of basis functions. The basis coefficients $\{\U^l_i\}$ are determined by using a reconstruction scheme, such as the variational reconstruction \cite{wang2017compact_VR} that will be presented in Section \ref{ssec:VR}.
 
+Flux schemes based on solutions of Riemann problems are used to compute the numerical flux at the quadrature points in \eqref{eq:Flux-Integral}, since the piece-wise polynomial distribution \eqref{eq:FVRec} is discontinuous across cell interfaces, as shown in Figure \ref{fig:Riemann}.
+The numerical flux is computed by
+\begin{equation}
+    \label{eq:num-flux}
+    % \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
+    \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f= \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right),
+\end{equation}
+where $\tilde{\F}$ and $\tilde{\F}_v$ are the inviscid and viscous flux schemes, respectively, with the left and right states at the quadrature point defined by
+\begin{equation}
+    \begin{dcases}
+         & \U_L= \U_i\left(\x_{f,g},t \right), \quad \nabla \U_L= \nabla \U_i\left(\x_{f,g},t \right),\\
+         & \U_R= \U_j\left(\x_{f,g} ,t \right), \quad \nabla \U_R= \nabla \U_j\left(\x_{f,g},t \right).
+    \end{dcases}
+\end{equation}
+In this work, $\tilde{\F}$ is the local Lax-Friedrichs scheme and $\tilde{\F}_v$ is the viscous flux scheme in \cite{wang2017compact_VR}.
+
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.3\linewidth]{pics/Riemann}
     \caption{Riemann problem on cell interface.}
     \label{fig:Riemann}
 \end{figure}
-
-Flux schemes based on solutions of Riemann problems are used to compute the numerical flux at the quadrature points in \eqref{eq:Flux-Integral}, since the piece-wise polynomial distribution is discontinuous across cell interfaces, as shown in Figure \ref{fig:Riemann}.
-The numerical flux is computed as
-\begin{equation}
-    \label{eq:num-flux}
-    \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
-\end{equation}
-where $\tilde{\F}$ and $\tilde{\F}_v$ are the schemes used to compute the inviscid and viscous numerical fluxes, respectively, with the left and right states defined by
-\begin{equation}
-    \begin{dcases}
-         & \U_L= \U_i\left(\x_{f,g},t \right), \quad \nabla \U_L= \nabla \U_i\left(\x_{f,g},t \right),  \\
-         & \U_R= \U_j\left(\x_{f,g} ,t \right), \quad \nabla \U_R= \nabla \U_j\left(\x_{f,g},t \right).
-    \end{dcases}
-\end{equation}
-In this work, $\tilde{\F}$ is the local Lax-Friedrichs scheme and $\tilde{\F}_v$ is the viscous flux scheme by Wang et al. \cite{wang2017compact_VR}.
 
 %In this work, the inviscid numerical flux is computed by using the local Lax-Friedrichs scheme
 %\begin{equation}
@@ -208,22 +211,26 @@ In this work, $\tilde{\F}$ is the local Lax-Friedrichs scheme and $\tilde{\F}_v$
 %	\tilde{\U} = \dfrac{1}{2} \left(\U_L+\U_R\right), \quad \nabla \tilde{\U}= \dfrac{1}{2}\left(\nabla \U_L+ \nabla \U_R\right) + \dfrac{1}{2 \Delta \tilde{x}} \left(\U_R - \U_L\right), \quad \Delta \tilde{x} = \dfrac{\min \left(\overline{\OO}_i,\overline{\OO}_j\right)}{A_f}.
 %\end{equation}
 
-The semi-discrete finite volume scheme \eqref{eq:Semi-FV} can be rewritten in an ordinary differential equation (ODE) form
+Once the right-hand-side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
+% \begin{equation}
+%     \label{eq:FVODECell}
+%     \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
+% \end{equation}
 \begin{equation}
     \label{eq:FVODECell}
-    \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
+    \derivative{\uu_i}{t} = \R_i,
 \end{equation}
-where can be integrated in time to update the cell-average in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.
+which can be integrated in time to update the cell-average in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.
 
-\subsection{Variational Reconstruction}
+\subsection{Variational reconstruction}
 \label{ssec:VR}
 
-This subsection presents a variational reconstruction scheme \cite{wang2017compact_VR} that can achieve arbitrary high-order accuracy on a compact stencil involving only the current cell and its face-neighboring cells. The compact reconstruction stencil $S_i= \left\{i,j_1,j_2,j_3\right\}$ of a triangular element $i$ is shown in Figure \ref{fig:compactstencil}. In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner. For the sake of presentation, the two-dimensional case is considered to illustrate the variational reconstruction procedure.
+This subsection presents a variational reconstruction \cite{wang2017compact_VR} that can achieve arbitrary high-order accuracy on a compact stencil involving only the current cell and its face-neighboring cells. The compact reconstruction stencil $S_i= \left\{i,j_1,j_2,j_3\right\}$ of a triangular element $i$ is shown in Figure \ref{fig:compactstencil}. In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner. For the sake of presentation, the two-dimensional case is considered to illustrate the variational reconstruction.
 
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.3\linewidth]{pics/compact_stencil}
-    \caption{Compact reconstruction stencil.}
+    \caption{Compact reconstruction stencil of a triangular element.}
     \label{fig:compactstencil}
 \end{figure}
 
@@ -293,7 +300,7 @@ The characteristic length scales are used to non-dimensionalize the basis functi
 %    \inc x_i = \inc y_i = \max_{\x \in \OO_i} \left\{\|\x - \x_{i}\|_2\right\}.
 %\end{equation}
 
-The objective of a reconstruction is to determine the unknown basis coefficients $u_i^l$,  $l=1,\cdots,\mathrm{N_b}\left(k\right)$, $i=1,\cdots,N$, given the cell-averages $\overline{u}_j$, $j=1,\cdots,N$. In the variational reconstruction \cite{wang2017compact_VR}, the linear equation system to determine the unknown basis coefficients is derived by minimizing a cost function using the variational method. Different cost function results in different reconstruction schemes. The cost function is defined as
+The objective of a reconstruction is to determine the unknown basis coefficients $u_i^l$,  $l=1$, $\cdots$, $\mathrm{N_b}\left(k\right)$, $i=1,\cdots,N$, given the cell-averages $\overline{u}_j$, $j=1,\cdots,N$. In the variational reconstruction \cite{wang2017compact_VR}, the linear equation system to determine the unknown basis coefficients is derived by minimizing a cost function using the variational method. Different cost function results in different reconstruction schemes. The cost function is defined as
 \begin{equation}
     \label{eq:cost-function}
     I = \sum^{N_f}_{f=1} {I_f},
@@ -312,10 +319,10 @@ In this work, the IJI is defined as
             \right)
             \right]^2
         \dd A
-    }
+    },
 \end{equation}
-where $L$ and $R$ are the two cells sharing interface $f$, $\omega_f^G$ is the geometric weight and
-$\omega_f^D$ is the derivative weight. The IJI measures the jumps of the reconstruction polynomial and its spatial derivatives on cell interface.
+where $L$ and $R$ are the two cells sharing the interface $f$, $\omega_f^G$ is the geometric weight and
+$\omega_f^D$ is the derivative weight. The IJI measures the jumps of the reconstruction polynomial and its spatial derivatives on the cell interface.
 The derivative weights of the cubic variational reconstruction are
 \begin{equation}
     \begin{aligned}
@@ -331,7 +338,7 @@ with
     \omega_D(0) = 1, \ \omega_D(1) = d_{LR}, \ \omega_D(2) = \frac{\left(d_{LR}\right)^2}{2}, \ \omega_D(3) = \frac{\left(d_{LR}\right)^3}{6},
     \label{eq:wdHQMOPT}
 \end{equation}
-where $d_{LR}= \left\| \x_L -\x_R \right\|_2$ is the distance between the barycenters of cell $L$ and $R$.
+where $d_{LR}= \left\| \x_L -\x_R \right\|_2$ is the distance between the centroids of elements $L$ and $R$.
 As only nearly uniform and isotropic meshes are used in the numerical simulations in this paper,
 the geometric weights
 $\omega^G_f$ are all set as 1.
@@ -341,7 +348,7 @@ Linear reconstruction equations can be derived by using the variational method, 
     \label{eq:minimization}
     \partialderivative{I}{u_i^l} = 0, \ l=1,\cdots, \mathrm{N_b}(k),\  i=1,\cdots N.
 \end{equation}
-By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function} and \eqref{eq:minimization}, a linear equation system is obtained as following
+By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function} and \eqref{eq:minimization}, a linear equation system is obtained as follows
 \begin{equation}
     \label{eq:vrBlockEq}
     \mathbf{A}_{i} \us_i
@@ -355,7 +362,7 @@ and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathr
     \label{eq:vrCoeffs}
     \begin{aligned}
          & \mathbf{A}_{i} [m,n]=
-        \sum_{j \in S_i, j \neq i} \omega_f^G\int_{\OO_i \cap \OO_j}{
+        \sum_{j \in S_i, j \neq i} \omega_f^G\int_{f}{
             \sum_{p+q=0}^{k}
             \left(\omega_f^D(p,q)\right)^2
             \partialderivative{^{p+q}\varphi_{i,m}}{x^p\partial y^q}
@@ -363,7 +370,7 @@ and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathr
             \ \dd A},
         \\
          & \mathbf{B}^j_{i} [m,n]=
-        \omega_f^G\int_{\OO_i \cap \OO_j}{
+        \omega_f^G\int_{f}{
             \sum_{p+q=0}^{k}
             \left(\omega_f^D(p,q)\right)^2
             \partialderivative{^{p+q}\varphi_{i,m}}{x^p\partial y^q}
@@ -373,14 +380,15 @@ and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathr
          & \mathbf{b}_{i} [m]=
         \sum_{j \in S_i, j \neq i}
         \omega_f^G \left(\omega_f^D(0,0)\right)^2
-        \int_{\OO_i \cap \OO_j}{
+        \int_{f}{
             \varphi_{i,m} \left(\overline{u}_j - \overline{u}_i\right)
             \ \dd A},
         \\
          & \mathbf{u}_i [m]= u^m_i, \\
-         & \mathbf{u}_j [m]= u^m_j.
+         & \mathbf{u}_j [m]= u^m_j,
     \end{aligned}
 \end{equation}
+with $f= \partial \Omega_i \cap \partial \Omega_j$ being the cell interface.
 It is observed from \eqref{eq:vrBlockEq} that the variational reconstruction is implicit, as the unknown coefficients of the face-neighboring cells are required to determine the unknown coefficients of the current cell.
 By assembling the linear equations \eqref{eq:vrBlockEq} of all cells, we obtain a global linear equation system
 \begin{equation}
@@ -398,31 +406,35 @@ where
          & \mathbf{u}= \left\{\mathbf{u}_i\right\}, \ \mathbf{b}= \left\{\mathbf{b}_i\right\}.
     \end{aligned}
 \end{equation}
-It is proved in \cite{wang2017compact_VR} that the large and sparse reconstruction matrix $\mathbf{A}$ is symmetric and positive definite, which guarantees the existence and uniqueness of the solution of the linear equation system \eqref{eq:global-system}. This is a significant advantage of the variational reconstruction over other existing high-order reconstructions on unstructured grids.
+It is proved in \cite{wang2017compact_VR} that the large and sparse matrix $\mathbf{A}$ is symmetric and positive definite, which guarantees the existence and uniqueness of the solution of the linear equation system \eqref{eq:global-system}. This is a significant advantage of the variational reconstruction over other existing high-order reconstructions on unstructured grids.
 The linear equation system \eqref{eq:global-system} is solved iteratively using the block Gauss-Seidel method, of which the convergence is proved in \cite{wang2017compact_VR}.
 Each block Gauss-Seidel iteration is compact as it only relies on the information of the current and face-neighboring cells.
 %It is proved in \cite{wang2017compact_VR} that the block Gauss-Seidel method is convergent for the linear equation system \eqref{eq:global-system}.
 
-In the reconstructions of solutions involving discontinuities, a WBAP limiter \cite{li2011multi,li2012multi} is used to suppress spurious oscillations. The limiting process on the element $i$ in Figure \ref{fig:compactstencil} is presented for illustration. The limited reconstruction polynomial
+In the reconstruction of a solution that involves discontinuities, a WBAP limiter \cite{li2011multi,li2012multi} is used to suppress spurious oscillations. The limiting process on the element $i$ in Figure \ref{fig:compactstencil} is presented for illustration. The limited reconstruction polynomial
 \begin{equation}\label{eqn:Limited_Polynomial}
-    \tilde{u}_{i} \left(\x\right) = \overline{u}_{i} + \sum_{l=1}^{\mathrm{N_b}\left(k\right)} \tilde{u}_i^l \varphi_{i,l}  \left(\x\right)
+    \tilde{u}_{i} \left(\x\right) = \overline{u}_{i} + \sum_{l=1}^{\mathrm{N_b}\left(k\right)} \tilde{u}_i^l \varphi_{i,l}  \left(\x\right),
 \end{equation}
-is a nonlinear weighted average of the reconstruction polynomial $u_i \left(\x\right)$ and three additional candidate polynomials $u_{j \rightarrow i} \left(\x\right), j=j_1, j_2, j_3$ obtained through a secondary reconstruction \cite{li2012high}. The limited coefficients $\tilde{u}^l_i$ is computed by
+is a non-linearly weighted average of the reconstruction polynomial $u_i \left(\x\right)$ and three additional candidate polynomials $u_{j \rightarrow i} \left(\x\right)$, $j=j_1, j_2, j_3$ obtained through a secondary reconstruction \cite{li2012high}. The limited coefficients $\tilde{u}^l_i$ are computed by
 \begin{equation}\label{eq:Limiting}
     \tilde{u}_i^l= L\left(u_i^l, u^l_{j_1 \rightarrow i}, u^l_{j_2 \rightarrow i}, u^l_{j_3 \rightarrow i}\right),
 \end{equation}
-with a limiting function
+where
 \begin{equation}
-    L(a_0,a_1,...,a_J)=a_0\cdot{W\left(1,\frac{a_1}{a_0},...,\frac{a_J}{a_0}\right)}, \quad W=\frac{n+\sum_{m=1}^{J}{1/\theta_m^{p-1}}}{n+\sum_{m=1}^{J}{1/\theta_m^{p}}},
+    L(a_0,a_1,\cdots, a_J)=a_0\cdot{W\left(1,\frac{a_1}{a_0}, \cdots, \frac{a_J}{a_0}\right)},
 \end{equation}
-where $n=10$ and $p=4$. The limiting is performed in a successive manner in characteristic space \cite{li2012multi}.
+with the WBAP limiting function defined as
+\begin{equation}
+W(1,\theta_1,\cdots, \theta_J)=\frac{n+\sum_{m=1}^{J}{1/\theta_m^{p-1}}}{n+\sum_{m=1}^{J}{1/\theta_m^{p}}}.
+\end{equation}
+In this work, we set the parameters of the limiting function as $n=10$ and $p=4$. The limiting is performed in a successive manner in characteristic space \cite{li2012multi}.
 
-\subsection{Implicit Time Marching}
+\subsection{Implicit time integration}
 \label{ssec:TimeMarching}
 
 As mentioned in the previous subsection, the linear equation system of the variational reconstruction is solved iteratively. The reconstruction will be very expensive if the iteration needs to reach convergence at each single time step. A reconstruction and implicit dual-time stepping coupled iteration procedure has been proposed in \cite{wang2016compact1_VR} to address this computational efficiency issue. In the coupled iteration procedure, the reconstruction iteration is performed only once at each pseudo time step. The coupling between the reconstruction and the time integration makes these two procedures achieve convergence synchronously. By using the coupled iteration, the implicit nature of the variational reconstruction does not result in additional cost, thus ensuring the high computational efficiency of the variational finite volume method.
 
-In this work, the time integration scheme for unsteady flow simulation is the six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK}. By using this method, \eqref{eq:FVODECell} is integrated in time as
+In this work, the time integration scheme for unsteady flow simulation is the six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK}. By integrating the ODE \eqref{eq:FVODECell} in time, the cell-average is updated by
 \begin{subequations}\label{eq:ESDIRK4}
     \begin{align}
          & \uu^{n,1}_i \ = \uu^{n}_i, \label{eq:esdirk4-1}                                                                  \\
@@ -442,10 +454,10 @@ where
     \R^{n,q}_i  = \R_i \left(t^n + c_q \inc t^n, \left\{\U^{n,q}_j\right\}_{j \in S_i}\right),
 \end{equation}
 with $\inc t^n= t^{n+1} - t^n$ being the time step size, which is in general a user-specified constant.
-The Runge-Kutta coefficients $a_{sq}$ and $c_q$ of ESDIRK4 can be found
+The coefficients $a_{sq}$ and $c_q$ of ESDIRK4 can be found
 in \cite{bijl2002implicitBDFvESDIRK}.
 
-The implicit and nonlinear equation \eqref{eq:esdirk4-s} is solved iteratively using a dual-time stepping technique, in which a pseudo-time variable $\tau$ is introduced. The pseudo-time integration scheme for  \eqref{eq:esdirk4-s} is
+The implicit and nonlinear equation \eqref{eq:esdirk4-s} is solved iteratively using a dual-time stepping technique, in which a pseudo-time variable $\tau$ is introduced. The pseudo-time integration scheme is %for  \eqref{eq:esdirk4-s} is
 \begin{equation}
     \dfrac{\uu^{n,s,m+1}_i-\uu^{n,s,m}_i}{\inc \tau_i} + \dfrac{\uu^{n,s,m+1}_i - \uu^{n}_i}{\inc t^n} = \sum_{q=1}^{s-1} a_{sq} \R^{n,q}_i + a_{ss} \R_i^{n,s,m+1},
 \end{equation}
@@ -457,9 +469,9 @@ By using the linear approximation
 \begin{equation}
     \R^{n,s,m+1}_i \approx \R^{n,s,m}_i + \sum_{j \in S_i} \dfrac{\partial \R_i}{\partial \UM_j} \left(\uu^{n,s,m+1}_j-\uu^{n,s,m}_j\right),
 \end{equation}
-we obtain a linear equation system to update the cell-average in pseudo-time direction as following
+we obtain a linear equation system to update the cell-average in the pseudo-time direction as follows
 \begin{equation}
-    %	\label{eq:pseudo-time-equation}
+    % \label{eq:pseudo-time-equation}
     \left(\frac{\eye}{\inc \tau_i} + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R_i }{\uu_i} \right) \inc \uu^{n,s, m}_i
     -
     a_{ss}\sum_{j\in S_i,j\neq i} {
@@ -473,10 +485,11 @@ where
     \label{eq:define-inc}
     \inc \uu^{n,s,m}_i= \uu^{n,s,m + 1}_i - \uu^{n,s,m}_i, \quad \tilde{\R}^{n,s,m}_i= \sum_{q=1}^{s-1} a_{sq} \R^{n,q}_i + a_{ss} \R_i^{n,s,m} - \dfrac{\uu^{n,s,m}_i - \uu^{n}_i}{\inc t^n}.
 \end{equation}
-The linear equation system \eqref{eq:linearTauUpdate} is solved by using the matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo-time until $\uu^{n,s,m+1}_{i}$ converges to $\uu^{n,s}_{i}$, forming an inner iteration at the $s$-th stage of ESDIRK4. The convergence criterion of the inner iteration is that the $L_1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
+The linear equation system \eqref{eq:linearTauUpdate} is solved by using the matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo-time until $\uu^{n,s,m+1}_{i}$ converges to $\uu^{n,s}_{i}$, forming an inner iteration at the $s$-th stage of ESDIRK4. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
 
 The local pseudo-time step size is computed by
 \begin{equation}
+    \label{eq:local-pseudo-time-step}
     \inc \tau_{i} = \frac{\CFLtau \overline{\OO}_i }
     {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
 \end{equation}
@@ -498,7 +511,7 @@ where $\lambda_{f}$ is the spectral radius estimated on cell interface $f$ and $
 %a norm. For transient flow the current research finds setting $\varE_{\tau}$
 %from $10^{-3}$ to $10^{-4}$ sufficiently accurate.
 
-\section{Positivity-Preserving Algorithm}
+\section{Positivity-preserving algorithm}
 \label{sec:PP}
 
 In compressible flow simulations, density and pressure need to be preserved positive, to avoid nonphysical solutions or numerical instabilities. Therefore, a positivity-preserving property is desired for numerical methods, especially high-order numerical methods, to perform robust simulations of compressible flows.
@@ -509,22 +522,11 @@ The set of admissible states is defined by
     \U =  \begin{pmatrix}
         \rho \\ \rho \mathbf{u} \\ \rho E
     \end{pmatrix} \middle|
-    \rho \geq \varepsilon_\rho
+    \rho >  0
     \text{ and }
-    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) \geq \varepsilon_p
+    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) >  0
     \right\}.
 \end{equation}
-The parameters $\varepsilon_\rho, \varepsilon_p$
-are sufficiently small positive density and pressure values
-defined for each flow.
-The choice of the small density and pressure parameters
-depends on the flow characteristics, and can be generally set as
-$$
-    \varepsilon_\rho=\varepsilon \rho_0, \varepsilon_p=\varepsilon p_0,
-$$
-where $\rho_0, p_0$ are reference values taken from the initial field or estimated average flow,
-and $\varepsilon\ll 1$ can be chosen to be $10^{-11}$ to force the $\varepsilon_\rho,\varepsilon_p$ parameters negligible
-compared to the primary flow.
 Density $\rho$ is a linear function of $\U$, and satisfies
 \begin{equation}
     \label{eq:density-linear}
@@ -540,14 +542,14 @@ A positivity-preserving numerical scheme satisfies that $\U^{n+1} \in G$, if $\U
     %	\label{eq:FVRec}
     \U^{n+1}_i (\x)= \UM^{n+1}_i + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^{n+1,l} \varphi_{i,l}(\x) }, \quad i=1, \cdots,N.
 \end{equation}
-An implicit finite volume solution $\U^{n+1} \in G$ can be obtained through the following two steps:
+A solution $\U^{n+1} \in G$ can be obtained by using an implicit finite volume method in two steps:
 \begin{enumerate}[label=(\arabic*)]
-    \item Given $\U^n \in G$, obtain $\UM^{n+1} \in G$ by using a proper implicit time-stepping scheme;
-    \item Given $\UM^{n+1} \in G$, obtain $\U^{n+1} \in G$ by using a proper limiting algorithm.
+    \item Given $\U^n \in G$, obtain $\UM^{n+1} \in G$ through implicit time integration;
+    \item Given $\UM^{n+1} \in G$, obtain $\U^{n+1} \in G$ through reconstruction polynomial limiting.
 \end{enumerate}
 The second step can be accomplished by using the scaling limiter of Zhang et al. \cite{zhang2010positivity}. Therefore, the key of developing a positivity-preserving implicit finite volume method is to design an implicit time-stepping scheme that leads to admissible updated cell-averages.
 
-In this paper, we propose a positivity-preserving algorithm for finite volume methods with implicit dual-time discretizations. In this algorithm, the physical and pseudo time step sizes are controlled by limiting the solution changes, to obtain admissible cell-averages at the next physical and pseudo time steps, respectively. The details of the proposed positivity-preserving algorithm will be presented in the following subsections.
+In this paper, we propose a positivity-preserving algorithm for finite volume methods with implicit dual-time stepping. In this algorithm, the physical and pseudo time step sizes are limited by controlling the solution changes, to obtain admissible cell-averages at the next physical and pseudo time steps, respectively. The details of the proposed positivity-preserving algorithm will be presented in the following subsections.
 
 %The finite volume method with implicit time marching
 %is able to steadily produce numerical results in
@@ -566,25 +568,25 @@ In this paper, we propose a positivity-preserving algorithm for finite volume me
 %and straightforward algorithms
 %to mitigate the change of encountering positivity-preserving problems.
 
-\subsection{Physical Time Step Limiting}
+\subsection{Physical time step limiting}
 \label{ssec:physical-limiting}
 
-In an unsteady flow simulation using implicit time marching, the physical time step size is usually set as a user-specified constant, i.e., $\inc t^n= \inc t_{max}$, based on a prior estimation of the time scale of the problem. For challenging problems, there are transient states with very low density or pressure, making it difficult for the numerical method to preserve positivity using the original time step size $\inc t_{max}$.
-The positivity-preserving difficulty may be overcome by reducing the time step size temporarily. Therefore, we propose to control the physical time step size dynamically based on a positivity-preserving principle
+In an unsteady flow simulation using implicit time stepping, the physical time step size is usually set as a user-specified constant, i.e., $\inc t^n= \inc t_{max}$, based on a prior estimation of the time scale of the problem. For challenging problems, there are transient states with very low density or pressure, making it difficult for the numerical method to preserve positivity using the original time step size $\inc t_{max}$.
+This issue may be addressed by reducing the time step size temporarily. Therefore, we propose to control the physical time step size dynamically based on a positivity-preserving principle
 \begin{equation}
     \label{eq:ppLimit}
     %		\begin{aligned}
-    \rho\left(\uu_i^{n+1} \right)  \geq \varepsilon_\rho, \quad
-    p\left(\uu_i^{n+1}\right) \geq \varepsilon_p ,
+    \rho\left(\uu_i^{n+1} \right)  >0, \quad
+    p\left(\uu_i^{n+1}\right) > 0 ,
     %		\end{aligned}
 \end{equation}
 for all cells $i=1, \cdots,N$.
-However, the solution $\UM_i^{n+1}$ is unknown at the beginning of the time step. To overcome this difficulty, we propose an solution estimation based on a forward Euler time stepping, which is given by
+However, the solution $\UM_i^{n+1}$ is unknown at the beginning of the time step. To overcome this challenge, we propose a solution estimation based on a forward Euler time discretization as follows
 \begin{equation}
     \label{eq:estimation-dt}
     \UM_i^{n+1} \approx  \uu_i^n + \inc t^{n}  \R_i^n.
 \end{equation}
-A time step size $ \inc t^{n}_{pp}$ satisfying the positivity-preserving principle \eqref{eq:ppLimit} can be determined by limiting the solution changes as follows
+A time step size $\inc t^{n}_{pp}$ satisfying the positivity-preserving principle \eqref{eq:ppLimit} can be determined by limiting the solution changes as follows
 \begin{equation}
     \label{eq:ppLimitDt}
     \begin{aligned}
@@ -592,67 +594,311 @@ A time step size $ \inc t^{n}_{pp}$ satisfying the positivity-preserving princip
          & \geq
         (1- \eta_t)
         \rho\left(\uu_i^n\right)
-        +
-        \eta_t \varepsilon_\rho
-        > \varepsilon_\rho, \\
+        >  0, 
+        % \Leftrightarrow \rho\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right) - \rho\left(\uu_i^n\right)
+        %  & \geq -\eta_t \rho\left(\uu_i^n\right),
+         \\
         p\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right)
          & \geq
         (1- \eta_t)
         p\left(\uu_i^n\right)
-        +
-        \eta_t \varepsilon_p
-        > \varepsilon_p,
+        >  0,
     \end{aligned}
 \end{equation}
-for all cells $i=1, \cdots,N$, where $\eta_t\in(0,1)$ is the parameter used to control the relative solution changes. It is noted that the forward Euler scheme is first-order accurate, and thus the error of the estimation in \eqref{eq:estimation-dt} is $\mathcal{O}(\inc t^2)$. As the allowable solution changes in \eqref{eq:ppLimitDt} are $\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1)$ and $\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1)$, the positivity of $\UM_i^{n+1}$  can be preserved, provided that $\eta_t$ is not overly large.
+for all cells $i=1, \cdots,N$, where $\eta_t\in(0,1)$ is the parameter used to control the relative solution changes. A larger $\eta_t$ results in a larger allowable time step. The local truncation error of the forward Euler method \eqref{eq:estimation-dt} is approximately proportional to $\left(\inc t^{n}\right)^2$, resulting in estimation errors of density and pressure as follows 
+% $\mathcal{O}(\inc t^2)$. 
+\begin{equation}
+\label{eq:estimation-error-dt}
+\begin{aligned}
+    e_\rho= \rho\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right) - \rho\left( \UM_i^{n+1}\right) \sim \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right),\\ 
+    e_p= p\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right) - p\left( \UM_i^{n+1}\right) \sim \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right).
+\end{aligned}
+\end{equation}
+These estimation errors are significantly smaller than the allowable solution changes
+\begin{equation}
+    \begin{aligned}
+        -\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1), \\
+        -\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1),
+    \end{aligned}
+\end{equation}
+which are obtained from \eqref{eq:ppLimitDt}.
+% $\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1)$ and $\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1)$, 
+Therefore, the forward Euler time discretization is sufficiently accurate for solution estimation.
+%the positivity of $\UM_i^{n+1}$  can be preserved, provided that $\eta_t$ is not overly large.
+Based on \eqref{eq:ppLimit}, \eqref{eq:ppLimitDt} and \eqref{eq:estimation-error-dt}, we have
+\begin{equation}
+    \eta_t \geq \max \left\{\dfrac{\rho\left(\uu_i^n\right)-\rho\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right)}{\rho\left(\uu_i^n\right)}, \dfrac{p\left(\uu_i^n\right)-p\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right)}{p\left(\uu_i^n\right)} \right\} \sim \mathcal{O} \left(\inc t^{n}_{pp}\right),
+\end{equation}
+and
+\begin{equation}
+    \eta_t < 1- \max \left\{\dfrac{e_\rho}{\rho\left(\uu_i^n\right)}, \dfrac{e_p}{p\left(\uu_i^n\right)} \right\} \sim 1- \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right),
+\end{equation}
+indicating that the parameter $\eta_t$ must not be too close to zero or one to ensure the positivity of solution $\UM_i^{n+1}$. 
 
 The allowable time step size for cell $i$ can be determined in two steps according to \eqref{eq:ppLimitDt}.
 First, we assume an allowable time step size
 $\alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{\rho} \in (0,1]$, to preserve positivity of density. According to \eqref{eq:density-linear} and \eqref{eq:ppLimitDt}, we have
+% \begin{equation}
+%     \rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
+%     (1- \eta_t)
+%     \rho\left(\uu_i^n\right),
+% \end{equation}
 \begin{equation}
-    \rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
+\label{eq:alpha-t-rho-ineq}
+    \begin{split}
+        \rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) &= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) \\
+    &\geq
     (1- \eta_t)
     \rho\left(\uu_i^n\right),
+    \end{split}
 \end{equation}
 and thus obtain
 \begin{equation}
+\label{eq:alpha-t-rho}
     \alpha_{t,i}^{\rho} = \begin{dcases}
-        1,                                                                                                                                         & \ \mathrm{if} \ \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) \geq  \rho\left(\UM^n_i\right), \\
-        \min\left(1, \dfrac{-\eta_t \rho\left(\UM^n_i\right)}{\rho \left(\UM^n_i + \inc t_{max} \R^n_i\right)-  \rho\left(\UM^n_i\right)} \right), & \
-        %\mathrm{if} \ \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)<  \rho\left(\UM^n_i\right).
-        \mathrm{else}.
+    \min\left\{1, \dfrac{-\eta_t \rho\left(\UM^n_i\right)}{\delta \rho^n_i} \right\}, & \
+        \mathrm{if} \ 
+        \delta \rho^n_i= \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right) < 0,
+        \\
+        1,  & \ \mathrm{else}.
     \end{dcases}
 \end{equation}
+% where 
+% \begin{equation}
+%     \delta \rho^n_i= \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right).
+% \end{equation}
 Second, we assume an allowable time step size
 $\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$,
 to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
 \begin{equation}
-    p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
+\begin{split}
+    p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) &\geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \\
+    &\geq
     (1- \eta_t)
     p\left(\uu_i^n\right),
+\end{split}
 \end{equation}
 and thus obtain a sufficient condition
 \begin{equation}
+\label{eq:alpha-t-p}
     \alpha_{t,i}^{p} = \begin{dcases}
-        1,                                                                                                                                                       & \ \mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq  p \left(\UM^n_i\right), \\
-        \min\left(1, \dfrac{-\eta_t p \left(\UM^n_i\right)}{p \left(\UM^n_i +  \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)-  p \left(\UM^n_i\right)} \right), & \                                                                                                              %\mathrm{if} \ p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)<  p\left(\UM^n_i\right).
-        \mathrm{else}.
+        \min\left\{1, \dfrac{-\eta_t p \left(\UM^n_i\right)}{\delta p_i^n} \right\}, & \ 
+        \mathrm{if} \ \delta p_i^n=  p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) -  p \left(\UM^n_i\right) <0, \\
+        1, & \ \mathrm{else}.
     \end{dcases}
 \end{equation}
 The global time step size is computed by
 \begin{equation}
-    \inc t^n = \alpha_t \inc t_{max}
+    \label{eq:alpha-t-global}
+    \inc t^n = \alpha_t \inc t_{max}, \quad \alpha_t = \min_i \left\{\alpha_{t,i}^{\rho}\alpha_{t,i}^{p} \right\}.
 \end{equation}
-where
-\begin{equation}
-    \alpha_t = \min_i(\alpha_{t,i}^{\rho}\alpha_{t,i}^{p}).
-\end{equation}
-It can be observed from the above equations that $\inc t^n \leq \inc t_{max}$, as $0<\alpha_t \leq 1$.
+% where
+% \begin{equation}
+%     \alpha_t = \min_i(\alpha_{t,i}^{\rho}\alpha_{t,i}^{p}).
+% \end{equation}
+% It can be observed from the above equation that $\inc t^n \leq \inc t_{max}$, as $0<\alpha_t \leq 1$, indicating an upper bound of the global physical time step size.
+From the equation above, we observe that $\Delta t^n \leq \Delta t_{\text{max}}$ since $0 < \alpha_t \leq 1$. This establishes an upper bound for the global physical time step size.
 
-\subsection{Pseudo Time Step Limiting}
+An analysis can be performed on the lower bound of the physical time step size.
+The right-hand-side of the semi-discrete finite volume scheme is computed by
+\begin{equation}
+    \label{eq:Semi-FV-1}
+    \R_i = -\frac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \ \dd A.
+\end{equation}
+On a cell interface $f$, a spectral radius $\tilde{\lambda}_f>0$ can be found such that
+\begin{equation}
+    \left\| \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \right\| \leq \tilde{\lambda}_f \min \left\{\|\UM_L\|, \|\UM_R\| \right\},
+\end{equation}
+where $\|\cdot\|$ denotes the $L^2$ norm, if the ratio $\max \left\{\|\UM_L\|, \|\UM_R\| \right\}/\min \left\{\|\UM_L\|, \|\UM_R\| \right\}$ is bounded.
+Therefore, we have
+\begin{equation}
+    \left\| \R_i \right\| 
+    \leq \frac{1}{\overline{\OO}_i} \sum_{f \in \partial \Omega_i}{
+        A_{f} \tilde{\lambda}_{f} \min \left\{\|\UM_L\|, \|\UM_R\| \right\}
+    } 
+    \leq \frac{\sum_{f \in \partial \Omega_i} A_f\tilde{\lambda}_f}{\overline{\OO}_i}\|\UM_i\|
+    =
+    \frac{\CFL_i}{\inc t_{max}}\|\UM_i\|,
+\end{equation}
+where $\CFL_i= \inc t_{max}\sum_{f \in \partial \Omega_i} A_f \tilde{\lambda}_f/\overline{\OO}_i$. 
+Given that $\UM_i$ is finite and non-singular, we can find $\mathcal{O}(1)$ coefficients $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ such that
+\begin{equation}
+    \begin{aligned}
+        \left| \rho\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right|
+        & \leq
+        C^\rho_i \rho\left( \UM_i \right),\\
+        \left| \rho E\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right|
+        & \leq
+        C^{\rho E}_i \rho E\left( \UM_i \right),\\
+        \left\| \rho \uv\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right\|
+        & \leq
+        C^{\rho \uv}_i \left\| \rho \uv\left( \UM_i \right)              \right\|,\\
+    \end{aligned}
+\end{equation}
+where $\rho(\U)$, $\rho E(\U)$ and $\rho \uv(\U)$ are linear functions as they take directly the components of $\U$.
+% $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ are $\mathcal{O}(1)$ coefficients determined by $\UM_i$.
+We can show that $\alpha_{t,i}^{\rho}$ has a lower bound.
+By substituting the following inequality 
+\begin{equation}
+    |\delta \rho_i^n| = \left|\rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right)\right|
+    =
+    \left|\rho\left(\inc t_{max} \R^n_i\right)\right|
+    \leq
+    \CFL_i C^\rho_i \rho\left(\UM^n_i\right),
+\end{equation}
+into \eqref{eq:alpha-t-rho}, we have
+\begin{equation}
+    \label{eq:alpha-t-rho-lb}
+    \alpha_{t,i}^{\rho} \geq \frac{\eta_t}{\CFL_i C_i^\rho},
+\end{equation}
+which indicates a finite lower bound for $\alpha_{t,i}^{\rho}$. 
+
+\newcommand{\uincT}{\inc\U_i^{n,\rho}}
+Next, we derive a lower bound for $\alpha_{t,i}^{p}$ using a similar approach.
+We define $\inc\U_i^{n,\rho} =\alpha_{t,i}^{\rho} \inc t_{max} \R^n_i$.
+According to \eqref{eq:alpha-t-rho-ineq}, we have 
+\begin{equation}
+    \rho\left(\UM^n_i+\uincT  \right) \geq (1-\eta_t)\rho\left(\UM^n_i\right).
+\end{equation}
+By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
+% {\small
+\begin{equation}
+    \begin{aligned}
+        \dfrac{|\delta p_i^n|}{\gamma-1} 
+        &=  \dfrac{1}{\gamma-1} \left| p \left(\UM^n_i + \inc\U_i^{n,\rho}\right) -  p \left(\UM^n_i\right) \right| \\
+        &=  \left| \rho E\left( \uincT \right) 
+         - \frac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i+\uincT  \right)
+         }
+         + \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)}
+        \right| \\
+        &\leq  \left| \rho E\left( \uincT \right) \right|
+         +
+         \dfrac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i+\uincT  \right)
+         }
+         +
+          \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
+        &\leq  \left| \rho E\left( \uincT \right) \right|
+         +
+         \frac{1}{1-\eta_t}
+         \frac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i \right)
+         }
+         +
+          \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
+        &\leq \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  \rho E\left( \UM^n_i \right) 
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+        \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)},
+    \end{aligned}
+\end{equation}
+% }
+where $\rho\uv()^2$ is the short form of $\rho\uv()\cdot\rho\uv()$.
+As $p\left(\UM^n_i\right) > 0$, we have
+\begin{equation}
+    \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} < \rho E\left(\UM^n_i\right),
+\end{equation}
+and thus
+\begin{equation}
+    \begin{aligned}
+        |\delta p_i^n| &\leq
+        (\gamma-1)\left[
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+        \right]
+        \rho E\left( \UM^n_i \right).
+    \end{aligned}
+\end{equation}
+According to \eqref{eq:alpha-t-p}, we obtain
+\begin{equation}
+    \begin{aligned}
+        \label{eq:alpha-t-p-lb}
+        \alpha_{t,i}^{p} 
+        & \geq \dfrac{\eta_t}{\gamma-1} \frac{p\left(\UM^n_i\right)}{
+            \rho E\left(\UM^n_i\right)
+        }
+        \frac{1}{
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+            +\left(
+            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+            + \frac{2-\eta_t}{1-\eta_t}
+            \right)
+        } \\
+        & = \eta_t \frac{1}{
+           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
+        }
+        \frac{1}{
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+            +\left(
+            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+            + \frac{2-\eta_t}{1-\eta_t}
+            \right)
+        },
+    \end{aligned}
+\end{equation}
+where $Ma_i$ is the Mach number based on $\UM^n_i$. 
+Consequently, the global time step size is bounded below by
+\begin{equation}
+    \label{eq:delta-t-lb}
+    \frac{\inc t^n}{\inc t_{max}} \geq 
+    \eta_t^2
+    \min_i
+    \left\{
+    \frac{1}{
+           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
+        }
+    \frac{1}{\CFL_i C_i^\rho}
+    \frac{1}{
+     \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+    }
+    \right\}.
+\end{equation}
+We assume that the state $\UM^n_i$ yields a finite Mach number $Ma_i$.
+Under the conditions that $\eta_t\sim\mathcal{O}(1)$, $1-\eta_t\sim\mathcal{O}(1)$,
+$\CFL_i\sim\mathcal{O}(1)$ and ${1}/\left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\sim\mathcal{O}(1)$,
+$\inc t^n$ is not infinitely small compared to $\inc t_{max}$.
+In other words, when the CFL number $\CFL_i$ based on $\inc t_{max}$ is $\mathcal{O}(1)$, 
+the CFL number determined by the scaled $\inc t^n$ also remains $\mathcal{O}(1)$.
+
+% {\color{red} END OF $\inc t$ LB DISCUSSION}
+
+\subsection{Pseudo time step limiting}
 \label{ssec:pseudo-limiting}
 
-The physical time step limiting strategy described in the previous subsection is used to obtain a solution $\UM_i^{n+1} \in G$, which is the converged solution of the last stage of ESDIRK4 \eqref{eq:ESDIRK4}. However, intermediate solutions with negative density or pressure might be encountered during the inner iteration at each stage. Therefore, we propose to limit the solution changes by controlling the pseudo-time step sizes during the inner iteration process, similar to the limiting strategy in physical time direction in Section \ref{ssec:physical-limiting}.
+The physical time step limiting strategy described in the previous subsection is used to obtain an admissible state $\UM_i^{n+1} \in G$, which is the converged solution of the final stage of ESDIRK4 \eqref{eq:ESDIRK4}. However, intermediate solutions with negative density or pressure may arise during the inner iterations of each stage. To address this issue, we propose to control solution changes by limiting pseudo-time step sizes during the inner iteration process, following a similar limiting strategy to that used in the physical-time direction described in Section \ref{ssec:physical-limiting}.
 
 For the $m$-th inner iteration at the $s$-stage of ESDIRK4, we have the following positivity-preserving requirement
 \begin{equation}
@@ -662,17 +908,17 @@ For the $m$-th inner iteration at the $s$-stage of ESDIRK4, we have the followin
     p\left(\uu_i^{n,s,m+1}\right)>0,
     %		\end{aligned}
 \end{equation}
-for all cells $i=1,\cdots,N$. However, $\UM^{n,sm+1}_i$ is unknown at the beginning of the pseudo-time step. Based on an explicit dual-time  discretization of \eqref{eq:esdirk4-s} given by
+for all cells $i=1,\cdots,N$. However, $\UM^{n,s, m+1}_i$ is unknown at the beginning of the pseudo-time step. Based on an explicit dual-time  discretization of \eqref{eq:esdirk4-s} as follows
 \begin{equation}
     \dfrac{\uu^{n,s,m+1}_i-\uu^{n,s,m}_i}{\inc \tau_i} + \dfrac{\uu^{n,s,m}_i - \uu^{n}_i}{\inc t^n} \approx \sum_{q=1}^{s-1} a_{sq} \R^{n,q}_i + a_{ss} \R_i^{n,s,m},
 \end{equation}
-we obtain an solution estimation
+we obtain a solution estimation
 \begin{equation}
     \label{eq:estimation-dtau}
     \UM_i^{n,s,m+1} \approx  \UM_i^{n,s,m} + \inc \tau_i  \tilde{\R}_i^{n,s,m},
 \end{equation}
 with $ \tilde{\R}_i^{n,s,m}$ defined in \eqref{eq:define-inc}.
-A pseudo-time step size $ \inc \tau_{i,pp}$ satisfying the positivity-preserving principle \eqref{eq:ppLimit-Tau} can be determined by limiting the solution changes as follows
+A pseudo-time step size $ \inc \tau_{i,pp}$ satisfying the positivity-preserving requirement \eqref{eq:ppLimit-Tau} can be determined by limiting solution changes as follows
 \begin{equation}
     \label{eq:ppLimitDtau}
     \begin{aligned}
@@ -680,22 +926,23 @@ A pseudo-time step size $ \inc \tau_{i,pp}$ satisfying the positivity-preserving
          & \geq
         (1- \eta_\tau)
         \rho\left(\uu_i^{n,s.m}\right)
-        + \eta_\tau \varepsilon_\rho
-        >\varepsilon_\rho, \\
+        >0, \\
         p\left(\uu_i^{n,s,m} + \inc  \tau_{i,pp} \tilde{\R}_i^{n,s,m}\right)
          & \geq
         (1- \eta_\tau)
         p\left(\uu_i^{n,s,m}\right)
-        + \eta_\tau \varepsilon_p
-        >\varepsilon_p,
+        > 0,
     \end{aligned}
 \end{equation}
 where $\eta_\tau\in(0,1)$ is the parameter used to control the relative solution changes.
 
 The allowable pseudo-time step size for cell $i$ can be determined according to \eqref{eq:ppLimitDtau}
 using the same two-step procedure in Section \ref{ssec:physical-limiting}.
-The allowable time step size is $\inc \tau_{i,pp}= \alpha_{\tau,i}^{p}\alpha_{\tau,i}^{\rho} \inc  \tau_{i}$,
-%with $\alpha_{\tau,i}^{\rho}$, $\alpha_{\tau,i}^{p} \in (0,1]$, 
+The allowable time step size is 
+\begin{equation}
+    \label{eq:alpha-tau}
+    \inc \tau_{i,pp}= \alpha_{\tau,i}^{p}\alpha_{\tau,i}^{\rho} \inc  \tau_{i},
+\end{equation}
 where
 %\begin{equation}
 %	\rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
@@ -704,27 +951,18 @@ where
 %\end{equation}
 %and thus obtain
 \begin{equation}
+    \label{eq:alpha-tau-rho}
     \alpha_{\tau,i}^{\rho} = \begin{dcases}
-        1,                                                                                                                                                                             & \mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) \geq  \rho\left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\tau \rho\left(\UM^{n,s,m}_i\right)}{\rho \left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)-  \rho\left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) <  \rho\left(\UM^{n,s,m}_i\right).
-        \mathrm{else},
+        \min\left\{1, \dfrac{-\eta_\tau \rho\left(\UM^{n,s,m}_i\right)}{\delta \rho_i^{n,s,m}} \right\}, & \mathrm{if} \ \delta \rho_i^{n,s,m}= \rho\left(\UM^{n,s,m}_i + \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) - \rho\left(\UM^{n,s,m}_i\right) < 0, \\
+        1, & \mathrm{else},
     \end{dcases}
 \end{equation}
-%Second, we assume an allowable time step size $\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
-%\begin{equation}
-%	p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
-%	(1- \eta_t)
-%	p\left(\uu_i^n\right),
-%\end{equation}
-%and thus obtain
 and
 \begin{equation}
+    \label{eq:alpha-tau-p}
     \alpha_{\tau,i}^{p} = \begin{dcases}
-        1,                                                                                                                                                                                              & \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\tau p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right)<  p\left(\UM^{n,s,m}_i\right).
-        \mathrm{else}.
+        \min\left\{1, \dfrac{-\eta_\tau p \left(\UM^{n,s,m}_i\right)}{\delta p_i^{m,s,m}} \right\}, & \mathrm{if} \ \delta p_i^{m,s,m} = p \left(\UM^{n,s,m}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{n,s,m}_i\right) -p \left(\UM^{n,s,m}_i\right) < 0, \\
+        1, &\mathrm{else}.
     \end{dcases}
 \end{equation}
 
@@ -775,14 +1013,15 @@ and
 %Note that the reference time scale here is $\inc\tau_{i,CFL}$, 
 %and the compressing of $\inc\tau_i$ is non-uniform over the cells.
 
-It is noted that $\UM^{n,s,m+1}_i$ is obtained by performing one LU-SGS iteration for \eqref{eq:linearTauUpdate}, thus being not the converged solution of the linear equation system. Therefore, there is not theoretical result for the error of estimation in \eqref{eq:estimation-dtau}, and thus not guarantee for the positivity of the solution $\UM^{n,s,m+1}_i$. To address this issue, an increment correction will be introduced in the next subsection.
+% It is noted that, at each pseudo time step, the intermediate solution is updated through a single LU-SGS iteration and is therefore not the converged solution of the linear system \eqref{eq:linearTauUpdate}. Consequently, there is no theoretical guarantee for the accuracy of the estimation in \eqref{eq:estimation-dtau}, nor for the positivity of the updated solution \(\UM^{n,s,m+1}_i\). To address this limitation, an increment correction will be introduced in the next subsection.
+It is noted that, at each pseudo-time step, the updated intermediate solution is obtained through a single LU-SGS iteration. Consequently, this solution does not represent the fully converged state of the linear system described by \eqref{eq:linearTauUpdate}. As a result, the accuracy of the estimation in \eqref{eq:estimation-dtau} cannot be theoretically guaranteed, nor can the positivity of the updated solution. %$\UM^{n,s,m+1}_i$.
+To overcome this limitation, an increment correction will be introduced in the next subsection.
 
-\subsection{Increment Correction}
+\subsection{Increment correction}
 \label{ssec:increment-correction}
 
-As pointed out in the previous subsection, although the physical and pseudo time steps are limited,
-the intermediate results may have negative density or pressure before the convergence of the LU-SGS iteration.
-Therefore, a pseudo-time increment correction is designed to ensure the positivity of the updated solutions.
+As pointed out in the previous subsection, even with limited physical and pseudo time step sizes, the intermediate results may exhibit negative density or pressure prior to the convergence of the inner iteration.
+Therefore, a pseudo-time increment correction is designed to ensure the positivity of the updated intermediate solutions.
 The increment correction is based on the following conditions
 \begin{equation}
     \label{eq:ppLimitInc}
@@ -790,182 +1029,188 @@ The increment correction is based on the following conditions
         \rho\left(\uu_i^{n,s,m} + \alpha_{\inc,i} \inc \uu_i^{n,s,m}\right)
          & \geq
         (1- \eta_\inc)
-        \rho\left(\uu_i^{n,s,m}\right)
-        + \eta_\inc \varepsilon_\rho, \\
+        \rho\left(\uu_i^{n,s,m}\right), \\
         p\left(\uu_i^{n,s,m} + \alpha_{\inc,i} \inc \uu_i^{n,s,m}\right)
          & \geq
         (1- \eta_\inc)
-        p\left(\uu_i^{n,s,m}\right)
-        + \eta_\inc \varepsilon_p,
+        p\left(\uu_i^{n,s,m}\right),
     \end{aligned}
 \end{equation}
 where $\eta_\inc \in (0,1)$ is a relaxation parameter to control the relative solution changes.
 By using the same two-step approach used in physical/pseudo time step limiting, the relaxation parameter is computed by
 \begin{equation}
+\label{eq:alpha-inc}
     \alpha_{\inc,i}= \alpha_{\inc,i}^{\rho} \alpha_{\inc,i}^{p},
 \end{equation}
 where
 \begin{equation}
+\label{eq:alpha-inc-rho}
     \alpha_{\inc,i}^{\rho} = \begin{dcases}
-        1,                                                                                                                                                             & \mathrm{if} \ \rho\left(\UM^{n,s,m}_i +\inc \uu_i^{n,s,m}\right) \geq  \rho\left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\inc \rho\left(\UM^{n,s,m}_i\right)}{\rho \left(\UM^{n,s,m}_i +\inc \uu_i^{n,s,m} \right)-  \rho\left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ \rho\left(\UM^{n,s,m}_i + \inc \uu_i^{n,s,m}\right) <  \rho\left(\UM^{n,s,m}_i\right).
+        \min\left\{1, \dfrac{-\eta_\inc \rho\left(\UM^{n,s,m}_i\right)}{\delta \rho_{\inc,i}} \right\}, & \mathrm{if} \ \delta \rho_{\inc,i} = \rho\left(\UM^{n,s,m}_i +\inc \uu_i^{n,s,m}\right)  -\rho\left(\UM^{n,s,m}_i\right) < 0, \\
+        1, &
         \mathrm{else},
     \end{dcases}
 \end{equation}
-%Second, we assume an allowable time step size $\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $\alpha_{t,i}^{p} \in (0,1]$, to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen} and \eqref{eq:ppLimitDt}, we have
-%\begin{equation}
-%	p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \geq
-%	(1- \eta_t)
-%	p\left(\uu_i^n\right),
-%\end{equation}
-%and thus obtain
 and
 \begin{equation}
+\label{eq:alpha-inc-p}
     \alpha_{\inc,i}^{p} = \begin{dcases}
-        1,                                                                                                                                                                              & \ \mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right) \geq  p \left(\UM^{n,s,m}_i\right), \\
-        \min\left(1, \dfrac{-\eta_\inc p \left(\UM^{n,s,m}_i\right)}{p \left(\UM^{n,s,m}_i +  \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right)-  p \left(\UM^{n,s,m}_i\right)} \right), &
-        %\mathrm{if} \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right)<  p\left(\UM^{n,s,m}_i\right).
+        \min\left\{1, \dfrac{-\eta_\inc p \left(\UM^{n,s,m}_i\right)}{\delta p_{\inc,i}} \right\}, & \mathrm{if} \ \delta p_{\inc,i} = \ p \left(\UM^{n,s,m}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{n,s,m}\right) - p \left(\UM^{n,s,m}_i\right) < 0, \\
+        1, &
         \mathrm{else}.
     \end{dcases}
 \end{equation}
 A solution $\uu^{n,s,m+1}_i \in G$ is then computed by
 \begin{equation}
+\label{eq:increment-correction}
     \uu_i^{n,s,m+1} = \uu_i^{n,s,m} + \alpha_{\inc,i} \inc \uu_i^{n,s,m}.
 \end{equation}
 
-
-The positivity-preserving algorithm developed in this paper is based on the scaling limiter \cite{zhang2010positivity},
-physical time step limiting,
-pseudo time step limiting and pseudo time increment correction.
-The scaling limiter is accuracy-preserving \cite{zhang2010positivity}.
-It is known that reducing physical time step sizes does not affect the order of accuracy of the time integration.
-Furthermore, reducing pseudo time step sizes and increments at intermediate steps do not affect the accuracy
-of the converged solutions of the inner iterations.
-Therefore, the proposed positivity-preserving approach is accuracy-preserving.
-Furthermore, it is noted that the proposed positivity-preserving algorithm
-is applicable to general finite volume methods with implicit dual-time stepping,
-not limited to finite volume methods with high-order variational reconstruction or high-order ESDIRK time discretization.
-
-\subsection{Positivity Preserving Limiting of Reconstruction}
+\subsection{Reconstruction polynomial scaling}
 
 \label{ssec:rec-pp-limiter}
 
-Using high-order variational reconstruction and WBAP-L2
-accuracy preserving limiter, the reconstructed values
-on quadrature points could still violate positivity-preserving
-even if the mean values $\uu_i$ are positivity-preserving.
-Assuming after reconstruction and shock-capturing limiter,
-the reconstructed quadrature point value of conservative quantities are
+The density and pressure at quadrature points, interpolated using high-order reconstruction polynomials, may not remain positive despite the positivity of the cell-averaged values. To address this issue, we employ the scaling limiter developed by Zhang et al. \cite{zhang2010maximum,zhang2010positivity,zhang2012positivity}, which ensures positive density and pressure distributions within control volumes, given admissible cell-averages. Additionally, this scaling limiter is proven to be accuracy-preserving \cite{zhang2010positivity}.
+
+% The indices $n$,$s$ and $m$ are omitted here for all the discussions concerning reconstruction limiting happens within each implicit iteration and only the current mean values $\uu_i^{n,s,m}$  and reconstruction polynomials $\Ulim_i^{n,s,m}$of that iteration are considered. 
+
+To prevent the interpolated point values from being too close to zero, which may cause numerical difficulties, we introduce a new admissible set $G^\varepsilon \subset G$ defined as
 \begin{equation}
-    \Ulim_{i,g} = \uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+    G^\varepsilon= \left\{
+    \U =  \begin{pmatrix}
+        \rho \\ \rho \mathbf{u} \\ \rho E
+    \end{pmatrix} \middle|
+    \rho  \geq \varepsilon_\rho
+    \text{ and }
+    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) \geq \varepsilon_p
+    \right\},
 \end{equation}
-where $\Ulim_i^l$ are reconstruction coefficients
-produced by shock-capturing limiter,
-and subscript $g$ is the index of quadrature point and $\x_g$ is the coordinate of
-the quadrature point.
-The current research takes all quadrature points for each face integral
-and the volume integral into consideration of positivity preserving.
-Therefore, in order to preserve the positivity on
-quadrature points, a simple compression using $\beta_i\in[0,1]$ is defined as
+where $\varepsilon_\rho$ and $\varepsilon_p$ are problem-specific lower bounds computed by
+\begin{equation}\label{eq:epsilons}
+    \varepsilon_\rho=\min\left\{\varepsilon \rho_0, \min_i\{\rho(\uu_i)\}\right\}, \quad 
+    \varepsilon_p=\min\left\{\varepsilon p_0, \min_i\{p(\uu_i)\}\right\}.
+\end{equation}
+Here $\rho_0$ and $p_0$ are characteristic density and pressure, respectively, and $\varepsilon=10^{-11}$. The definitions in \eqref{eq:epsilons} inherently ensure that the cell-averages are included in the admissible set, i.e., $\uu_i \in G^\varepsilon$.
+
+By using the scaling limiter, the reconstruction polynomial on control volume $\Omega_i$
 \begin{equation}
-    \Ulim_{i,g}^{pp} = \uu_{i} + \beta_i \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+    \U_{i} \left(\x\right) = \uu_{i} + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l\varphi_{i,l}(\x)},
 \end{equation}
-
-The compression factor $\beta_i$ should satisfy
+is compressed as
 \begin{equation}
-    \begin{aligned}
-        \rho(\Ulim_{i,g}^{pp}) & \geq \varepsilon_\rho,\ \ p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p ,\ \ \forall i,g
-    \end{aligned}
-    \label{eq:pointwisePP}
+\label{eq:polynomial-scaling}
+    \hat{\U}_{i} \left(\x\right) = \uu_{i} + \beta_i \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l\varphi_{i,l}(\x)}, \quad 0 \leq \beta_i \leq 1,
 \end{equation}
-in order to enforce positivity-preserving on each quadrature point.
-
-When $\beta_i = 0$, $\Ulim_{i,g}^{pp} = \uu_{i}$,
-the condition \eeqref{eq:pointwisePP} can be definitely achieved,
-because $\uu_{i}$ is guaranteed to be positivity preserving in the increment correction process.
-However, when $\beta_i$ is too close to 0, the reconstructed solution
-approaches 0-th order reconstruction, and the accuracy of reconstruction is lost.
-
-In order to calculate a proper $\beta_i$ that preserves as much accuracy as possible,
-a limiting method derived from
-that of Zhang et al. \cite{zhang2010positivity}
-is introduced.
-Density limiting is first considered,
-a limiting factor $\beta_{i}^\rho$ is calculated with
+to ensure an admissible state at each quadrature point, i.e.,
 \begin{equation}
-    \beta_{i}^\rho = \min\left\{\frac{\rho(\uu_{i}) - \varepsilon_\rho}{\rho(\uu_{i}) - \rho_{min}} \right\},\ \
-    \rho_{min} = \min_{g}\{\rho(\Ulim_{i,g})\} =
-    \min_{g}\{\uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}\}.
+    \hat{\U}_{i} \left(\x_{i,g}\right) \in G^{\varepsilon},
 \end{equation}
+where $\x_{i,g}$ denotes a quadrature point for volume or surface integral. We refer to \cite{zhang2010positivity} for the detailed computation of $\beta_i$. 
+It is proved in \cite{zhang2010positivity} that, the scaling limiter preserves accuracy in smooth regions.
 
-Clearly, now
-\begin{equation}
-    \rho(\Ulim_{i,g}^{\rho,pp})\geq\varepsilon_\rho,\ \
-    \forall i,g,\ \
-    \Ulim_{i,g}^{\rho,pp} = \uu_{i} + \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
-\end{equation}
-is guaranteed.
-Here $\Ulim_{i,g}^{\rho,pp}$ has admissible density,
-but its pressure could still be unallowable and needs further limiting.
+% Assuming after reconstruction and shock-capturing limiter,
+% the reconstructed quadrature point value of conservative quantities are
+% \begin{equation}
+%     \Ulim_{i,g} = \uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+% \end{equation}
+% where $\Ulim_i^l$ are reconstruction coefficients
+% produced by shock-capturing limiter,
+% and subscript $g$ is the index of quadrature point and $\x_g$ is the coordinate of
+% the quadrature point.
+% The current research takes all quadrature points for each face integral
+% and the volume integral into consideration of positivity preserving.
 
-Next, for each quadrature point, consider
-\begin{equation}
-    \label{eq:point-beta}
-    \beta_{i,g}^p = \left\{
-    \begin{array}{ll}
-        1                                   & ,\text{if } p(\Ulim_{i,g}^{\rho,pp}) \geq \varepsilon_p \\
-        \text{solution of }
-        p(\uu_{i} + \beta_{i,g}^p\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}) = \varepsilon_p
-        \text{ with } \beta_{i,g}^p\in[0,1) & , otherwise
-    \end{array}
-    \right.
-\end{equation}
-The existence of the solution is proven with continuity of the pressure function in \cite{zhang2010positivity}.
-Using ideal gas relations, the equation to be solved in \eeqref{eq:point-beta} can be written as
-\begin{equation}
-    \label{eq:p-beta-function-sol}
-    p(\uu_{i}+\beta_{i,g}^p\inc \Ulim_{i}) = (\gamma - 1) \left(
-    \rho E + \beta_{i,g}^p\inc \rho E - \frac{1}{2}
-    \frac{||\rho \mathbf{u} + \beta_{i,g}^p\inc\rho\mathbf{u}||_2^2}
-    {\rho + \beta_{i,g}^p\inc\rho}
-    \right) = \varepsilon_p
-\end{equation}
-where
-$$
-    \inc \Ulim_{i} = \begin{bmatrix}
-        \inc \rho \\ \inc\rho\mathbf{u} \\ \inc \rho E
-    \end{bmatrix} = \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
-$$
-is the reconstructed portion of the point value.
-\eeqref{eq:p-beta-function-sol} is a quadratic equation of scalar $\beta_{i,g}^p$
-and can be solved analytically.
+% To this end, the reconstruction polynomial is compressed as
+% \begin{equation}
+%     \U_{i} \left(\x\right) = \uu_{i} + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l\varphi_{i,l}(\x)},
+% \end{equation}
+% a simple compression using $\beta_i\in[0,1]$ is defined as
+% The compression factor $\beta_i$ should satisfy
+% \begin{equation}
+%     \begin{aligned}
+%         \rho(\Ulim_{i,g}^{pp}) & \geq \varepsilon_\rho,\ \ p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p ,\ \ \forall i,g
+%     \end{aligned}
+%     \label{eq:pointwisePP}
+% \end{equation}
+% in order to enforce positivity-preserving on each quadrature point.
 
-Further, Zhang et al. \cite{zhang2010positivity} has also proven
-\begin{equation}
-    p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p,\ \
-    \forall i,g,\ \
-    \Ulim_{i,g}^{pp} = \uu_{i} + \min_g\{\beta_{i,g}^p\}\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
-\end{equation}
-is satisfied because it is a convex combination of admissible states.
+% When $\beta_i = 0$, $\Ulim_{i,g}^{pp} = \uu_{i}$,
+% the condition \eeqref{eq:pointwisePP} can be definitely achieved,
+% because $\uu_{i}\in G^\varepsilon$ is guaranteed.
+% However, when $\beta_i$ is too close to 0, the reconstructed solution
+% approaches 0-th order reconstruction, and the accuracy of reconstruction is lost.
 
-Therefore, the final limiting factor is
-\begin{equation}
-    \beta_i = \min_g\{\beta_{i,g}^p\}\beta_i^\rho.
-\end{equation}
-and guarantees the condition \eeqref{eq:pointwisePP}.
+% In order to calculate a proper $\beta_i$ that preserves as much accuracy as possible,
+% the limiting method derived from
+% that of Zhang et al. \cite{zhang2010positivity}
+% is introduced.
+% Density limiting is first considered,
+% a limiting factor $\beta_{i}^\rho$ is calculated with
+% \begin{equation}
+%     \beta_{i}^\rho = \min\left\{\frac{\rho(\uu_{i}) - \varepsilon_\rho}{\rho(\uu_{i}) - \rho_{min}} \right\},\ \
+%     \rho_{min} = \min_{g}\{\rho(\Ulim_{i,g})\} =
+%     \min_{g}\{\uu_{i} + \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}\}.
+% \end{equation}
 
-The discussion from Zhang et al. \cite{zhang2010positivity} has also proven
-that $1-\beta_{i} = O(\Delta x^{k+1})$ due to the assumption that
-the reconstructed solution before limiting
-is a $(k+1)$-th order approximation of the real value.
-As a result, the current limiter does not destroy the accuracy of reconstruction.
+% Clearly, now
+% \begin{equation}
+%     \rho(\Ulim_{i,g}^{\rho,pp})\geq\varepsilon_\rho,\ \
+%     \forall i,g,\ \
+%     \Ulim_{i,g}^{\rho,pp} = \uu_{i} + \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+% \end{equation}
+% is guaranteed.
+% Here $\Ulim_{i,g}^{\rho,pp}$ has admissible density,
+% but its pressure could still be unallowable and needs further limiting.
 
+% Next, for each quadrature point, consider
+% \begin{equation}
+%     \label{eq:point-beta}
+%     \beta_{i,g}^p = \left\{
+%     \begin{array}{ll}
+%         1                                   & ,\text{if } p(\Ulim_{i,g}^{\rho,pp}) \geq \varepsilon_p \\
+%         \text{solution of }
+%         p(\uu_{i} + \beta_{i,g}^p\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}) = \varepsilon_p
+%         \text{ with } \beta_{i,g}^p\in[0,1) & , \text{else}
+%     \end{array}
+%     \right.
+% \end{equation}
+% The existence of the solution is proven with continuity of the pressure function in \cite{zhang2010positivity}.
+% Using ideal gas relations, the equation to be solved in \eeqref{eq:point-beta} can be written as
+% \begin{equation}
+%     \label{eq:p-beta-function-sol}
+%     p(\uu_{i}+\beta_{i,g}^p\inc \Ulim_{i}) = (\gamma - 1) \left(
+%     \rho E + \beta_{i,g}^p\inc \rho E - \frac{1}{2}
+%     \frac{||\rho \mathbf{u} + \beta_{i,g}^p\inc\rho\mathbf{u}||_2^2}
+%     {\rho + \beta_{i,g}^p\inc\rho}
+%     \right) = \varepsilon_p
+% \end{equation}
+% where
+% $$
+%     \inc \Ulim_{i} = \begin{bmatrix}
+%         \inc \rho \\ \inc\rho\mathbf{u} \\ \inc \rho E
+%     \end{bmatrix} = \beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+% $$
+% is the reconstructed portion of the point value.
+% \eeqref{eq:p-beta-function-sol} is a quadratic equation of scalar $\beta_{i,g}^p$
+% and can be solved analytically.
 
+% Further, Zhang et al. \cite{zhang2010positivity} has also proven
+% \begin{equation}
+%     p(\Ulim_{i,g}^{pp}) \geq \varepsilon_p,\ \
+%     \forall i,g,\ \
+%     \Ulim_{i,g}^{pp} = \uu_{i} + \min_g\{\beta_{i,g}^p\}\beta_{i}^\rho \sum_{l}^{\mathrm{N_b}(k)}{\Ulim_i^l\varphi_{i,l}(\x_g)}
+% \end{equation}
+% is satisfied because it is a convex combination of admissible states.
 
+% Therefore, the final limiting factor is
+% \begin{equation}
+%     \beta_i = \min_g\{\beta_{i,g}^p\}\beta_i^\rho.
+% \end{equation}
+% and guarantees the condition \eeqref{eq:pointwisePP}.
 
-
-
+% Furthermore, it is noted that the proposed positivity-preserving algorithm
+% is applicable to general finite volume methods with implicit dual-time stepping,
+% not limited to finite volume methods with high-order variational reconstruction or high-order ESDIRK time discretization.
 
 
 % Following the method for time step limiting, using
@@ -1035,8 +1280,86 @@ As a result, the current limiter does not destroy the accuracy of reconstruction
 %as long as the exact flux terms and the difference terms in \eeqref{eq:LLFCommon} use 
 %reconstructed values.
 
+\subsection{Implementation and analysis}
 
-\section{Numerical Results}
+The positivity-preserving algorithm developed in this paper is based on time step limiting, increment correction and reconstruction polynomial scaling.
+The implementation of the positivity-preserving algorithm for the finite volume schemes using ESDIRK4 time integration is described in Algorithm \ref{alg:pp-algorithm}. 
+
+ \begin{algorithm}[htbp!]
+        \renewcommand{\baselinestretch}{1.3}\selectfont
+ 	\caption{Positivity-preserving algorithm for FV schemes using ESDIRK4 time integration.}  
+ 	\label{alg:pp-algorithm}
+ 	\begin{algorithmic}[1] 
+ 		%		\Require Array 
+ 		%		\Ensure no
+ 		% \Function{$\left[ \left\{\UM_i^{n+1}\right\}_{i=1}^N, \Delta t^n \right]$=PPFV}{$\left\{\UM_i^{n}\right\}_{i=1}^N, \Delta t_{max}, \mathrm{CFL}_\tau,\eta_t, \ \eta_\tau,\eta_\Delta, \varepsilon_\rho, \varepsilon_p,n_{iter}$}
+        \Function{$\left[ \UM^{n+1}, \Delta t^n \right]$=PPFV}{$\UM^{n}, \Delta t_{max}, \mathrm{CFL}_\tau,\eta_t, \eta_\tau,\eta_\Delta, \varepsilon_\rho, \varepsilon_p,n_{iter}$}
+        
+        \State Perform reconstruction (and limiting if needed) of solution $\UM^{n}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+                
+        \State Compute numerical flux integrals to obtain the right-hand-side of \eqref{eq:Semi-FV} %integrals to obtain residuals $\left\{\R_i^{n}\right\}_{i=1}^N$
+        \State Compute allowable physical time step size for each cell according to \eqref{eq:alpha-t-rho} and \eqref{eq:alpha-t-p}
+        \State Compute allowable global physical time step size $\Delta t^n$ according to \eqref{eq:alpha-t-global}
+        \State Perform the explicit first stage of ESDIRK4 by setting $\UM^{n,1} =\UM^{n}$ %, for $i=1, \cdots,N$
+        \For {$s= 2, 6$}
+
+        \State Initialize intermediate solution by setting $\UM^{n,s,1}=\UM^{n,s-1}$ 
+        
+        \For {$m=1, n_{iter}$}
+
+        \State Perform reconstruction (and limiting if needed) of solution $\UM^{n,s,m}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+        \State Compute numerical flux integrals to obtain the right-hand-side of \eqref{eq:linearTauUpdate} %integrals to obtain residuals $\left\{\R_i^{n}\right\}_{i=1}^N$
+        
+        \State Compute local pseudo-time step size for each cell according to \eqref{eq:local-pseudo-time-step}
+
+        \State Compute allowable local pseudo-time step size for each cell according to \eqref{eq:alpha-tau} to \eqref{eq:alpha-tau-p}
+        \State Determine solution increments by solving \eqref{eq:linearTauUpdate} using the LU-SGS approach  %$\left\{\Delta \UM_i^{n,s,m}\right\}^N_{i=1}$
+
+        \State Correct the increment for each cell according to \eqref{eq:alpha-inc} to \eqref{eq:alpha-inc-p}
+
+        \State Obtain updated intermediate solution $\UM^{n,s,m+1}$ according to \eqref{eq:increment-correction} %$\UM_i^{n,s,m+1}=\UM_i^{n,s,m} + \Delta \UM_i^{n,s,m}$
+
+        \State Exit the inner iteration if convergence is reached
+        %the $L_1$-norm of the pseudo-time derivative has decreased by a certain number of orders of magnitude
+		\EndFor
+        \State Take the converged solution as the solution of the stage by setting $\UM^{n,s}=\UM^{n,s,m+1}$ %, for $i=1, \cdots,N$
+		\EndFor
+ 	
+        \State Obtain the solution at time step $n+1$ by setting $\UM^{n+1} =\UM^{n,6}$ %, for $i=1, \cdots,N$
+
+        % \State Perform reconstruction (and limiting if needed) of solution $\UM^{n+1}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+ 	\EndFunction 
+ 		
+ 		% \item[]
+ 		
+ 		% \Function {$\left[ \mathbf{u}_i, \mathbf{u}_{j_1},  \mathbf{u}_{j_2},  \mathbf{u}_{j_3} \right] $=VR}{$S_i, \overline{u}_{i}, \overline{u}_{j_1}, \overline{u}_{j_2}, \overline{u}_{j_3}, u_0, f_{\text{NN}}$} 
+ 		
+ 		% \State Compute the derivative weights on cell interfaces using \eqref{eqn:Derivative_weights_computation}
+ 		
+ 		% \State  Compute the elements of the reconstruction matrix $\mathbf{A}$ and right-hand-side $\mathbf{b}$ corresponding to cost function \eqref{eqn:forward_cost_function} using formulae \eqref{eqn:Matrix_Elements} and \eqref{eqn:DLU}
+ 		
+ 		% \State Compute $\mathbf{u}= \left\{\mathbf{u}_i, \mathbf{u}_{j_1},  \mathbf{u}_{j_2},  \mathbf{u}_{j_3} \right\}$ by solving the linear equation system $\mathbf{A} \mathbf{u}= \mathbf{b}$
+ 		
+ 		% \EndFunction 
+ 		
+ 	\end{algorithmic}  
+ \end{algorithm}  
+
+A cost analysis is conducted for the proposed positivity-preserving algorithm. As observed in Algorithm \ref{alg:pp-algorithm}, no additional vectors or matrices are allocated during its implementation, ensuring no extra memory cost. Furthermore, according to the computational cost analysis in Section \ref{ssec:sedov}, the positivity-preserving algorithm accounts for only 10\% of the total CPU time when the reconstruction polynomial scaling is activated on more than $20\%$ of the cells, demonstrating computational efficiency of the algorithm.
+
+Next, we analyze the accuracy of the finite volume schemes incorporating the proposed positivity-preserving algorithm. It is well-established that reducing the physical time step size does not impact the order of accuracy of the time integration.
+% Generally, pseudo time step limiting and increment correction may be activated during the early stages of the inner iteration to stabilize the solution and are deactivated in later stages as the solution converges. 
+% {\color{red}Even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy.}
+% Therefore, these techniques do not affect the accuracy of the converged solution in the inner iteration process.
+In general, pseudo-time step limiting and increment correction are often activated during the initial stages of the inner iteration to stabilize the solution. These techniques are typically deactivated in later stages as the solution converges. Importantly, even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy. As a result, these stabilization techniques do not compromise the accuracy of the converged solution in the inner iteration process.
+Furthermore, as noted earlier, the scaling limiter effectively preserves the accuracy of the reconstruction in smooth regions \cite{zhang2010positivity}.
+In conclusion, the positivity-preserving algorithm preserves accuracy in both space and time. The accuracy-preserving property is demonstrated through an accuracy test on a smooth vortex problem in Section \ref{ssec:accuracy-test}.
+
+Finally, we analyze the applicability of the proposed positivity-preserving algorithm. 
+% This algorithm is applicable to general implicit finite volume methods on unstructured grids for compressible flow simulations. While there is no restriction on the spatial discretization, an implicit dual-time discretization is essential.
+This algorithm is applicable to a broad range of implicit finite volume methods on unstructured grids for compressible flow simulations. Although the spatial discretization can be arbitrary, the use of an implicit dual-time stepping approach is essential for its effective implementation.
+
+\section{Numerical results}
 \label{sec:Results}
 
 The proposed positivity-preserving algorithm is verified using a series of benchmark test cases.
@@ -1045,69 +1368,60 @@ cubic variational reconstruction and an ESDIRK4 time integration.
 In the simulations, the relaxation parameters are set as $\eta_t= 0.8$, $\eta_\tau=0.5$ and $\eta_\inc=0.9$,
 unless otherwise specified.
 The convergence criterion for inner iteration is that
-the $L_1$ norm of the pseudo time derivative decreases by three orders of magnitude.
+the $L^1$ norm of the pseudo-time derivative decreases by three orders of magnitude, unless otherwise specified.
 
-\subsection{Accuracy Test}
+\subsection{Accuracy test}
+\label{ssec:accuracy-test}
 
-Consider the classic two-dimensional isentropic vortex problem \cite{hu1999weighted_WENO}
-and modify it to have a vacuum point.
-A mean flow
-with $(\rho, u, v, p)=(1,1,1,1)$ is perturbed in $(u,v)$
-with an isentropic vortex centered at $(x_0,y_0)$.
-The perturbation is
-$$
+The classical two-dimensional isentropic vortex problem \cite{hu1999weighted_WENO}
+is modified to have low pressure and density \cite{zhang2012positivity}, serving as a test case to evaluate the accuracy of the positivity-preserving implicit finite volume method.
+An isentropic vortex centered at $(x_0,y_0)$ is added to the mean flow $(\rho, u, v, p)=(1,1,1,1)$ with the following perturbations
+\begin{equation}
     (\delta u, \delta v) = \frac{\epsilon}{2\pi} \exp(\frac{1-r^2}{2}) (-y+y_0, x-x_0),\ \
-    \delta T = \frac{(\gamma-1)\epsilon^2}{8\gamma \pi^2}\exp(\frac{1-r^2}{2})
-$$
-with $r^2=(x-x_0)^2+(y-y_0)^2$, $T=p/\rho$.
-Following \cite{zhang2012positivity},
-we set $\gamma=1.4$ and the vortex strength $\epsilon = 10.0828$ so that
-the lowest density and pressure in the exact solution are nearly zero,
-which challenges the simulation of this problem with a vacuum point.
-The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-20}$.
+    \delta T = \frac{(\gamma-1)\epsilon^2}{8\gamma \pi^2}\exp(1-r^2), \ \ \delta\left(\frac{p}{\rho^\gamma}\right)=0, 
+\end{equation}
+where $r^2=(x-x_0)^2+(y-y_0)^2$ and $T= p/\rho$. The ratio of specific heat is $\gamma=1.4$. The exact solution is the passive convection of the vortex with the mean velocity. Following \cite{zhang2012positivity}, we set the vortex strength as $\epsilon = 10.0828$ such that the lowest density and pressure of the exact solution are $7.8 \times 10^{-15}$ and $1.7 \times 10^{-20}$, respectively.
+The reference density and pressure used in reconstruction polynomial scaling are set as $\rho_0 = 10^{-10}$ and $p_0=10^{-10}$, respectively. %The very low reference value additionally assure that an exact initial solution would not be limited for positivity preserving. 
 
-The calculating domain is set to be $[0,10]\times[0,10]$ and the initial center of
-the vortex is $(x_0,y_0)=(5,5)$, and periodic boundary conditions in $x$ and $y$ directions are used.
-In the calculations, the pseudo time step limiting from Section \ref{ssec:pseudo-limiting},
-increment correction from Section \ref{ssec:increment-correction},
-and reconstruction limiting from Section \ref{ssec:rec-pp-limiter} are applied
-while the physical time limiting from Section \ref{ssec:physical-limiting}
-is disabled to apply constant time step size $\Delta t = \Delta x/50$.
-The time step size is proportional to the grid size, because both the
-spacial and temporal schemes have fourth order accuracy.
-The CFL number for pseudo-time step is $\CFLtau = 100$.
-Table \ref{tab:ivResults} demonstrates the results of the accuracy test, and
-fourth order accuracy can be observed.
+The computational domain is defined as $[0,10]\times[0,10]$, with the vortex initially centered at $(x_0,y_0)=(5,5)$. Periodic boundary conditions are applied at the domain boundaries.  A set of successively refined rectangular meshes, with grid sizes $h=1/2$ to $h=1/32$, are used in the simulations. Following \cite{zhang2012positivity}, the final time is set as $t=0.01$. 
+Pseudo-time step limiting, increment correction, and reconstruction polynomial scaling are applied during the simulations. Physical-time step limiting is disabled to maintain constant time step sizes of $\Delta t = h/50$.
+% The time step size is proportional to the grid size, because both the
+% spacial and temporal schemes have fourth order accuracy.
+The CFL number for the pseudo-time step is $\CFLtau = 100$. The convergence criterion for inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by nine orders of magnitude.
+The $L^1$ and $L^\infty$ errors in density, along with the corresponding convergence rates, are listed in Table \ref{tab:ivResults}. The results demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
 
-\begin{table}[htbp]
+\begin{table}[htbp!]
     \centering
-    \footnotesize
-    \begin{tabular}{|c|c|c|c|c|}
-        \hline
-        $\Delta x$ & $L^1 error$ & order & $L^\infty error$ & order \\
-        \hline
-        1/2        & 1.846e-03   & -     & 6.068e-02        & -     \\
-        \hline
-        1/4        & 7.859e-05   & 4.55  & 4.849e-03        & 3.65  \\
-        \hline
-        1/8        & 1.215e-06   & 6.02  & 2.118e-04        & 4.52  \\
-        \hline
-        1/16       & 2.876e-08   & 5.40  & 1.337e-05        & 3.99  \\
-        \hline
-        1/32       & 1.848e-09   & 3.96  & 7.139e-07        & 4.23  \\
-        \hline
-    \end{tabular}
-    \caption{Density error and accuracy order at $t=0.01$, isentropic vortex with vacuum point}
+    \caption{Accuracy test results for the isentropic vortex problem.}
     \label{tab:ivResults}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{ c c c c c}
+        \toprule
+        Grid size & $L^1$ error & Order & $L^\infty$ error & Order \\
+        \midrule
+        1/2 &1.85E-3 & - & 6.07E-2 & -\\
+        % \hline
+        1/4 &7.86E-5 & 4.55 & 4.85E-3 & 3.65\\
+        % \hline
+        1/8 &1.22E-6 & 6.02 & 2.12E-4 & 4.52\\
+        % \hline
+        1/16 &2.88E-8 & 5.40 & 1.34E-5 & 3.99\\
+        % \hline
+        1/32 &1.85E-9 & 3.96 & 7.14E-7 & 4.23 \\
+    \bottomrule
+    \end{tabular}
 \end{table}
 
-\subsection{Double Rarefaction}
+\subsection{Double rarefaction}
 
 The one-dimensional double rarefaction problem \cite{hu2004kineticDoubleRare}
 is a Riemann problem with the following initial conditions
 \begin{equation}
     (\rho,u,p) = \begin{dcases}
-        (1,-2,0.1),\ \  & x < 0.5,       \\
+        (1,-2,0.1),\ \  & \mathrm{if} \ x < 0.5,       \\
         (1,2,0.1),\ \   & \mathrm{else}.
     \end{dcases}
     %    \left\{
@@ -1119,12 +1433,12 @@ is a Riemann problem with the following initial conditions
 The flow is inviscid and the ratio of specific heat is $\gamma=1.4$.
 In this problem, a vacuum lies in in the middle, adjacent to the ends of two rarefaction waves.
 The computational domain is $[0,1]$.
-We perform a numerical simulation on a uniform mesh with grid size $\inc x = 1/400$, up to $t=0.1$ using a user-specified time step size $\inc t_{max}= 5 \times 10 ^{-3}$.
+We perform a numerical simulation on a uniform mesh with a grid size of $\inc x = 1/400$, up to $t=0.1$ using a maximum time step size of $\inc t_{max}= 5 \times 10 ^{-3}$.
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and
 increased gradually up to its maximum $10$ at the tenth iteration.
-The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-14}$.
+The reference pressure and density values are set as $\rho_0=1$ and $p_0=0.1$, respectively.
 %The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
-The numerical results are shown in Figure \ref{fig:doubleRare}. It is observed from Figure \ref{fig:doubleRare} that, the numerical solution is essentially oscillation-free and agrees well with the reference solution.
+The numerical results are presented in Figure \ref{fig:doubleRare}, which shows that the numerical solution is essentially oscillation-free and agrees well with the exact solution.
 
 \begin{figure}[htbp]
     \centering
@@ -1183,11 +1497,12 @@ The numerical results are shown in Figure \ref{fig:doubleRare}. It is observed f
 %The numerical results of the two simulations are shown in Figure \ref{fig:leBlanc}. It is observed that the numerical solutions with both time step sizes basically agree with the exact solution, and no negative values of pressure and density are detected. 
 
 
-\subsection{Sedov Blast Wave}
+\subsection{Sedov blast wave}
+\label{ssec:sedov}
 
-The Sedov blast problem \cite{zhang2012positivity,vilar2016positivity} is a popular case to test positivity-preserving properties of
+The Sedov blast wave problem \cite{zhang2012positivity,vilar2016positivity} is a popular case to test positivity-preserving properties of
 numerical schemes.
-The governing equations are the Euler equations and the ratio of specific heat is $\gamma = 1.4$. The computational domain is $[0,1.1]\times[0,1.1]$, partitioned into rectangular cells with grid size $\inc x = \inc y = 1.1/160$. The initial conditions are
+The governing equations are the Euler equations and the ratio of specific heat is $\gamma = 1.4$. The computational domain is $[0,1.1]\times[0,1.1]$, partitioned into rectangular cells with a grid size of $\inc x = \inc y = 1.1/160$. The initial conditions are
 \begin{equation}
     (\rho,u,v,p) = \begin{dcases}
         (1,0,0,4\times 10 ^{-9}),\ \                                          & \text{if } x > \inc x \ \mathrm{or} \ y > \inc y, \\
@@ -1201,7 +1516,7 @@ whose front is located at radius $r=1$ at $t=10^{-3}$, with a peak density reach
 %The final computational time is $t = 1\times10^{-3}$,
 %when the exact solution has the shock wave at radius of $1$. 
 All boundaries are slip walls.
-The small pressure and density parameters are chosen to be $\varepsilon_\rho = \varepsilon_p = 10^{-11}$.
+The reference density and pressure are set as $\rho_0=1$ and $p_0=4\times10^{-9}$, respectively.
 %Fourth order variational reconstruction finite volume with ESDIRK4
 % discretization is used. 
 %The relaxation parameters and internal CFL number are the same as 1-D problems.
@@ -1212,9 +1527,18 @@ The small pressure and density parameters are chosen to be $\varepsilon_\rho = \
 %The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
 %and 297 steps with $\inc t_{max}=10^{-5}$.
 Two simulations are performed up to $t=10^{-3}$,
-using $1020$ time steps with $\inc t_{max} = 10^{-6}$
-and  $189$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
+using $1014$ time steps with $\inc t_{max} = 10^{-6}$
+and  $161$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
 
+The computed density contours at $t=10^{-3}$ are shown in Figure \ref{fig:sedov}. It is observed that the numerical solutions are essentially oscillation-free. To check the solutions in a more intuitive way, we plot both the analytical and numerical density distributions along the $y=x$ line in Figure \ref{fig:sedovLine}.
+It is shown in Figure \ref{fig:sedovLine} that both numerical solutions agree well with the analytic solution.
+% and the one with the smaller time step size has higher resolution.
+%With larger time step size limit $\inc t_{max}=10^{-5}$, the 
+%solution appears slightly distorted, but the overall 
+%position and strength of the shock front is correct.
+
+A computational cost analysis is performed to validate the computational efficiency of the proposed positivity-preserving algorithm. Table \ref{tab:cpu-time-cost} reports the CPU time for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$, where the reconstruction polynomial scaling is performed on $22\%$ of the cells. As listed in Table \ref{tab:cpu-time-cost} that, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time.
+This finding indicates that the algorithm incurs relatively small additional computational cost, thereby confirming its efficiency.
 
 \begin{figure}[htbp]
     \centering
@@ -1230,13 +1554,6 @@ and  $189$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
     \label{fig:sedov}
 \end{figure}
 
-The computed density contours at $t=10^{-3}$ are shown in Figure \ref{fig:sedov}. It is observed that the numerical solutions are essentially oscillation-free. To check the solutions in a more intuitive way, we plot both the analytical and numerical density distributions along the $y=x$ line in Figure \ref{fig:sedovLine}.
-It is shown in Figure \ref{fig:sedovLine} that, both numerical solutions agree well with the analytic solution.
-% and the one with the smaller time step size has higher resolution.
-%With larger time step size limit $\inc t_{max}=10^{-5}$, the 
-%solution appears slightly distorted, but the overall 
-%position and strength of the shock front is correct.
-
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.6\textwidth]{pics/PPRobust_Sedov.pdf}
@@ -1244,12 +1561,36 @@ It is shown in Figure \ref{fig:sedovLine} that, both numerical solutions agree w
     \label{fig:sedovLine}
 \end{figure}
 
+\begin{table}[htbp!]
+    \centering
+    \caption{Computational cost for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$.}
+    \label{tab:cpu-time-cost}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{l c c}
+        \toprule
+        Procedure & CPU times (s) & Percentage (\%) \\
+        \midrule
+        Positivity preserving & 7.3566 & 10.35\\
+        % \hline
+        Variational reconstruction & 4.9303 & 6.94\\
+        % \hline
+        WBAP limiting & 41.7281 & 58.71\\
+        % \hline
+        Numerical flux & 13.0100 & 18.31\\
+        % \hline
+        Linear solving and others &  4.0440 & 5.69\\
+        % \hline
+        % Positivity preserving & 7.3566 & 10.35\\
+        \midrule
+        {Total} & 71.069 & 100 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
 
-
-
-
-
-\subsection{Mach 2000 Jet}
+\subsection{Mach 2000 jet}
 
 The Mach 2000 jet problem \cite{zhang2010positivity} is a challenging case as it has extremely strong discontinuities.
 Following the practice of \cite{huang2024general},
@@ -1260,58 +1601,58 @@ Far-field boundary conditions are imposed on the upper, lower and right boundari
 \begin{equation}
     (\rho,u,v,p) = \left\{
     \begin{array}{ll}
-        (5,800,0,0,4127),\ \  & \text{if } -0.05 \leq y \leq 0.05, \\
+        (5,800,0,0.4127),\ \  & \text{if } -0.05 \leq y \leq 0.05, \\
         (0.5,0,0,0.4127),\ \  & \text{else}.                       \\
     \end{array}
     \right.
 \end{equation}
 The initial conditions are $(\rho,u,v,p)=(0.5,0,0,0.4127)$.
-The numerical simulations are performed on a uniform rectangular mesh with $800 \times 800$ cells, up to $t=10^{-3}$ using a user-specified time step size $\inc t_{max} = 1\times10^{-6}$.
+The numerical simulations are performed on a uniform rectangular mesh with $800 \times 800$ cells, up to $t=10^{-3}$ using a maximum time step size of $\inc t_{max} = 1\times10^{-6}$.
 %$\CFLtau$ is initially $0.1$ at the beginning of each stage,
 %and reaches $2.0$ at the 10th pseudo time iteration. 
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
-The small pressure and density parameters are chosen to be
-$\varepsilon_\rho = 0.5\times10^{-11},\ \varepsilon_p = 0.4127\times10^{-11}$.
+The reference density and pressure are
+$\rho_0=0.5$ and $p_0=0.4127$, respectively.
 
-The computed density and pressure contours at $t=10^{-3}$ in logarithmic scales are shown in Figure \ref{fig:M2000_ReInf_R}, \ref{fig:M2000_Re1E2_R}, \ref{fig:M2000_ReInf_P} and \ref{fig:M2000_Re1E2_P}.
-It is observed from these figures that the numerical results are essentially non-oscillatory, and small-scale structures are smeared out in the $Re=100$ case due to the viscous effect.
+The computed density and pressure contours at $t=10^{-3}$ in logarithmic scales are shown in Figures \ref{fig:M2000_ReInf_R} to \ref{fig:M2000_Re1E2_P}.
+It is observed from these figures that the numerical results are essentially non-oscillatory, and small-scale flow structures are smeared in the $Re=100$ case due to viscous effects.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_R.png}
-    \caption{$\log_{10}(\rho)$ of $Re=\infty$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
+    \caption{$\log_{10}(\rho)$ of $\Re=\infty$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
     \label{fig:M2000_ReInf_R}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_R.png}
-    \caption{$\log_{10}(\rho)$ of $Re=100$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
+    \caption{$\log_{10}(\rho)$ of $\Re=100$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
     \label{fig:M2000_Re1E2_R}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_P.png}
-    \caption{$\log_{10}(p)$ of $Re=\infty$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
+    \caption{$\log_{10}(p)$ of $\Re=\infty$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
     \label{fig:M2000_ReInf_P}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_P.png}
-    \caption{$\log_{10}(p)$ of $Re=100$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
+    \caption{$\log_{10}(p)$ of $\Re=100$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
     \label{fig:M2000_Re1E2_P}
 \end{figure}
 
-\subsection{Shock Diffraction}
+\subsection{Shock diffraction}
 
 The shock diffraction problem \cite{zhang2010positivity}, in which a shock passes a backward facing corner,
 is used to test the positivity-preserving capability of the proposed algorithm.
 The governing equations are the Euler equations with $\gamma = 1.4$.
 The computational domain is the union of $[0,1]\times[6,11]$ and $[1,13]\times[0,11]$.
-The initial condition is a Mach number $5.09$ shock located at $x=0.5$,
+The initial condition is a Mach $5.09$ shock located at $x=0.5$,
 moving into undisturbed air ahead of the shock at a state $(\rho, u, v, p)=(1.4,0,0,1)$.
 %{\color{red}The boundary conditions are inflow at $x = 0, \ 6\leq y \leq 11$, outflow at $x = 13, \ 0\leq y \leq 11$, $1 \leq x \leq 13, \ y = 0$ and $0 \leq x \leq 13, \ y = 11$, and non-slip at the walls $0\leq x \leq 1, \ y = 6$ and $x = 1, \ 0\leq y \leq 6$.}
 Inflow and slip solid wall boundary conditions are imposed on
@@ -1319,11 +1660,10 @@ the left side $x = 0$, $6\leq y \leq 11$ and other boundaries, respectively.
 %The boundary at $x=0$ is set to match the left state of the shock, and 
 %all other boundaries are set as inviscid wall.
 The simulation is performed on a rectangular mesh with grid size $\inc x = \inc y = 1/80$,
-up to $t=2.3$ using a user-specified time step size $\inc t_{max}=1\times 10^{-3}$.
+up to $t=2.3$ with $\inc t_{max}=1\times 10^{-3}$.
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
-The small pressure and density parameters are chosen to be
-$\varepsilon_\rho = 1.4\times10^{-11},\ \varepsilon_p = 1\times10^{-11}$.
+The reference density and pressure are $\rho_0=1.4$ and $p_0=1$, respectively.
 
 \begin{figure}[htbp]
     \centering
@@ -1344,26 +1684,25 @@ It is observed from Figure \ref{fig:Corner} that,
 the numerical solutions are essentially oscillation-free and small-scale shock structures are well resolved.
 
 
-\subsection{Shock Reflection and Diffraction Around a Wedge}
+\subsection{Shock reflection and diffraction around a wedge}
 
 The shock reflection and diffraction problem \cite{zhang2017positivity} is similar to the shock diffraction problem,
 with the corner replaced by a wedge. The computational domain is $[0,3]\times[0,2]$
-with a $30^\circ$ wedge placed at $x\in[0.2,1.2]$, while the
+with a $30^\circ$ wedge placed at $0.2 \leq x \leq 1.2$, while the
 tip of the wedge is at $(x,y) = (1.2, 1/\sqrt{3})$.
-Initially, there is a Mach $10$ shock at $x=0.2$ moving into undisturbed air at a state $(\rho, u, v, p) = (1.4,0,0,1)$. The $x=0$ boundary on
+Initially, there is a Mach $10$ shock at $x=0.2$ moving into undisturbed air in a state $(\rho, u, v, p) = (1.4,0,0,1)$. The $x=0$ boundary on
 the left matches the downstream state of the shock, and all other boundaries
 are inviscid walls.
 Before the diffraction of the shock, the development
 of the shock structure is identical with that in the Mach $10$ double Mach reflection problem \cite{woodward1984dmr}.
 Similar to the Mach $2000$ jet example, $\Re=\infty$ and $\Re=100$ cases
-are investigated. A triangular mesh with grid size $h = 1/160$,
+are investigated. A triangular mesh with grid size $h = 1/320$,
 shown in Figure \ref{fig:wedgeMesh}, is used in the simulations.
 The simulations are performed up to $t=0.245$ using
-a user-specified time step size $\inc t_{max}= 2\times10^{-4}$.
+a maximum time step size of $\inc t_{max}= 2\times10^{-4}$.
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
-The small pressure and density parameters are chosen to be
-$\varepsilon_\rho = 1.4\times10^{-11},\ \varepsilon_p = 1\times10^{-11}$.
+The reference density and pressure values are $\rho_0=1.4$ and $p_0=1$, respectively.
 
 \begin{figure}[htbp]
     \centering
@@ -1381,11 +1720,11 @@ the small-scale flow structures around the shear layer and the wedge are smeared
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_R.png}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_R_Bi.png}
         \caption[]{$\rho$, 60 contour lines from 0 to 22}
     \end{subfigure}\hfill
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_P.png}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_P_Bi.png}
         \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
     \end{subfigure}
     \caption{Density and pressure contours for the shock reflection and diffraction problem, $\Re=\infty$.}
@@ -1395,16 +1734,112 @@ the small-scale flow structures around the shear layer and the wedge are smeared
 \begin{figure}[htbp]
     \centering
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_R.png}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_R_Bi.png}
         \caption[]{$\rho$, 60 contour lines from 0 to 22}
     \end{subfigure}\hfill
     \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_P.png}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_P_Bi.png}
         \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
     \end{subfigure}
     \caption{Density and pressure contours for the shock reflection and diffraction problem, $\Re=100$.}
     \label{fig:wedgeRe1E2}
 \end{figure}
+
+\subsection{Three-dimensional Noh problem}
+
+In the Noh problem \cite{noh1987errors}, an implosion at the origin generates a spherical shock wave with an infinite Mach number, propagating outward from the origin at a constant speed. 
+Due to its extreme conditions, the Noh problem has been widely used to evaluate the effectiveness of positivity-preserving numerical schemes for three-dimensional Euler equations \cite{hu2013positivity}.
+Following \cite{johnsen2010assessment}, 
+in our simulation, the computation domain is set as
+$[0,0.256]\times[0,0.256]\times[0,0.256]$. The ratio of specific heat is $\gamma=5/3$.
+The initial conditions are
+\begin{equation}
+\label{eq:initial-condition-Noh}
+    \begin{aligned}
+        \rho & = 1, \\
+        \mathbf{u}  &= -\mathbf{x} /\|\mathbf{x}\|_2, \\
+        p & = 10^{-6},\\
+    \end{aligned}
+\end{equation}
+where $\|\mathbf{x}\|_2$ is the distance to the 
+origin. The pressure is nominally zero and leads to an infinite Mach number for the imploding flow. While in practical computations, a lower bound on the pressure, such as $10^{-6}$ in \eqref{eq:initial-condition-Noh}, is imposed to prevent complex eigenvalues which would make the problem ill-posed \cite{johnsen2010assessment}.
+Symmetric boundary conditions are applied on the three boundary planes passing through the origin. For the remaining boundary planes, inflow pressure and velocity are specified based on the initial conditions, while the time-dependent density is set from the analytical solution.
+The analytic solution of density \cite{noh1987errors} is 
+\begin{equation}
+    \rho = 
+    \begin{dcases}
+        64, & \text{if } \ \|\mathbf{x}\|_2<t/3, \\
+        (1+t/\|\mathbf{x}\|_2)^2,  & \text{else}.
+    \end{dcases}
+\end{equation}
+The simulation is performed on a uniform hexahedral mesh with a grid size of $\inc x = \inc y= \inc z = 10^{-3}$, using a maximum time step size of $\inc t_{max}=5 \times 10^{-4}$. The simulation is terminated at $t=0.6$ to ensure that the 
+shock does not reach the inflow boundaries. 
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+and increased gradually up to its maximum $2$ at the tenth iteration.
+The reference density and pressure values used in reconstruction polynomial scaling are $\rho_0=1$ and $p_0=10^{-6}$, respectively. 
+
+Figures \ref{fig:noh0} and \ref{fig:noh1} present the numerical solution at $t = 0.6$, showing that neither negative density nor negative pressure appears.
+% The density profiles in Figure \ref{sfig:noh0-b} and the internal energy profiles in Figure \ref{sfig:noh0-e} are
+% close to those presented in \cite{hu2013positivity}. 
+The profiles in Figure \ref{fig:noh1} confirm that the computed shock position and the fluid conditions behind the shock are accurately captured. The discrepancy from the analytical solution near the origin arises from the three-dimensional nature of the system.
+Compared with the results computed on a $\inc x = \inc y= \inc z = 2 \times 10^{-3}$ Cartesian mesh using fifth- to tenth-order hybrid WENO/central difference schemes in \cite{johnsen2010assessment}, 
+the density profiles in Figure \ref{sfig:noh0-r} exhibit smaller errors near the origin.  
+Likewise, compared with the results computed on a $200 \times 30$ polar mesh by using a second-order Lagrangian discontinuous Galerkin scheme in \cite{li2014cell},
+the internal energy profiles in Figure \ref{sfig:noh0-e} show notably lower errors near the origin.
+Overall, these results for the Noh problem underscore the effectiveness of the proposed positivity-preserving algorithm for three-dimensional cases.
+
+% \begin{figure}[htbp]
+%     \centering
+%     \begin{subfigure}{0.4\textwidth}
+%         \includegraphics[width=\textwidth]{pics/PPRobust_NohR-256.png}
+%         \caption[]{density}
+%         \label{sfig:noh0-a}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]
+%         {pics/PPRobust_Noh-p-256.pdf}
+%         \caption[]{pressure}
+%         \label{sfig:noh0-p}
+%     \end{subfigure}
+%     \caption{Density contour and pressure profiles of the Noh problem at $t=0.6$.}
+%     \label{fig:noh0}
+% \end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.49\textwidth]{pics/PPRobust_NohR-256.png}
+    \caption{Density contour of the Noh problem at $t=0.6$.}
+    \label{fig:noh0}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-p-256.pdf}
+        \caption[]{Pressure}
+        \label{sfig:noh0-p}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-rho-256.pdf}
+        \caption[]{Density}
+        \label{sfig:noh0-r}
+    \end{subfigure}
+    \hfill
+    \vspace{5mm}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-e-256.pdf}
+        \caption[]{Internal energy}
+        \label{sfig:noh0-e}
+    \end{subfigure}
+    \caption{Solution profiles along the $y=z=0$ (axial) and $y=x,z=0$ (diagonal) lines of the Noh problem at $t=0.6$.}
+    \label{fig:noh1}
+\end{figure}
+
 
 
 \section{Conclusions}
@@ -1414,11 +1849,13 @@ This paper presents a positivity-preserving algorithm for finite volume methods 
 In the positivity-preserving algorithm, admissible cell-averages are obtained by limiting solution changes,
 which is accomplished by controlling physical and pseudo time step sizes.
 To overcome the difficulty of unknown solution changes,
-we propose to use explicit time discretizations to obtain efficient estimations of future states.
+we employ explicit time discretizations to obtain efficient estimations of future states.
 The allowable time step sizes are determined by limiting the relative solution changes.
 Given positive cell-averages,
 admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter.
 The proposed positivity-preserving algorithm is accuracy-preserving.
-Numerical results for a series of benchmark test cases demonstrate the robustness and
-high resolution of the positivity-preserving implicit high-order finite volume method.
+Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution and robustness of the positivity-preserving implicit high-order finite volume method.
 
+\section*{Acknowledgments}
+
+This work is supported by National Natural Science Foundation of China (Grants 12372284 and U2230402).
