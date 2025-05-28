@@ -61,7 +61,7 @@ Section \ref{sec:Results} presents the numerical results for benchmark test case
 \newcommand{\trans}{^\mathrm{T}}
 \newcommand{\U}{\mathbf{U}}
 \newcommand{\Ulim}{\widetilde{\mathbf{U}}}
-\newcommand{\F}{\mathbf{F}}
+\renewcommand{\F}{\mathbf{F}}
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\OO}{\mathbf{\Omega}}
 \newcommand{\UM}{\overline{\U}}
@@ -78,8 +78,8 @@ Section \ref{sec:Results} presents the numerical results for benchmark test case
 \newcommand{\CFLtau}{\text{CFL}_\tau}
 \newcommand{\CFL}{\text{CFL}}
 \newcommand{\eeqref}[1]{Eq.\eqref{#1}}
-\newcommand{\um}{\overline{u}}
-\newcommand{\us}{\mathbf{u}}
+\renewcommand{\um}{\overline{u}}
+\renewcommand{\us}{\mathbf{u}}
 \newcommand{\SAll}{\mathcal{S}}
 
 \newcommand{\FF}{\mathcal{F}}
@@ -1380,11 +1380,29 @@ An isentropic vortex centered at $(x_0,y_0)$ is added to the mean flow $(\rho, u
     (\delta u, \delta v) = \frac{\epsilon}{2\pi} \exp(\frac{1-r^2}{2}) (-y+y_0, x-x_0),\ \
     \delta T = \frac{(\gamma-1)\epsilon^2}{8\gamma \pi^2}\exp(1-r^2), \ \ \delta\left(\frac{p}{\rho^\gamma}\right)=0, 
 \end{equation}
-where $r^2=(x-x_0)^2+(y-y_0)^2$ and $T= p/\rho$. The ratio of specific heat is $\gamma=1.4$. The exact solution is the passive convection of the vortex with the mean velocity. Following \cite{zhang2012positivity}, we set the vortex strength as $\epsilon = 10.0828$ such that the lowest density and pressure of the exact solution are $7.8 \times 10^{-15}$ and $1.7 \times 10^{-20}$, respectively.
-The reference density and pressure used in reconstruction polynomial scaling are set as $\rho_0 = 10^{-10}$ and $p_0=10^{-10}$, respectively. %The very low reference value additionally assure that an exact initial solution would not be limited for positivity preserving. 
+where $r^2=(x-x_0)^2+(y-y_0)^2$ and $T= p/\rho$. 
+The ratio of specific heat is $\gamma=1.4$. 
+The exact solution is the passive convection of the vortex with the mean velocity. 
+Following \cite{zhang2012positivity}, we set the vortex strength as $\epsilon = 10.0828$ 
+such that the lowest density and pressure of the exact solution are 
+$7.8 \times 10^{-15}$ and $1.7 \times 10^{-20}$, respectively.
+The reference density and pressure used in reconstruction polynomial scaling are 
+set as $\rho_0 = 10^{-10}$ and $p_0=10^{-10}$, respectively. 
+%The very low reference value additionally assure that an exact initial 
+% solution would not be limited for positivity preserving. 
 
 The computational domain is defined as $[0,10]\times[0,10]$, with the vortex initially centered at $(x_0,y_0)=(5,5)$. Periodic boundary conditions are applied at the domain boundaries.  A set of successively refined rectangular meshes, with grid sizes $h=1/2$ to $h=1/32$, are used in the simulations. Following \cite{zhang2012positivity}, the final time is set as $t=0.01$. 
-Pseudo-time step limiting, increment correction, and reconstruction polynomial scaling are applied during the simulations. Physical-time step limiting is disabled to maintain constant time step sizes of $\Delta t = h/50$.
+Pseudo-time step limiting, increment correction, and reconstruction polynomial 
+scaling are applied during the simulations. 
+\replaced[id=harry]
+{
+Physical time step limiting is enabled with a chosen upper bound $\inc t_{max} = h/50$.
+In the numerical results, physical time step limiting does not further decrease 
+$\inc t$ from $\inc t_{max}$.
+}{
+Physical-time step limiting is disabled to maintain constant 
+time step sizes of $\Delta t = h/50$.
+}
 % The time step size is proportional to the grid size, because both the
 % spacial and temporal schemes have fourth order accuracy.
 
@@ -1393,51 +1411,13 @@ The convergence criterion for inner iteration is that the $L^1$ norm of the pseu
 decreases by nine orders of magnitude.
 \added[id=harry]
 {
-Accuracy test is conducted using 4th order VFV and 4th order ESDIRK4 time marching. 
+The accuracy test is conducted using 4th order VFV and 4th order ESDIRK4 time marching. 
 }
 The $L^1$ and $L^\infty$ errors in density, 
 along with the corresponding convergence rates, 
 are listed in Table \ref{tab:ivResults}. 
-The results demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
+The accuracy results in Table \ref{tab:ivResults} demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
 
-\added[id=harry]
-{
-In addition to accuracy test, efficiency of the current method is compared with a 2nd order counterpart.
-The 2nd order test uses 2nd order FV and 2nd order trapezoid rule time marching. 
-In the 2nd order scheme, the face flux integration uses midpoint rule. 
-All positivity preserving algorithms are in the same form.
-All the tests are conducted on the same machine with the same parameters, and wall time is recorded 
-for each test run. 
-Figure \ref{fig:IVeff} displays convergence and efficiency of the 2nd and 4th order methods. 
-$N_x$ in Figure \ref{fig:IVeff} means number of grids in one direction, or $10/h$ in other words.
-In Figure \ref{fig:IVeff}(a), the 4th order method displays 4th or higher order of accuracy, while the 2nd order 
-method displays 2nd order accuracy. 
-On the same $160\times160$ grid, 4th order method produces only 
-less than $1/100$ of the error 2nd order method produces.
-Figure \ref{fig:IVeff}(b) indicates the efficiency of 4th order methods overtakes that of 2nd when 
-the error demand is strict. 
-When $10^-4$ density error is needed, 2nd order method uses less time,
-but when $10^-6$ density error is needed, 4th order method uses significantly less time.
-Therefore, it is demonstrated in the isentropic vortex test that
-high order positivity preserving methods has two advantages: 
-(1) high order methods can resolve the same structure better on the same grid; 
-(2) high order methods consumes less time when demanding small error. 
-}
-
-\begin{figure}[htbp]
-   \centering
-   \begin{subfigure}{0.4\textwidth}
-       \includegraphics[width=\textwidth]{pics/PPRobust_IV_err1.pdf}
-       \caption[]{Error vs. grid size}
-   \end{subfigure}
-%    \hfill
-   \begin{subfigure}{0.4\textwidth}
-       \includegraphics[width=\textwidth]{pics/PPRobust_IV_eff1.pdf}
-       \caption[]{Error vs. wall time}
-   \end{subfigure}
-   \caption{Convergence and efficiency comparison of the 4th and 2nd order methods in isentropic vortex problem}
-   \label{fig:IVeff}
-\end{figure}
 
 \begin{table}[htbp!]
     \centering
@@ -1464,13 +1444,74 @@ high order positivity preserving methods has two advantages:
     \end{tabular}
 \end{table}
 
+\added[id=harry]
+{
+Figure \ref{fig:IVres} illustrates density residual convergence history from 
+different accuracy test runs. 
+$N_{it}$ denotes the total inner iteration step across each stage in each 
+ESDIRK step.
+Every stage in every step lowers residual by nine orders of magnitude.
+Stage residuals converge faster in finer grids.
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_IV_res.pdf}
+    \caption{Partial convergence history in the isentropic vortex accuracy tests.}
+    \label{fig:IVres}
+\end{figure}
+
+
+\added[id=harry]
+{
+In addition to accuracy test, efficiency of the current method is compared with a 2nd order counterpart.
+The 2nd order test uses 2nd order FV and 2nd order trapezoid rule time marching. 
+In the 2nd order scheme, the face flux integration uses midpoint rule. 
+All positivity-preserving algorithms are in the same form.
+All the tests are conducted on the same machine with the same parameters, and wall time is recorded 
+for each test run. 
+Figure \ref{fig:IVeff} displays convergence and efficiency of the 2nd and 4th order methods. 
+$N_x$ in Figure \ref{fig:IVeff} means number of grids in one direction, or $10/h$ in other words.
+In Figure \ref{sfig:IVeff_err}, the 4th order method displays 4th or higher order of accuracy, while the 2nd order 
+method displays 2nd order accuracy. 
+On the same $160\times160$ grid, 4th order method produces only 
+less than $1/100$ of the error 2nd order method produces.
+Figure \ref{sfig:IVeff_eff} indicates the efficiency of 4th order methods overtakes that of 2nd when 
+the error demand is strict. 
+When $10^{-4}$ density error is needed, 2nd order method uses less time,
+but when $10^{-6}$ density error is needed, 4th order method uses significantly less time.
+Therefore, it is demonstrated in the isentropic vortex tests that
+high order positivity-preserving methods have two advantages: 
+(1) high order methods can resolve the same structure better on the same grid; 
+(2) high order methods consume less time and have higher efficiency 
+when small error is demanded. 
+}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_err1.pdf}
+       \caption[]{Error vs. grid size}
+       \label{sfig:IVeff_err}
+   \end{subfigure}
+%    \hfill
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_eff1.pdf}
+       \caption[]{Error vs. wall time}
+       \label{sfig:IVeff_eff}
+   \end{subfigure}
+   \caption{Convergence and efficiency comparison of the 4th and 2nd order methods in isentropic vortex problem}
+   \label{fig:IVeff}
+\end{figure}
+
+
 \subsection{Le Blanc Shock Tube}
 
 \added[id=harry]{
 The Le Blanc shock tube problem is a one-dimensional Riemann problem described by the Euler equations and 
 generates an extremely strong shockwave \cite{toro2013riemann}. 
 As a result, the Le Blanc problem is often used as 
-a test case for positivity preserving schemes \cite{hu2013positivity, chan2021positivity, huang2024general}. 
+a test case for positivity-preserving schemes \cite{hu2013positivity, chan2021positivity, huang2024general}. 
 The initial conditions are listed in \eeqref{eq:leBlancCond}.
 }
 \begin{equation}
@@ -1506,7 +1547,7 @@ $\inc t_{max} = 0.01$ and $\inc t_{max} = 0.1$ respectively.
        \includegraphics[width=\textwidth]{pics/PPRobust_LB_P.pdf}
        \caption[]{Pressure}
    \end{subfigure}
-   \caption{Results of the Le Blanc shock tube problem at $t=6$}
+   \caption{Results of the Le Blanc shock tube problem at $t=6$.}
    \label{fig:leBlanc}
 \end{figure}
 
@@ -1521,16 +1562,18 @@ On both grids, using larger $\inc t_{max}$ produces more oscillations near the s
 
 \begin{figure}[htbp]
    \centering
-   \begin{subfigure}{0.33\textwidth}
+   \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/PPRobust_LB_dt.pdf}
        \caption[]{Time step}
+       \label{sfig:leBlanc1_t}
    \end{subfigure}
 %    \hfill
-   \begin{subfigure}{0.33\textwidth}
+   \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/PPRobust_LB_res.pdf}
        \caption[]{Density residual (partial view)}
+       \label{sfig:leBlanc1_res}
    \end{subfigure}
-   \caption{Time step and convergence history of the Le Blanc problem}
+   \caption{Time step and convergence history of the Le Blanc problem.}
    \label{fig:leBlanc1}
 \end{figure}
 
@@ -1538,14 +1581,14 @@ On both grids, using larger $\inc t_{max}$ produces more oscillations near the s
 Figure \ref{fig:leBlanc1} illustrates history of time step size and density residual in the Le Blanc problem.
 Using smaller $\inc t_{max}$, the actual $\inc t$ often reaches $\inc t_{max}=0.01$ on both grids. 
 With larger $\inc t_{max}=0.1$, the actual time step $\inc t$ is constrained by the grid size near strong discontinuities.
-Figure \ref{fig:leBlanc1}(a) shows that smaller grid size imposes smaller time step size upper bound 
+Figure \ref{sfig:leBlanc1_t} shows that smaller grid size imposes smaller time step size upper bound 
 in physical time step size limiting.
 }
 
 \added[id=harry]{
-In Figure \ref{fig:leBlanc1}(b), the $x$ axis represents total iteration numbers
+In Figure \ref{sfig:leBlanc1_res}, the $x$ axis represents total iteration numbers
 across each stage of each ESDIRK time step.
-The convergence history shown in Figure \ref{fig:leBlanc1}(b) indicates the residuals 
+The convergence history shown in Figure \ref{sfig:leBlanc1_res} indicates the residuals 
 reduce rapidly in each stage and step.
 In a few stages, the residuals struggle to further reduce to 3 orders of magnitude lower than the initial level. 
 Convergence difficulties in these few steps might be the result of oscillations generated 
@@ -1573,7 +1616,13 @@ is a Riemann problem with the following initial conditions
 The flow is inviscid and the ratio of specific heat is $\gamma=1.4$.
 In this problem, a vacuum lies in in the middle, adjacent to the ends of two rarefaction waves.
 The computational domain is $[0,1]$.
-We perform a numerical simulation on a uniform mesh with a grid size of $\inc x = 1/400$, up to $t=0.1$ using a maximum time step size of $\inc t_{max}= 5 \times 10 ^{-3}$.
+We perform a numerical simulation on a uniform mesh with a grid size of $\inc x = 1/400$, up to $t=0.1$
+ using a maximum time step size of $\inc t_{max}= 5 \times 10 ^{-3}$.
+\added[id=harry]
+{
+Numerical results show that the time step limiting procedure does not further decrease the time step here, 
+hence uniform $\inc t$ is observed.
+}
 In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and
 increased gradually up to its maximum $10$ at the tenth iteration.
 The reference pressure and density values are set as $\rho_0=1$ and $p_0=0.1$, respectively.
@@ -1596,6 +1645,21 @@ The numerical results are presented in Figure \ref{fig:doubleRare}, which shows 
     \end{subfigure}
     \caption{Results of the double rarefaction problem at $t=0.1$.}
     \label{fig:doubleRare}
+\end{figure}
+
+\added[id=harry]
+{
+Figure \ref{fig:DRres} illustrates part of residual convergence history in 
+the rarefaction test. 
+In each stage of each ESDIRK step, it is shown 
+that the solution converges in rather few iterations. 
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_DR_res.pdf}
+    \caption{Partial convergence history in the double rarefaction test.}
+    \label{fig:DRres}
 \end{figure}
 
 
@@ -1630,9 +1694,21 @@ The reference density and pressure are set as $\rho_0=1$ and $p_0=4\times10^{-9}
 %are tested. 
 %The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
 %and 297 steps with $\inc t_{max}=10^{-5}$.
+
 Two simulations are performed up to $t=10^{-3}$,
 using $1014$ time steps with $\inc t_{max} = 10^{-6}$
-and  $161$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
+and  $161$ time steps with $\inc t_{max} = 10^{-5}$, respectively. 
+\added[id=harry]
+{
+Time step history and residual convergence history are shown in 
+Figure \ref{fig:sedov1}. 
+Each stage of each step converges rapidly in the inner iterations 
+as shown in Figure \ref{sfig:sedov1_res}.
+Figure \ref{sfig:sedov1_dt} indicates that the initial Sedov blast
+leads to strong time step restriction, and with 
+the evolution of the blast, the time step limitation is relaxed 
+until the manual upper bound $\inc t_{max}$ is reached.
+}
 
 The computed density contours at $t=10^{-3}$ are shown in Figure \ref{fig:sedov}. It is observed that the numerical solutions are essentially oscillation-free. To check the solutions in a more intuitive way, we plot both the analytical and numerical density distributions along the $y=x$ line in Figure \ref{fig:sedovLine}.
 It is shown in Figure \ref{fig:sedovLine} that both numerical solutions agree well with the analytic solution.
@@ -1643,6 +1719,23 @@ It is shown in Figure \ref{fig:sedovLine} that both numerical solutions agree we
 
 A computational cost analysis is performed to validate the computational efficiency of the proposed positivity-preserving algorithm. Table \ref{tab:cpu-time-cost} reports the CPU time for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$, where the reconstruction polynomial scaling is performed on $22\%$ of the cells. As listed in Table \ref{tab:cpu-time-cost} that, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time.
 This finding indicates that the algorithm incurs relatively small additional computational cost, thereby confirming its efficiency.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Sedov_dt.pdf}
+        \caption[]{Time step}
+        \label{sfig:sedov1_dt}
+    \end{subfigure}
+    % \hfill
+    \begin{subfigure}{0.4\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Sedov_res.pdf}
+        \caption[]{Density residual (partial view)}
+        \label{sfig:sedov1_res}
+    \end{subfigure}
+    \caption{Time step and convergence history of the Sedov problem}
+    \label{fig:sedov1}
+\end{figure}
 
 \begin{figure}[htbp]
     \centering
@@ -1821,7 +1914,7 @@ The Kelvin-Helmholtz instability induced in the shear layer is well resolved in 
 While in Figure  \ref{fig:wedgeRe1E2} for the $\Re=100$ case,
 the small-scale flow structures around the shear layer and the wedge are smeared  due to the existence of physical viscosity.
 
-\begin{figure}[htbp]
+\begin{figure}[htbp!]
     \centering
     \begin{subfigure}{0.5\textwidth}
         \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_R_Bi.png}
@@ -1835,7 +1928,7 @@ the small-scale flow structures around the shear layer and the wedge are smeared
     \label{fig:wedgeReInf}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[htbp!]
     \centering
     \begin{subfigure}{0.5\textwidth}
         \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_R_Bi.png}
@@ -1847,6 +1940,242 @@ the small-scale flow structures around the shear layer and the wedge are smeared
     \end{subfigure}
     \caption{Density and pressure contours for the shock reflection and diffraction problem, $\Re=100$.}
     \label{fig:wedgeRe1E2}
+\end{figure}
+
+\subsection{Steady state Ma 20 bow shock}
+
+\added[id=harry]
+{
+A inviscid Ma 20 flow over a two-dimensional round head is tested in the 
+current subsection following literature that investigated steady state positivity-preserving
+methods \cite{gallice2022entropy,cossart2025toward}. 
+Although sometimes time-accurate temporal integration is used to obtain a steady state solution, 
+the current test is performed using steady state iteration to illustrate the capability 
+of current algorithm to directly handle steady state computation. 
+In other words, the time-accurate time marching schemes like ESDIRK are replaced with 
+a single implicit Euler step with infinite time step size.
+All the iterations are in pseudo time and correspond to the inner iterations in the 
+unsteady problems. 
+Therefore, the physical time step limiting is not present in a steady state computation. 
+Pseudo time step limiting, increment correction and polynomial scaling are the same 
+as those in unsteady problems.
+}
+
+\added[id=harry]
+{
+The mesh used in Ma 20 bow shock is a $40\times100$ structured grid as shown in 
+Figure \ref{sfig:CylinderFront_mesh}.
+The inflow condition is $(\rho, u, v, p) = (1, 1, 0, 1.78571\times10^-3)$ and $\gamma=1.4$.
+Steady calculations are performed using 1st order, 2nd order and 4th order spacial discretizations.
+The 4th order spacial discretization is 4th order VFV.
+The 2nd order spacial discretization is 2nd order FV using Green Gauss reconstruction.
+The 1st order spacial discretization is 1st order FV using piecewise constant reconstruction.
+The 1st and 2nd order methods use midpoint rule instead of high order quadrature rule.
+All spacial discretizations still use LLF flux as numerical inviscid flux.
+}
+
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O1.png}
+        \caption[]{O1}
+        \label{sfig:CylinderFront_O1}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O2.png}
+        \caption[]{O2}
+        \label{sfig:CylinderFront_O2}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O4.png}
+        \caption[]{O4}
+        \label{sfig:CylinderFront_O4}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_Mesh.png}
+        \caption[]{Mesh}
+        \label{sfig:CylinderFront_mesh}
+    \end{subfigure}
+    \caption{Ma 20 bow shock problem density distributions and mesh.}
+    \label{fig:CylinderFront}
+\end{figure}
+
+\added[id=harry]
+{
+Convergence history is displayed in Figure \ref{fig:CylinderFront_res}. 
+The 1st order method converges rapidly and the residual decreases to 
+$10^{-8}$ of the peak value within 400 iterations.
+Residual of the 2nd order method can only converge 5 orders of magnitude,
+while the 4th order only 3.
+This troubled convergence is common in 
+shock capturing with 2nd or higher order methods equipped with limiters.
+}
+
+\added[id=harry]
+{
+Density distributions in Figure \ref{fig:CylinderFront} suggest 
+the Ma 20 bow shock can be correctly calculated in all three 
+spacial discretizations. 
+Positivity-preserving algorithms seem not to have affected 
+the quality of converged results.  
+As a result of LLF flux, no carbuncle phenomenon (shock instability)
+is observed.
+Width of the shock is rather large in the 1st order result, due to 
+the use of LLF flux.
+Such smearing is reduced in 2nd and 4th order results. 
+The shock 
+is the sharpest in the 4th order result, 
+and the density peak near stagnation point is also 
+highest in the 4th order result.
+}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.4\textwidth]{pics/PPRobust_CylinderFront_res.pdf}
+    \caption{Convergence history of Ma 20 bow shock problem.}
+    \label{fig:CylinderFront_res}
+\end{figure}
+
+\subsection{Hypersonic cavity problem}
+
+\added[id=harry]
+{
+The hypersonic cavity problem \cite{morgenstern1994hypersonic} involves hypersonic air flow
+over a rectangular cavity on a wall parallel to the flow, 
+modeled with compressible Navier-Stokes equations. 
+Due to the significance of viscosity and hypersonic transient 
+procedures in this problem, the hypersonic cavity is used in the current 
+research to investigate the performance of implicit positivity preserving 
+algorithms.
+}
+
+\added[id=harry]
+{
+Following early computational research \cite{morgenstern1994hypersonic}, 
+we use an inflow condition of $Ma=6.3$, $Re/m=4.084\times10^6$. 
+Inflow has stagnation temperature $1110\unit{K}$ and wall temperature is $300\unit{K}$.
+In this test, viscosity obeys standard air's Sutherland's law and Prandtl number is set as $0.72$.
+The cavity has length-to-depth ratio $L/D=10.67$ and the dimensional depth is $D=19.1\unit{mm}$.
+In actual computation, inflow densitym, velocity and cavity depth are normalized as $1$.
+Maximum non-dimensional time step is set to $\inc t_{max}=0.01$ to capture most of the unsteady features 
+according to previous results \cite{morgenstern1994hypersonic}. 
+Although the conditions above are all derived from the reference 
+computation \cite{morgenstern1994hypersonic}, there are still some ambiguities
+in the computational setup including 
+the inlet velocity profile, the boundary layer mesh height and 
+the choice of time step size, which has not been discussed in the literature
+to the author's knowledge.
+}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_Mesh.png}
+    \caption{Mesh of the hypersonic cavity test.}
+    \label{fig:Cavity_mesh}
+\end{figure}
+
+\added[id=harry]
+{
+An unstructured mesh is generated with first layer height being $10^{-4}D$ on 
+the wall. The mesh contains $121,747$ quadrilateral and triangular cells, 
+and is partly displayed in Figure \ref{fig:Cavity_mesh}. 
+The simulation is started with free stream condition and 
+computed until initial transients are eliminated.
+The 4th order VFV combined with 4th order ESDIRK4 method is used.
+All positivity-preserving algorithms, including physical time step limiting,
+pseudo time step limiting, increment correction and reconstruction polynomial
+scaling are applied.
+}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_T.png}
+    \caption{Time-averaged temperature distribution of the hypersonic cavity test. 24 lines from 100 to 560.}
+    \label{fig:Cavity_T}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_P.png}
+    \caption{Time-averaged pressure distribution of the hypersonic cavity test. 27 lines from 0.01 to 0.07.}
+    \label{fig:Cavity_P}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_q.pdf}
+        \caption[]{Heat transfer rate}
+        \label{sfig:Cavity1_q}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_p.pdf}
+        \caption[]{Pressure}
+        \label{sfig:Cavity1_p}
+    \end{subfigure}
+    \caption{Time-averaged wall heat transfer rate and pressure. 
+    Compared with experiment \cite{hahn1969experimental} and computation \cite{morgenstern1994hypersonic}.}
+    \label{fig:Cavity1}
+\end{figure}
+
+
+\added[id=harry]
+{
+After initial transients are eliminated, time-averaged properties 
+are investigated. Figure \ref{fig:Cavity_T} and Figure \ref{fig:Cavity_P}
+demonstrate time-averaged temperature and pressure distribution. 
+The results generally agree with those from the reference 
+computation \cite{morgenstern1994hypersonic}.
+To compare the wall heat flux rate and pressure with experimental data
+\cite{hahn1969experimental}, 
+computed values are normalized with heat transfer rate and 
+pressure at a station $x/D=-1.33$ in Figure \ref{fig:Cavity1}. 
+From Figure \ref{fig:Cavity1}, the computed heat transfer rate 
+matches well with experimental data and reference computation.
+The variation near the end of the cavity results from large 
+vortex structures, and the experiment might have failed to 
+provide enough resolution \cite{morgenstern1994hypersonic}.
+The pressure distribution at the bottom of the cavity matches 
+the reference computation, while the experimental pressure values 
+are significantly lower at the start of the cavity. 
+The difference between the current result and 
+the reference computation might be a result of difference in 
+flow condition setups.
+}
+
+\added[id=harry]
+{
+To investigate the profit from using implicit time marching, 
+time steps and projected explicit time steps $\inc t_E$ are plotted in
+Figure \ref{fig:Cavity_time}. 
+The projected explicit time step size $\inc t_E$ is 
+calculated with criterion $\CFL \leq 1$. 
+Even without any positivity-preserving restrictions, 
+explicit time marching schemes rely on this criterion to maintain 
+linear stability. It can be observed in Figure \ref{fig:Cavity_time} that 
+after initial transients, implicit time step size maintains a value of $0.01$, 
+while $\inc t_E$ stabilizes lower than $1.2\times 10^{-6}$. 
+This means implicit time marching has generally more than $8000$ times larger
+time steps compared with explicit time marching.
+Considering that each implicit ESDIRK4 step has 5 stages and each stage 
+takes at most 40 inner iterations to solve, and each implicit inner iteration
+is at most $20\%$ more expensive than explicit stages according to Table \ref{tab:cpu-time-cost},
+the implicit scheme still has efficiency more than 30 times higher than explicit ones. 
+If the cost of multi-stage explicit methods and the time step restriction based on some specific 
+positivity-preserving method are considered, the time step efficiency advantage
+of the implicit scheme might be even more significant.
+}
+
+
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t.pdf}
+    \caption{Time step history and projected explicit time step in the 
+    hypersonic cavity problem.}
+    \label{fig:Cavity_time}
 \end{figure}
 
 \subsection{Three-dimensional Noh problem}
