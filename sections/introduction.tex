@@ -1,0 +1,57 @@
+% !TeX root = main.tex
+
+
+\section{Introduction}
+\label{sec:intro}
+
+Computational fluid dynamics (CFD) has become a powerful tool for investigating flow problems of scientific or industrial significance, driven by advancements in computer hardware and the development of numerical methods such as finite difference (FD), finite volume (FV), finite element (FE), and spectral methods.
+Second-order FV method on unstructured grids \cite{van1979towards}
+%\cite{van1979towards,jameson1981numerical,aftosmis1995behavior,hubbard1999multidimensional,haselbacher2000accurate,diskin2010comparison}
+is widely used in commercial and open-source CFD codes, thus being the workhorse of engineering
+flow simulations. Over recent decades, various high-order methods on unstructured grids have been developed,
+such as the high-order FV \cite{ollivier1997quasi_ENO,dumbser2007quadrature_WENO,wang2017compact_VR,nishikawa2023efficient},
+discontinuous Galerkin (DG) \cite{reed1973triangularDG,cockburn2001rungeDG},
+hybrid FV/DG \cite{dumbser2008unified,li2022reconstructed,zhang2012class1},
+residual distribution (RD)  \cite{abgrall2003construction} and
+flux reconstruction (FR) \cite{huynh2007flux,vincent2011new,wang2009unifying}.
+Such methods, compared with their second-order counterparts,
+have higher-order accuracy and lower dissipation/dispersion,
+while maintaining the capability of handling complex geometries.
+However, numerical methods, particularly high-order ones, often experience reduced robustness when applied to complex flow problems, even on high-quality computational meshes.
+A frequently encountered robustness issue in compressible flow simulations is the failure to
+preserve positivity of density or pressure, which leads to nonphysical solutions or numerical instabilities.
+
+Tremendous efforts have been made on developing positivity-preserving algorithms to enhance the robustness of numerical methods,
+especially high-order methods, for compressible flow simulations.
+For numerical methods employing explicit time integration, commonly used positivity-preserving algorithms can be broadly classified into two categories \cite{xu2017bound}.
+The first category includes positivity-preserving scaling limiters \cite{zhang2010maximum,zhang2010positivity,wang2012robust,cheng2014positivity,du2022high},
+which compress the solution polynomials to obtain positive density and pressure distributions,
+while being accuracy-preserving.
+It is proved that, by using the scaling limiter,
+a monotone numerical flux and a suitable CFL condition,
+the FV and DG methods using strong stability preserving (SSP) Runge-Kutta
+time integrations are positivity-preserving \cite{zhang2010positivity}.
+This approach has also been extended to FD methods \cite{zhang2012positivity,fan2022positivity}.
+The second category encompasses positivity-preserving flux limiters \cite{hu2013positivity,christlieb2015high,kuzmin2022bound},
+which construct a convex combination of the first-order monotone flux and the high-order flux to ensure positivity under certain conditions. Compared to scaling limiters,
+flux limiters offer the advantage of straightforward applicability to high-order FD methods for conservation laws and to high-order schemes
+for convection-diffusion problems \cite{xu2017bound}.
+However, the accuracy-preserving property of the flux limiter is often demonstrated
+by extensive numerical results \cite{xiong2013parametrized},
+as it is difficult to be proved for general cases \cite{xu2017bound}.
+\added[id=r1]{Besides these two categories of algorithms, Chan et al. \cite{chan2021positivity} and Gallice et al. \cite{gallice2022entropy} designed positivity-preserving first-order finite volume schemes through the construction of specialized approximate Riemann solvers, which can be extended to high-order accuracy by using a high-order polynomial reconstruction and a \textit{posteriori} multi-dimensional optimal order detection (MOOD) limiting strategy. Dzanic and Witherden \cite{dzanic2022positivity} proposed a positivity-preserving entropy-based adaptive filtering technique for shock capturing in discontinuous spectral element methods, which enforces positivity by adapting the filter strength. Upperman and Yamaleev \cite{upperman2022positivity} developed a first-order, positivity-preserving and entropy-stable finite volume scheme for the compressible Navier-Stokes equations, which introduces artificial dissipation and time step restriction to guarantee the positivity of density and internal energy. This scheme was later extended to high-order accuracy by employing a flux limiter \cite{yamaleev2022positivity}.}
+
+Explicit time stepping methods suffer from the CFL constraint that restricts the time step sizes.
+For simulations with very small allowable time step sizes, such as the high Reynolds number turbulent flow simulations with large aspect ratio grids in the near-wall region, implicit time stepping methods are significantly more efficient.
+Although most of the effort has been made for increasing accuracy of the time discretization and for increasing the efficiency of the nonlinear solver, only a few works exist in the literature concerning the positivity-preserving property of implicit methods \cite{qin2018implicit}, as it is difficult to verify if an implicit numerical scheme is positivity-preserving, even for a low-order one \cite{huang2024general}. This difficulty comes from the fact that, in implicit time stepping, the solutions are updated by solving a system of nonlinear equations iteratively. Batten et al. \cite{batten1997average} developed a positive FD scheme employing the Patankar trick \cite{patankar2018numerical} for compressible turbulent flows. Moryossef and Levy \cite{moryossef2006unconditionally,mor2009unconditionally} developed implicit unconditional positive FV schemes for unsteady turbulent flows by constructing $M$-matrix Jacobians. These methods are low-order accurate and are complicated to generalize to high order \cite{qin2018implicit}. Parent \cite{parent2018positivity} developed a positivity-preserving dual-time stepping scheme for high-resolution FV methods on structured grids solving Euler equations based on a Cauchy-Kowalevski procedure. Lian et al. \cite{lian2009solution} proposed a solution-limited time stepping scheme for FV methods on unstructured grids to enhance the reliability in steady-state compressible flow simulations. \added[id=r1]{Cossart et al. \cite{cossart2025toward} designed robust linearized implicit finite volume schemes on unstructured grids for steady-state hypersonic flow simulations, based on linear stability analysis.} Qin et al. \cite{qin2018implicit} developed an implicit high-order positivity-preserving DG method for steady-state compressible Euler equations. Recently, Huang et al. \cite{huang2024general} proposed a positivity-preserving algorithm based on an iterative flux correction procedure, for finite volume methods simulating compressible flows on unstructured grids with a second-order backward difference (BDF2) dual-time stepping.
+%Based on the literature survey, it is found that it is of great interest to develop positivity-preserving algorithms for general high-order numerical methods on unstructured grids for unsteady compressible flow simulations.
+
+In this paper, we develop a positivity-preserving algorithm for arbitrary high-order finite volume schemes on unstructured grids with implicit time integration, towards robust and efficient simulations of unsteady compressible flows.
+In the positivity-preserving algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution changes. To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states. 
+% The allowable time step sizes are determined by limiting the relative solution changes to ensure positivity of updated solutions. At each stage of the implicit Runge-Kutta time integration, the solution is obtained by solving an implicit nonlinear equation system iteratively using dual-time stepping technique, forming an inner iteration process in the pseudo-time direction. Physical and pseudo time step sizes limiting are performed to ensure admissible converged and intermediate solutions of the inner iteration process, respectively.
+The allowable time step sizes are determined by constraining the relative solution changes, ensuring the positivity of the updated solutions. At each stage of the implicit Runge-Kutta time integration, the solution is obtained by iteratively solving an implicit nonlinear equation system using the dual-time stepping technique, which forms an inner iteration process in the pseudo-time direction. Both physical and pseudo-time step size limitations are applied to ensure the admissibility of converged and intermediate solutions during the inner iteration process, respectively.
+Given positive cell-averages, admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter \cite{zhang2010positivity}. It is well-established that limiting time step sizes does not compromise the order of accuracy. Furthermore, as previously mentioned, the scaling limiter has been proven to preserve accuracy. Consequently, the proposed positivity-preserving algorithm is inherently accuracy-preserving. 
+The positivity-preserving algorithm is applied to a high-order variational finite volume method \cite{wang2017compact_VR} with an explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration \cite{bijl2002implicitBDFvESDIRK}, and verified using a series of benchmark test cases. Numerical results demonstrate the high accuracy, high resolution and robustness of the implicit positivity-preserving high-order finite volume method.
+
+The remainder of this paper is organized as follows. Section \ref{sec:CFV} presents the high-order finite volume method on unstructured grids using implicit time stepping. Section \ref{sec:PP} presents the positivity-preserving algorithm for implicit finite volume methods.
+Section \ref{sec:Results} presents the numerical results for benchmark test cases. Section \ref{sec:Conclusions} gives concluding remarks.

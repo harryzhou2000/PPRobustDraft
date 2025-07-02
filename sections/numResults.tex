@@ -1,0 +1,1119 @@
+% !TeX root = main.tex
+
+\section{Numerical results}
+\label{sec:Results}
+
+\replaced[id=r1]{The proposed positivity-preserving algorithm is validated through a series of benchmark test cases. Most of these focus on inviscid flows, while three cases consider viscous flows, such as the hypersonic flow past an open cavity, which features a hypersonic boundary layer. The numerical scheme employed is a fourth-order accurate implicit finite volume method, which uses a cubic variational reconstruction to achieve fourth-order accuracy in space and an ESDIRK4 scheme to achieve fourth-order accuracy in time.}
+{The proposed positivity-preserving algorithm is verified using a series of benchmark test cases.
+The numerical scheme used is the fourth-order accurate implicit finite volume method based on a
+cubic variational reconstruction and an ESDIRK4 time integration.}
+In the simulations, the relaxation parameters are set as $\eta_t= 0.8$, $\eta_\tau=0.5$ and $\eta_\inc=0.9$,
+unless otherwise specified.
+\replaced[id=r1]{The convergence criterion for inner iteration is that
+the $L^1$ norm of the pseudo-time derivative of density (referred to as the $L^1$ density residual in the convergence history plots) decreases by three orders of magnitude, unless otherwise specified.}
+{The convergence criterion for inner iteration is that
+the $L^1$ norm of the pseudo-time derivative decreases by three orders of magnitude, unless otherwise specified.}
+
+\subsection{Accuracy test}
+\label{ssec:accuracy-test}
+
+The classical two-dimensional isentropic vortex problem \cite{hu1999weighted_WENO}
+is modified to have low pressure and density \cite{zhang2012positivity}, serving as a test case to evaluate the accuracy of the positivity-preserving implicit finite volume method.
+An isentropic vortex centered at $(x_0,y_0)$ is added to the mean flow $(\rho, u, v, p)=(1,1,1,1)$ with the following perturbations
+\begin{equation}
+    (\delta u, \delta v) = \frac{\epsilon}{2\pi} \exp(\frac{1-r^2}{2}) (-y+y_0, x-x_0),\ \
+    \delta T = \frac{(\gamma-1)\epsilon^2}{8\gamma \pi^2}\exp(1-r^2), \ \ \delta\left(\frac{p}{\rho^\gamma}\right)=0, 
+\end{equation}
+where $r^2=(x-x_0)^2+(y-y_0)^2$ and $T= p/\rho$. 
+The ratio of specific heat is $\gamma=1.4$. 
+The exact solution is the passive convection of the vortex with the mean velocity. 
+Following \cite{zhang2012positivity}, we set the vortex strength as $\epsilon = 10.0828$ 
+such that the lowest density and pressure of the exact solution are 
+$7.8 \times 10^{-15}$ and $1.7 \times 10^{-20}$, respectively.
+The reference density and pressure used in reconstruction polynomial scaling are 
+set as $\rho_0 = 10^{-10}$ and $p_0=10^{-10}$, respectively. 
+%The very low reference value additionally assure that an exact initial 
+% solution would not be limited for positivity preserving. 
+
+The computational domain is defined as $[0,10]\times[0,10]$, with the vortex initially centered at $(x_0,y_0)=(5,5)$. Periodic boundary conditions are applied at the domain boundaries.  A set of successively refined rectangular meshes, with grid sizes $h=1/2$ to $h=1/32$, are used in the simulations. Following \cite{zhang2012positivity}, the final time is set as $t=0.01$. 
+\replaced[id=r2]
+{The maximum physical time step size is set to $\inc t_{max} = h/50$.
+However, numerical experiments show that the physical time step limiting is not activated, indicating that the physical time step remains at $\inc t= \inc t_{max} = h/50$.
+}{Pseudo-time step limiting, increment correction, and reconstruction polynomial 
+scaling are applied during the simulations. 
+Physical-time step limiting is disabled to maintain constant 
+time step sizes of $\Delta t = h/50$.
+}
+% The time step size is proportional to the grid size, because both the
+% spacial and temporal schemes have fourth order accuracy.
+
+The CFL number for the pseudo-time step is $\CFLtau = 100$. 
+The convergence criterion for inner iteration is that the $L^1$ norm of the pseudo-time derivative 
+decreases by nine orders of magnitude.
+% \added[id=harry]
+% {
+% The accuracy test is conducted using 4th order VFV and 4th order ESDIRK4 time marching. 
+% }
+The $L^1$ and $L^\infty$ errors in density, 
+along with the corresponding convergence rates, 
+are listed in Table \ref{tab:ivResults}. 
+The accuracy results in Table \ref{tab:ivResults} demonstrate that the numerical scheme achieves the theoretical fourth-order accuracy.
+
+
+\begin{table}[htbp!]
+    \centering
+    \caption{Accuracy test results for the isentropic vortex problem.} %, \added[id=harry]{4th order VFV and 4th order ESDIRK4}}
+    \label{tab:ivResults}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{ c c c c c}
+        \toprule
+        Grid size & $L^1$ error & Order & $L^\infty$ error & Order \\
+        \midrule
+        1/2 &1.85E-3 & - & 6.07E-2 & -\\
+        % \hline
+        1/4 &7.86E-5 & 4.55 & 4.85E-3 & 3.65\\
+        % \hline
+        1/8 &1.22E-6 & 6.02 & 2.12E-4 & 4.52\\
+        % \hline
+        1/16 &2.88E-8 & 5.40 & 1.34E-5 & 3.99\\
+        % \hline
+        1/32 &1.85E-9 & 3.96 & 7.14E-7 & 4.23 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\added[id=r1]
+{The convergence histories of the inner iterations are shown in Figure \ref{fig:IVres}.
+As observed in the figure, the density residual decreases by nine orders of magnitude in each stage, indicating that the inner iterations reach convergence. Additionally, convergence is faster on finer meshes.
+}
+
+\replaced[id=r1]{A second-order implicit finite volume method is also tested to compare against the fourth-order method and highlight the advantages of high-order schemes. This second-order approach employs Green-Gauss reconstruction and trapezoidal-rule time integration, and the proposed positivity-preserving algorithm is also applied to ensure solution positivity.
+The accuracy comparison between the second- and fourth-order methods is shown in Figure \ref{sfig:IVeff_err}, which demonstrates that both methods achieve their theoretical orders of accuracy. The efficiency comparison is shown in Figure \ref{sfig:IVeff_eff}. A numerical scheme is regarded more efficient if it achieves the same accuracy at a lower cost, or delivers higher accuracy at the same cost.  It can be observed from the error-cost plots in Figure \ref{sfig:IVeff_eff} that, for high-accuracy requirements, the fourth-order method achieves a given accuracy at significantly lower computational expense or provides much higher accuracy at equivalent computational cost. For example, at a wall-clock time of $70$ seconds, the errors of the second- and fourth-order methods are approximately $1.5 \times 10^{-6}$ and $3.0 \times 10^{-9}$, respectively. This indicates that the fourth-order method is approximately $500$ times more efficient in this scenario. Thus, the fourth-order finite volume method demonstrates substantially greater efficiency compared to its second-order counterpart for applications demanding high accuracy.
+}
+{In addition to accuracy test, efficiency of the current method is compared with a 2nd order counterpart.
+The 2nd order test uses 2nd order Green-Gauss reconstruction and 2nd order trapezoid rule time marching. 
+In the 2nd order scheme, the face flux integration uses midpoint rule. 
+All positivity-preserving algorithms are in the same form.
+All the tests are conducted on the same machine with the same parameters, and wall time is recorded 
+for each test run. 
+Figure \ref{fig:IVeff} displays convergence and efficiency of the 2nd and 4th order methods. 
+$N_x$ in Figure \ref{fig:IVeff} means number of grids in one direction, or $10/h$ in other words.
+In Figure \ref{sfig:IVeff_err}, the 4th order method displays 4th or higher order of accuracy, while the 2nd order 
+method displays 2nd order accuracy. 
+On the same $160\times160$ grid, 4th order method produces only 
+less than $1/100$ of the error 2nd order method produces.
+Figure \ref{sfig:IVeff_eff} indicates the efficiency of 4th order methods overtakes that of 2nd when 
+the error demand is strict. 
+When $10^{-4}$ density error is needed, 2nd order method uses less time,
+but when $10^{-6}$ density error is needed, 4th order method uses significantly less time.
+Therefore, it is demonstrated in the isentropic vortex tests that
+high order positivity-preserving methods have two advantages: 
+(1) high order methods can resolve the same structure better on the same grid; 
+(2) high order methods consume less time and have higher efficiency 
+when small error is demanded. 
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{pics/PPRobust_IV_res.pdf}
+    \caption{\added[id=r1]{Partial convergence history of inner iterations for the isentropic vortex problem. $N_{it}$ denotes the total number of inner iteration steps across the ESDIRK4 stages.}}
+    \label{fig:IVres}
+\end{figure}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_err1.pdf}
+       \caption[]{Accuracy}
+       \label{sfig:IVeff_err}
+   \end{subfigure}
+   \hfill
+   \begin{subfigure}{0.49\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_IV_eff1.pdf}
+       \caption[]{Efficiency}
+       \label{sfig:IVeff_eff}
+   \end{subfigure}
+   \caption{\added[id=r1]{Accuracy and efficiency comparisons between the fourth-order (O4) and second-order (O2) methods for the isentropic vortex problem. $N_x=10/h$ denotes the number of cells in the $x$-direction.}}
+   \label{fig:IVeff}
+\end{figure}
+
+%% the following content will be presented in the response to reviewer
+% \added[id=r2]
+% {
+% \color{violet}
+% \textbf{
+% We also tested on large $\inc t_{max}$ to see the impact of 
+% physical time step limiting. 
+% The termination time is changed to $t = 0.32$, and $\inc t_{max} =   0.64 h$ is used. 
+% The minimum number of time steps is then $N_{t,min} =1/(2h)$. 
+% This calculation uses 5 reconstruction iterations per evaluation of RHS, 
+% and a {\it p}-multigrid method to enhance convergence. 
+% Relative residual convergence threshold is set to $10^-6$.
+% Results are shown in Table \ref{tab:ivResultsLargeDt}. 
+% It can be seen in Table \ref{tab:ivResultsLargeDt} that the 
+% physical time step limiting is activated on fine girds, and on 
+% coarse grids the time step size is not limited. 
+% As the average time step size still refines with grid nearly proportionally,
+% the order of accuracy in the results also satisfies design order approximately.
+% } 
+% }
+
+
+% \begin{table}[htbp!]
+%     \centering
+%     \caption{Accuracy test results for the isentropic vortex problem,  large time step size}
+%     \label{tab:ivResultsLargeDt}
+%     % \footnotesize
+%     % \begin{tabular}{|c|c|c|c|c|}
+%     \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+%     \renewcommand{\arraystretch}{1.2}
+%     \begin{tabular}{ c llc c c c}
+%         \toprule
+%         Grid size  & $N_{t,min}$&$N_t$& $L^1$ error & Order & $L^\infty$ error & Order \\
+%         \midrule
+%  1/2 & 1 & 1 & 4.538e-03 & - & 9.729e-02 & -\\
+%  1/4 & 2 & 2 & 2.282e-04 & 4.31 & 8.120e-03 & 3.58\\
+%  1/8 & 4 & 7 & 7.204e-06 & 4.99 & 4.381e-04 & 4.21\\
+%  1/16 & 8 & 9 & 1.320e-07 & 5.77 & 4.222e-05 & 3.38\\
+%  1/32 & 16 & 18 & 4.956e-09 & 4.74 & 3.955e-06 & 3.42\\
+%     \bottomrule
+%     \end{tabular}
+% \end{table}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{\added[id=r1]{Le Blanc shock tube}}
+
+\added[id=r1]{
+The Le Blanc shock tube problem is a one-dimensional Riemann problem described by the Euler equations and 
+generates an extremely strong shockwave \cite{toro2013riemann}. 
+As a result, the Le Blanc problem is often used as 
+a test case for positivity-preserving schemes \cite{hu2013positivity, chan2021positivity, huang2024general}. 
+The initial conditions are
+}
+\begin{equation}
+   (\rho,u,p) = \left\{
+       \begin{array}{ll}
+           (1,0,2/3\times10^{-1}),\ \ & x < 3\\
+           (10^{-3},0,2/3\times10^{-10}),\ \ & x \geq 3\\
+       \end{array}
+   \right.
+   \label{eq:leBlancCond}
+\end{equation}
+\added[id=r1]{The ratio of specific heat is $\gamma = 5/3$.
+The computational domain is in $[0,9]$. 
+Two uniform meshes are employed, consisting of $N=800$ and $N=3200$ cells, respectively. Simulations are conducted up to a final physical time of $t=6$, using two maximum physical time step sizes, $\Delta t_{max} = 0.01$ and $0.1$.
+In each inner iteration, the CFL number for local pseudo time step, $\CFLtau$, is initiated as $0.5$ and increased gradually up to its maximum $10$ at the tenth iteration. 
+The reference density and pressure are set as $\rho_0=1$ and $p_0=2/3\times10^{-1}$, respectively.
+}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_R.pdf}
+       \caption[]{Density}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_U.pdf}
+       \caption[]{Velocity}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_P.pdf}
+       \caption[]{Pressure}
+   \end{subfigure}
+   \caption{\added[id=r1]{Numerical solutions of the Le Blanc shock tube problem at $t=6$.}}
+   \label{fig:leBlanc}
+\end{figure}
+
+\added[id=r1]{
+The numerical results from the four simulations, corresponding to two meshes and two maximum time step sizes, are presented in Figure \ref{fig:leBlanc}. The numerical solutions closely match the exact solution, and no negative values of pressure or density are observed. The positions of the shockwave and contact discontinuity computed on the finer mesh ($N=3200$) are significantly closer to the exact solution compared to those computed on the coarser mesh ($N=800$). Additionally, the larger $\Delta t_{max}$ produces more pronounced oscillations  oscillations near the shockwave on both meshes.
+}
+
+
+\begin{figure}[htbp!]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_dt.pdf}
+       \caption[]{Time step}
+       \label{sfig:leBlanc1_t}
+   \end{subfigure}
+   \hfill
+   \begin{subfigure}{0.49\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LB_res.pdf}
+       \caption[]{Partial convergence history}
+       \label{sfig:leBlanc1_res}
+   \end{subfigure}
+   \caption{\added[id=r1]{Time step evolution and inner iteration convergence history for the Le Blanc shock tube problem. $N_{it}$ denotes the total number of inner iteration steps across the ESDIRK4 stages.}}
+   \label{fig:leBlanc1}
+\end{figure}
+
+\added[id=r1]{
+% Figure \ref{fig:leBlanc1} illustrates history of time step size and density residual.
+% Using smaller $\inc t_{max}$, the actual $\inc t$ often reaches $\inc t_{max}=0.01$ on both grids. 
+% With larger $\inc t_{max}=0.1$, the actual time step $\inc t$ is constrained by the grid size near strong discontinuities.
+% Figure \ref{sfig:leBlanc1_t} shows that smaller grid size imposes smaller time step size upper bound 
+% in physical time step size limiting.
+% The convergence history shown in Figure \ref{sfig:leBlanc1_res} indicates that the residuals
+% reduce to three orders of magnitude within certain number of iteration steps.
+Figure \ref{fig:leBlanc1} illustrates the history of the time step size and density residual. When using the smaller maximum time step size ($\Delta t_{max}=0.01$), the actual $\Delta t$ frequently reaches the imposed upper limit on both meshes. In contrast, with the larger $\Delta t_{max}=0.1$, the actual time step size is constrained by the grid spacing near regions with strong discontinuities. Figure \ref{sfig:leBlanc1_t} demonstrates that a smaller grid spacing imposes a stricter upper bound on the allowable physical time step size. Additionally, the convergence history presented in Figure \ref{sfig:leBlanc1_res} indicates that the residuals decrease by three orders of magnitude within a certain number of iteration steps.
+}
+
+\added[id=r2]{
+% In order to investigate the effect of changing 
+% relaxation parameters $\eta_t$, $\eta_\tau$ and $\eta_\Delta$,
+% which are used in physical time step limiting, pseudo time step limiting and 
+% increment correction respectively,
+% a series of experiments are conducted on the Le Blanc problem.
+% Based on the case $N=800$ and $\Delta t_{max}=0.1$, with
+% the default relaxation parameters $\eta_t=0.8$, $\eta_\tau=0.5$ and $\eta_\Delta=0.9$, a series of additional test runs are performed with their results shown in Table \ref{tab:leBlancParamTest} and Figure \ref{fig:leBlancParamTest}.
+To investigate the sensitivity of the positivity-preserving finite volume scheme to variations in the relaxation parameters $\eta_t$, $\eta_\tau$, and $\eta_\Delta$, which control physical time step limiting, pseudo time step limiting, and increment correction respectively, a series of numerical experiments are conducted using the Le Blanc shock tube problem. The baseline simulation is performed on the $N=800$ mesh, with default parameters $\eta_t=0.8$, $\eta_\tau=0.5$, and $\eta_\Delta=0.9$, using a maximum time step size of $\Delta t_{max}=0.1$. Additional simulations are performed by altering one parameter at a time from this baseline, enabling the assessment of sensitivity to each parameter. The statistical outcomes of these experiments are summarized in Table \ref{tab:leBlancParamTest}, while the corresponding numerical solutions are presented in Figure \ref{fig:leBlancParamTest}.
+}
+
+\added[id=r2]{
+% In Table \ref{tab:leBlancParamTest}, statistics including number of total time steps $N_{step}$, average number of iterations per stage $\overline{N_{iter}}$ , 
+% average time step size $\overline{\Delta t^n}$ , minimum and maximum step size $\min{\Delta t^n}$ and $\max{\Delta t^n}$  are listed. 
+% It can be observed that changing $\eta_\Delta$ only slightly alters the number of time steps and iterations.
+% A smaller $\eta_\tau$  increases $\overline{N_{iter}}$ while a larger $\eta_\tau$ decreases $\overline{N_{iter}}$ according to Table \ref{tab:leBlancParamTest}. 
+% Using $\eta_\tau=0.5$ significantly decreases $\overline{N_{iter}}$ and improves efficiency compared to $\eta_\tau=0.2$, 
+% and using $\eta_\tau=0.8$ does not improve efficiency much. 
+% According to Table \ref{tab:leBlancParamTest}, the relaxation parameter $\eta_t$ primarily influences physical time step size. 
+% A larger $\eta_t$ allows for larger $\Delta t^i$ and therefore fewer time steps.
+% When $\eta_{t}=0.9$, $N_{step}$ decreases from $120$ to $114$, and with $\eta_t = 0.4$, $N_{step}$  is increased to $141$. 
+% The benefit of further increasing $\eta_t$ from baseline setup is marginal.
+Table \ref{tab:leBlancParamTest} provides key statistics including the total number of time steps ($N_{step}$), average iterations per stage ($\overline{N_{iter}}$), average time-step size ($\overline{\Delta t^n}$), minimum and maximum time-step sizes ($\min{\Delta t^n}$, $\max{\Delta t^n}$). It is observed that altering $\eta_\Delta$ only slightly affects $N_{step}$ and $\overline{N_{iter}}$. The parameter $\eta_\tau$ significantly influences the average number of iterations per stage: decreasing $\eta_\tau$ increases $\overline{N_{iter}}$, whereas increasing $\eta_\tau$ decreases it. Specifically, setting $\eta_\tau=0.5$ notably improves efficiency compared to $\eta_\tau=0.2$, while further increasing $\eta_\tau$ to 0.8 yields limited additional benefit.
+According to Table \ref{tab:leBlancParamTest}, the relaxation parameter $\eta_t$ primarily affects the physical time-step size. A larger $\eta_t$ permits a larger $\Delta t^n$, resulting in fewer total steps. For instance, increasing $\eta_t$ from $0.8$ to $0.9$ reduces $N_{step}$ from $120$ to $114$, whereas decreasing $\eta_t$ to $0.4$ increases $N_{step}$ to $141$. Further increases in $\eta_t$ beyond the baseline setting offer marginal improvements.
+}
+
+\added[id=r2]{
+% As illustrated in Figure \ref{fig:leBlancParamTest}, all relaxation parameters produce nearly identical solutions, with correct prediction of the 
+% discontinuities as well as positivity of density and pressure.
+% In summary, changing relaxation parameters  $\eta_t$, $\eta_\tau$ and $\eta_\Delta$ in a reasonable 
+% range doe not affect convergence and accuracy of the method, 
+% and the current choice of parameters is efficient enough while 
+% being relatively conservative. 
+Figure \ref{fig:leBlancParamTest} demonstrates that varying the relaxation parameters within reasonable ranges produces nearly identical numerical solutions. The discontinuities are accurately captured, and positivity of density and pressure is maintained. In summary, adjusting the parameters $\eta_t$, $\eta_\tau$, and $\eta_\Delta$ within practical limits does not significantly affect convergence or accuracy. Thus, the current parameter selection represents an efficient yet conservative choice.
+}
+
+
+
+\begin{table}[htbp!]
+    \centering
+    \caption{\added[id=r2]{Statistical results from the parameter sensitivity analysis for the Le Blanc shock tube problem.}}
+    \label{tab:leBlancParamTest}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    % \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{ c c c c c c c c c}
+        \toprule
+        Case name& $\eta_t$ & $\eta_\tau$ &$\eta_\Delta$ & $N_{step}$ & $\overline{N_{iter}}$ & $\overline{\Delta t^n}$& $\min{\Delta t^n}$& $\max{\Delta t^n}$\\
+        \midrule
+Base  & 0.8 & 0.5 & 0.9 & 120 & 27.2 & 5.00E-02 & 2.58E-02 & 1.00E-01 \\
+$\eta_{\Delta}=0.5$ & 0.8 & 0.5 & 0.5 & 118 & 27.5 & 5.08E-02 & 2.50E-02 & 1.00E-01 \\
+$\eta_{\Delta}=0.95$ & 0.8 & 0.5 & 0.95 & 119 & 27.3 & 5.04E-02 & 2.42E-02 & 1.00E-01 \\
+$\eta_{\tau}=0.2$ & 0.8 & 0.2 & 0.9 & 116 & 33.7 & 5.17E-02 & 2.74E-02 & 1.00E-01 \\
+$\eta_{\tau}=0.8$ & 0.8 & 0.8 & 0.9 & 120 & 26.6 & 5.00E-02 & 2.61E-02 & 1.00E-01 \\
+$\eta_{t}=0.4$ & 0.4 & 0.5 & 0.9 & 141 & 24.4 & 4.26E-02 & 2.20E-02 & 1.00E-01 \\
+$\eta_{t}=0.9$ & 0.9 & 0.5 & 0.9 & 114 & 30.8 & 5.26E-02 & 2.81E-02 & 1.00E-01 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LBPT_R.pdf}
+       \caption[]{Density}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LBPT_U.pdf}
+       \caption[]{Velocity}
+   \end{subfigure}\hfill
+   \begin{subfigure}{0.33\textwidth}
+       \includegraphics[width=\textwidth]{pics/PPRobust_LBPT_P.pdf}
+       \caption[]{Pressure}
+   \end{subfigure}
+   \caption{\added[id=r2]{Numerical solutions of the Le Blanc shock tube problem at $t=6$ on a $N=800$ mesh, using a maximum time step size of $\Delta t_{max}=0.1$, with different relaxation parameters.}}
+   \label{fig:leBlancParamTest}
+\end{figure}
+
+
+\subsection{Double rarefaction}
+
+The one-dimensional double rarefaction problem \cite{hu2004kineticDoubleRare}
+is a Riemann problem with the following initial conditions
+\begin{equation}
+    (\rho,u,p) = \begin{dcases}
+        (1,-2,0.1),\ \  & \mathrm{if} \ x < 0.5,       \\
+        (1,2,0.1),\ \   & \mathrm{else}.
+    \end{dcases}
+    %    \left\{
+    %        \begin{array}{ll}
+    %            (1,-2,0.1),\ \ & x < 0.5,\\
+    %            (1,2,0.1),\ \ &  \mathrm{else}.\\
+    %        \end{array}
+\end{equation}
+The flow is inviscid and the ratio of specific heat is $\gamma=1.4$.
+In this problem, a vacuum lies in in the middle, adjacent to the ends of two rarefaction waves.
+The computational domain is $[0,1]$.
+We perform a numerical simulation on a uniform mesh with a grid size of $\inc x = 1/400$, up to $t=0.1$
+ using a maximum time step size of $\inc t_{max}= 5 \times 10 ^{-3}$.
+\added[id=r1]
+{The numerical results show that the physical time step limiting procedure does not reduce the time step in this case, resulting in a uniform $\Delta t$ throughout the simulation.}
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and
+increased gradually up to its maximum $10$ at the tenth iteration.
+The reference pressure and density values are set as $\rho_0=1$ and $p_0=0.1$, respectively.
+%The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
+The numerical results are presented in Figure \ref{fig:doubleRare}, which shows that the numerical solution is essentially oscillation-free and agrees well with the exact solution.
+\added[id=r1]
+{Figure \ref{fig:DRres} shows the convergence history of the inner iterations, indicating that convergence is achieved in just a few steps.
+% Figure \ref{fig:DRres} illustrates the convergence history of inner iterations. It is observed from the figure that, the inner iterations reach convergence in only a few steps.
+% In each stage of each ESDIRK step, it is shown 
+% that the solution converges in rather few iterations. 
+}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.33\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_DR_R.pdf}
+        \caption[]{Density}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.33\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_DR_U.pdf}
+        \caption[]{Velocity}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.33\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_DR_P.pdf}
+        \caption[]{Pressure}
+    \end{subfigure}
+    \caption{Results of the double rarefaction problem at $t=0.1$.}
+    \label{fig:doubleRare}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_DR_res.pdf}
+    \caption{\added[id=r1]{Partial convergence history of inner iterations for the double rarefaction problem. $N_{it}$ denotes the total number of inner iteration steps across the ESDIRK4 stages.}}
+    \label{fig:DRres}
+\end{figure}
+
+
+
+
+\subsection{Sedov blast wave}
+\label{ssec:sedov}
+
+The Sedov blast wave problem \cite{zhang2012positivity,vilar2016positivity} is a popular case to test positivity-preserving properties of
+numerical schemes.
+The governing equations are the Euler equations and the ratio of specific heat is $\gamma = 1.4$. The computational domain is $[0,1.1]\times[0,1.1]$, partitioned into rectangular cells with a grid size of $\inc x = \inc y = 1.1/160$. The initial conditions are
+\begin{equation}
+    (\rho,u,v,p) = \begin{dcases}
+        (1,0,0,4\times 10 ^{-9}),\ \                                          & \text{if } x > \inc x \ \mathrm{or} \ y > \inc y, \\
+        (1,0,0,\dfrac{\left(\gamma-1\right)\varepsilon^0}{\inc x\inc y}),\ \  & \text{else},                                      \\
+    \end{dcases}
+\end{equation}
+where $\varepsilon^0$ is the total amount of release energy.
+By choosing $\varepsilon^0= 2.44816\times 10^5$,
+the solution consists of a diverging infinite strength shock wave
+whose front is located at radius $r=1$ at $t=10^{-3}$, with a peak density reaching $6$.
+%The final computational time is $t = 1\times10^{-3}$,
+%when the exact solution has the shock wave at radius of $1$. 
+All boundaries are slip walls.
+The reference density and pressure are set as $\rho_0=1$ and $p_0=4\times10^{-9}$, respectively.
+%Fourth order variational reconstruction finite volume with ESDIRK4
+% discretization is used. 
+%The relaxation parameters and internal CFL number are the same as 1-D problems.
+%Convergence threshold for pseudo time iteration is $10^{-3}$. 
+%The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
+%Maximum time step sizes of $\inc t_{max}=10^{-6}$ and $\inc t_{max}=10^{-5}$
+%are tested. 
+%The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
+%and 297 steps with $\inc t_{max}=10^{-5}$.
+
+Two simulations are performed up to $t=10^{-3}$,
+using $1014$ time steps with $\inc t_{max} = 10^{-6}$
+and  $161$ time steps with $\inc t_{max} = 10^{-5}$, respectively.
+\added[id=r1]
+{The evolution of the time step and the convergence history of inner iterations are presented in Figure \ref{fig:sedov1}. As shown in Figure \ref{sfig:sedov1_dt}, the initial Sedov blast imposes strong restrictions on the time step size. As the blast evolves, these restrictions are gradually relaxed until the predefined upper bound $\Delta t_{max}$ is reached. Figure \ref{sfig:sedov1_res} shows that the inner iterations converge rapidly within each ESDIRK4 stage.
+% The evolution of time step and the convergence history of inner iterations are shown in 
+% Figure \ref{fig:sedov1}. 
+% Figure \ref{sfig:sedov1_dt} indicates that the initial Sedov blast
+% leads to strong restrictions on time step sizes, and with 
+% the evolution of the blast, the time step limitation is relaxed 
+% until the predefined upper bound $\inc t_{max}$ is reached. In each ESDIRK4 stage, the inner iteration reaches convergence rapidly, as shown in Figure \ref{sfig:sedov1_res}.
+}
+
+The computed density contours at $t=10^{-3}$ are shown in Figure \ref{fig:sedov}. It is observed that the numerical solutions are essentially oscillation-free. To check the solutions in a more intuitive way, we plot both the analytical and numerical density distributions along the $y=x$ line in Figure \ref{fig:sedovLine}.
+It is shown in Figure \ref{fig:sedovLine} that both numerical solutions agree well with the analytic solution.
+% and the one with the smaller time step size has higher resolution.
+%With larger time step size limit $\inc t_{max}=10^{-5}$, the 
+%solution appears slightly distorted, but the overall 
+%position and strength of the shock front is correct.
+
+A computational cost analysis is performed to validate the computational efficiency of the proposed positivity-preserving algorithm. Table \ref{tab:cpu-time-cost} reports the CPU time for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$, where the reconstruction polynomial scaling is performed on $22\%$ of the cells. As listed in Table \ref{tab:cpu-time-cost} that, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time.
+This finding indicates that the algorithm incurs relatively small additional computational cost, thereby confirming its efficiency.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Sedov_dt.pdf}
+        \caption[]{Time step}
+        \label{sfig:sedov1_dt}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Sedov_res.pdf}
+        \caption[]{Partial convergence history}
+        \label{sfig:sedov1_res}
+    \end{subfigure}
+    \caption{\added[id=r1]{Time step evolution and inner iteration convergence history for the Sedov blast wave problem. $N_{it}$ denotes the total number of inner iteration steps across the ESDIRK4 stages.}}
+    \label{fig:sedov1}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_SedovDT1.png}
+        \caption[]{$\inc t_{max}=10^{-6}$}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_SedovDT10.png}
+        \caption[]{$\inc t_{max}=10^{-5}$}
+    \end{subfigure}
+    \caption{Density contours of the Sedov blast wave problem.}
+    \label{fig:sedov}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{pics/PPRobust_Sedov.pdf}
+    \caption{Density distributions of the Sedov blast wave problem along the diagonal line.}
+    \label{fig:sedovLine}
+\end{figure}
+
+\begin{table}[htbp!]
+    \centering
+    \caption{Computational cost for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$.}
+    \label{tab:cpu-time-cost}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{l c c}
+        \toprule
+        Procedure & CPU times (s) & Percentage (\%) \\
+        \midrule
+        Positivity preserving & 7.3566 & 10.35\\
+        % \hline
+        Variational reconstruction & 4.9303 & 6.94\\
+        % \hline
+        WBAP limiting & 41.7281 & 58.71\\
+        % \hline
+        Numerical flux & 13.0100 & 18.31\\
+        % \hline
+        Linear solving and others &  4.0440 & 5.69\\
+        % \hline
+        % Positivity preserving & 7.3566 & 10.35\\
+        \midrule
+        {Total} & 71.069 & 100 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Mach 2000 jet}
+
+The Mach 2000 jet problem \cite{zhang2010positivity} is a challenging case as it has extremely strong discontinuities.
+Following the practice of \cite{huang2024general},
+the current paper studies two cases with $\Re=\infty$ and $\Re=100$ to demonstrate the capability of the proposed positivity-preserving algorithm to deal with inviscid and viscous compressible flows, respectively.
+\replaced[id=r1]{The governing equations are the Euler equations for the inviscid case and the Navier–Stokes equations for the viscous case. The ratio of specific heat is $\gamma=5/3$. 
+For the $\Re=100$ case, the dynamic viscosity is set as a constant $\mu=\rho_{\infty} u_{\infty} L/\Re$, where $\rho_{\infty}=1$, $u_{\infty}=1$ and $L=1$, following \cite{huang2024general}.
+The Prandtl number for the viscous case is set to $Pr=0.7$.
+% In the $Re=100$ case, the dynamic viscosity is set as a constant $\mu=\rho_{\infty} u_{\infty} L/Re$ because the test case is artificial.
+}
+{The governing equations are the Navier-Stokes equations with $\gamma=5/3$.}
+The computational domain is $[0,1]\times[-0.25,0.25]$.
+Far-field boundary conditions are imposed on the upper, lower and right boundaries. The following inflow conditions are imposed on the left boundary:
+\begin{equation}
+    (\rho,u,v,p) = \left\{
+    \begin{array}{ll}
+        (5,800,0,0.4127),\ \  & \text{if } -0.05 \leq y \leq 0.05, \\
+        (0.5,0,0,0.4127),\ \  & \text{else}.                       \\
+    \end{array}
+    \right.
+\end{equation}
+The initial conditions are $(\rho,u,v,p)=(0.5,0,0,0.4127)$.
+The numerical simulations are performed on a uniform rectangular mesh with $800 \times 800$ cells, up to $t=10^{-3}$ using a maximum time step size of $\inc t_{max} = 1\times10^{-6}$.
+%$\CFLtau$ is initially $0.1$ at the beginning of each stage,
+%and reaches $2.0$ at the 10th pseudo time iteration. 
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+and increased gradually up to its maximum $2$ at the tenth iteration.
+The reference density and pressure are
+$\rho_0=0.5$ and $p_0=0.4127$, respectively.
+
+The computed density and pressure contours at $t=10^{-3}$ in logarithmic scales are shown in Figures \ref{fig:M2000_ReInf_R} to \ref{fig:M2000_Re1E2_P}.
+It is observed from these figures that the numerical results are essentially non-oscillatory, and small-scale flow structures are smeared in the $Re=100$ case due to viscous effects.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_R.png}
+    \caption{$\log_{10}(\rho)$ of $\Re=\infty$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
+    \label{fig:M2000_ReInf_R}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_R.png}
+    \caption{$\log_{10}(\rho)$ of $\Re=100$ Mach 2000 jet, 40 contour lines from -1.5 to 1.5.}
+    \label{fig:M2000_Re1E2_R}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_ReInf_P.png}
+    \caption{$\log_{10}(p)$ of $\Re=\infty$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
+    \label{fig:M2000_ReInf_P}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.9\textwidth]{pics/PPRobust_M2000_Re1E2_P.png}
+    \caption{$\log_{10}(p)$ of $\Re=100$ Mach 2000 jet, 40 contour lines from -1.4 to 5.3.}
+    \label{fig:M2000_Re1E2_P}
+\end{figure}
+
+\subsection{Shock diffraction}
+
+The shock diffraction problem \cite{zhang2010positivity}, in which a shock passes a backward facing corner,
+is used to test the positivity-preserving capability of the proposed algorithm.
+The governing equations are the Euler equations with $\gamma = 1.4$.
+The computational domain is the union of $[0,1]\times[6,11]$ and $[1,13]\times[0,11]$.
+The initial condition is a Mach $5.09$ shock located at $x=0.5$,
+moving into undisturbed air ahead of the shock at a state $(\rho, u, v, p)=(1.4,0,0,1)$.
+%{\color{red}The boundary conditions are inflow at $x = 0, \ 6\leq y \leq 11$, outflow at $x = 13, \ 0\leq y \leq 11$, $1 \leq x \leq 13, \ y = 0$ and $0 \leq x \leq 13, \ y = 11$, and non-slip at the walls $0\leq x \leq 1, \ y = 6$ and $x = 1, \ 0\leq y \leq 6$.}
+Inflow and slip solid wall boundary conditions are imposed on
+the left side $x = 0$, $6\leq y \leq 11$ and other boundaries, respectively.
+%The boundary at $x=0$ is set to match the left state of the shock, and 
+%all other boundaries are set as inviscid wall.
+The simulation is performed on a rectangular mesh with grid size $\inc x = \inc y = 1/80$,
+up to $t=2.3$ with $\inc t_{max}=1\times 10^{-3}$.
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+and increased gradually up to its maximum $2$ at the tenth iteration.
+The reference density and pressure are $\rho_0=1.4$ and $p_0=1$, respectively.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Corner_R.png}
+        \caption[]{$\log_{10}(\rho)$, 40 contour lines from -0.8 to 0.8}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Corner_P.png}
+        \caption[]{$\log_{10}(p)$, 40 contour lines from -0.6 to 1.6}
+    \end{subfigure}
+    \caption{Density and pressure contours of the shock diffraction problem.}
+    \label{fig:Corner}
+\end{figure}
+
+The computed density and pressure contours in logarithmic scales at $t=2.3$ are shown in Figure \ref{fig:Corner}.
+It is observed from Figure \ref{fig:Corner} that,
+the numerical solutions are essentially oscillation-free and small-scale shock structures are well resolved.
+
+
+\subsection{Shock reflection and diffraction around a wedge}
+
+The shock reflection and diffraction problem \cite{zhang2017positivity} is similar to the shock diffraction problem,
+with the corner replaced by a wedge. The computational domain is $[0,3]\times[0,2]$
+with a $30^\circ$ wedge placed at $0.2 \leq x \leq 1.2$, while the
+tip of the wedge is at $(x,y) = (1.2, 1/\sqrt{3})$.
+Initially, there is a Mach $10$ shock at $x=0.2$ moving into undisturbed air in a state $(\rho, u, v, p) = (1.4,0,0,1)$. The $x=0$ boundary on
+the left matches the downstream state of the shock, and all other boundaries
+are inviscid walls.
+Before the diffraction of the shock, the development
+of the shock structure is identical with that in the Mach $10$ double Mach reflection problem \cite{woodward1984dmr}.
+Similar to the Mach $2000$ jet example, $\Re=\infty$ and $\Re=100$ cases
+are investigated.
+\added[id=r1]{
+For all the cases, the ratio of specific heat is $\gamma=1.4$.
+% For the $\Re=100$ viscous case, 
+% the dynamic viscosity $\mu$ is taken as a constant with the
+% reference state of $\Re$ being $\rho=1,u=1,L=1$, following \cite{zhang2017positivity}. 
+% The Prandtl number in the viscous case is set to $Pr=0.7$.
+For the $\Re=100$ case, the dynamic viscosity is set as a constant $\mu=\rho_{\infty} u_{\infty} L/\Re$, where $\rho_{\infty}=1$, $u_{\infty}=1$ and $L=1$, following \cite{huang2024general}.
+The Prandtl number for the $\Re=100$ case is set to $Pr=0.7$.
+% The gas viscosity at $\Re=100$ is set as constant value $\mu=\rho_{\infty} u_{\infty} L/\Re$ considering the viscous test case is artificial.
+% The Prandtl number is set to $Pr=0.7$.
+}
+A triangular mesh with grid size $h = 1/320$,
+shown in Figure \ref{fig:wedgeMesh}, is used in the simulations.
+The simulations are performed up to $t=0.245$ using
+a maximum time step size of $\inc t_{max}= 2\times10^{-4}$.
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+and increased gradually up to its maximum $2$ at the tenth iteration.
+The reference density and pressure values are $\rho_0=1.4$ and $p_0=1$, respectively.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[trim={5px 0 5px 0},clip,width=0.6\textwidth]{pics/PPRobust_WedgeMesh.png}
+    \caption{Mesh used in the shock reflection and diffraction problem.}
+    \label{fig:wedgeMesh}
+\end{figure}
+
+The computed density and pressure contours are shown in Figure \ref{fig:wedgeReInf} and \ref{fig:wedgeRe1E2}.
+It is observed that the numerical solutions are essentially non-oscillatory.
+The Kelvin-Helmholtz instability induced in the shear layer is well resolved in Figure \ref{fig:wedgeReInf} for the $\Re=\infty$ case.
+While in Figure  \ref{fig:wedgeRe1E2} for the $\Re=100$ case,
+the small-scale flow structures around the shear layer and the wedge are smeared  due to the existence of physical viscosity.
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_R_Bi.png}
+        \caption[]{$\rho$, 60 contour lines from 0 to 22}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeReInf_P_Bi.png}
+        \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
+    \end{subfigure}
+    \caption{Density and pressure contours for the shock reflection and diffraction problem, $\Re=\infty$.}
+    \label{fig:wedgeReInf}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_R_Bi.png}
+        \caption[]{$\rho$, 60 contour lines from 0 to 22}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_WedgeRe1E2_P_Bi.png}
+        \caption[]{$\log_{10}(p)$, 60 contour lines from -1.7 to 2.7}
+    \end{subfigure}
+    \caption{Density and pressure contours for the shock reflection and diffraction problem, $\Re=100$.}
+    \label{fig:wedgeRe1E2}
+\end{figure}
+
+\subsection{\added[id=r1]{Mach 20 shock over a half cylinder}}
+
+\added[id=r1]
+{
+The Mach 20 shock over a half cylinder test case \cite{gallice2022entropy,cossart2025toward} is used to validate the proposed positivity-preserving algorithm in the context of steady-state hypersonic flows involving strong shock waves. The governing equations are the Euler equations. The ratio of specific heat is $\gamma=1.4$. 
+% Three numerical schemes are tested, including the first-, second- and fourth-order 
+% finite volume methods using reconstruction polynomials of degree zero, one, and three, respectively. 
+% The degree one and three polynomials are obtained through Green-Gauss and variational reconstructions, respectively.
+Three numerical schemes are tested: first-, second-, and fourth-order finite volume methods, 
+using reconstruction polynomials of degree zero, one, and three, respectively. The degree-one and degree-three piecewise polynomials 
+are respectively obtained using the Green–Gauss and variational reconstructions.
+As described in Section \ref{ssec:application-to-steady-state}, for this steady-state problem, pseudo time step limiting, increment correction and reconstruction polynomial scaling are employed to preserve the positivity of density and pressure. 
+Physical time step limiting is not required in this context. 
+The inflow condition is $(\rho, u, v, p) = (1, 1, 0, 1.78571\times10^-3)$.
+The computational mesh consists of $40 \times 100$ quadrilateral cells, 
+as shown in Figure \ref{sfig:CylinderFront_mesh}.
+The CFL number for local pseudo time step is $\CFLtau=10$. 
+The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times10^{-3}$, respectively.
+% A inviscid Ma 20 flow over a two-dimensional round head is tested in the 
+% current subsection following literature that investigated steady state positivity-preserving
+% methods . 
+% Although sometimes time-accurate temporal integration is used to obtain a steady state solution, 
+% the current test is performed using steady state iteration to illustrate the capability 
+% of current algorithm to directly handle steady state computation. 
+% In other words, the time-accurate time marching schemes like ESDIRK are replaced with 
+% a single implicit Euler step with infinite time step size.
+% All the iterations are in pseudo time and correspond to the inner iterations in the 
+% unsteady problems. 
+% Therefore, the physical time step limiting is not present in a steady state computation. 
+% Pseudo time step limiting, increment correction and polynomial scaling are the same 
+% as those in unsteady problems.
+}
+
+% \added[id=r1]
+% {
+% The mesh used in Ma 20 bow shock is a $40\times100$ structured grid as shown in 
+% Figure \ref{sfig:CylinderFront_mesh}.
+% The inflow condition is $(\rho, u, v, p) = (1, 1, 0, 1.78571\times10^{-3})$ and $\gamma=1.4$.
+% The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times10^{-3}$, respectively.
+% Steady calculations are performed using 1st order, 2nd order and 4th order spacial discretizations.
+% The 4th order spacial discretization is 4th order VFV.
+% The 2nd order spacial discretization is 2nd order FV using Green Gauss reconstruction.
+% The 1st order spacial discretization is 1st order FV using piecewise constant reconstruction.
+% The 1st and 2nd order methods use midpoint rule instead of high order quadrature rule.
+% All spacial discretizations still use LLF flux as numerical inviscid flux.
+% }
+
+\added[id=r1]
+{
+The convergence history is shown in Figure \ref{fig:CylinderFront_res}. The plots indicate that the first-order method converges rapidly, with the residual dropping to $10^{-8}$ of its peak value within 400 iterations. In contrast, the residual for the second-order method decreases by only five orders of magnitude, and for the fourth-order method by only three. Such slow or limited convergence is commonly observed when simulating shock-dominated flows using second- or higher-order methods with limiters.
+% The convergence history is displayed in Figure \ref{fig:CylinderFront_res}. It is observed from the convergence plots that, the first-order method converges rapidly and the residual decreases to $10^{-8}$ of the peak value within $400$ iterations.
+% Residual of the second-order method can only decrease by five orders of magnitude,
+% while the fourth-order one by only three.
+% This troubled convergence is common in simulating flows with shocks using second or higher order methods equipped with limiters.
+}
+
+\added[id=r1]
+{
+The computed density contours are shown in Figure \ref{fig:CylinderFront}, demonstrating that the Mach 20 bow shock is accurately captured in all three simulations. The use of the local Lax–Friedrichs (LLF) flux effectively avoids the carbuncle phenomenon, a well-known shock instability. The contours also show that shock resolution improves with increasing order of the numerical method.
+% Positivity-preserving algorithms seem not to have affected 
+% the quality of converged results.  
+% TODO: carbuncle, resolution
+% By using the local Lax-Friedrichs (LLF) flux, the infamous carbuncle phenomenon, which is a kind of shock instabilities, is avoided. It is observed from the density contours that, the shock resolution is improved by using the higher-order methods.
+% Width of the shock is rather large in the 1st order result, due to 
+% the use of LLF flux.
+% Such smearing is reduced in 2nd and 4th order results. 
+% The shock 
+% is the sharpest in the 4th order result, 
+% and the density peak near stagnation point is also 
+% highest in the 4th order result.
+}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_CylinderFront_res.pdf}
+    \caption{\added[id=r1]{Convergence history of the Mach $20$ shock over a half cylinder problem. In figure legends, \textquote{O1}, \textquote{O2} and \textquote{O4} denote the first-, second- and fourth-order finite volume schemes.}}
+    \label{fig:CylinderFront_res}
+\end{figure}
+
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O1.png}
+        \caption[]{First-order}
+        \label{sfig:CylinderFront_O1}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O2.png}
+        \caption[]{Second-order}
+        \label{sfig:CylinderFront_O2}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_O4.png}
+        \caption[]{Fourth-order}
+        \label{sfig:CylinderFront_O4}
+    \end{subfigure}
+    \begin{subfigure}{0.24\textwidth}
+        \includegraphics[width=\textwidth]{pics/CylinderFront_Mesh.png}
+        \caption[]{Mesh}
+        \label{sfig:CylinderFront_mesh}
+    \end{subfigure}
+    \caption{\added[id=r1]{Computed density contours and computational mesh for the Mach $20$ shock over a half cylinder problem.}}
+    \label{fig:CylinderFront}
+\end{figure}
+
+
+\subsection{\added[id=r2]{Hypersonic flow past an open cavity}}
+
+\added[id=r2]
+{
+The hypersonic flow past an open cavity problem \cite{morgenstern1994hypersonic} involves high-speed air flowing over a rectangular cavity embedded in a wall aligned with the flow direction. The flow is modeled using the compressible Navier–Stokes equations and features a hypersonic boundary layer. This test case is used to evaluate the capability of the proposed positivity-preserving implicit finite volume schemes in handling high-Reynolds-number viscous flows.
+% Due to the significance of viscosity and hypersonic transient 
+% procedures in this problem, the hypersonic cavity is used in the current 
+% research to investigate the performance of implicit positivity preserving 
+% algorithms.
+}
+
+\added[id=r2]{
+Following earlier computational studies \cite{morgenstern1994hypersonic}, we adopt an inflow Mach number of \(6.3\) and a Reynolds number per unit length of \(\Re = 4.084 \times 10^6\). The ratio of specific heat is \(\gamma = 1.4\). The inflow stagnation temperature is \(1110\,\text{K}\), and the wall temperature is set to \(300\,\text{K}\). In this test, viscosity follows Sutherland's law for air, and the Prandtl number is taken as \(0.72\).
+The cavity has a length-to-depth ratio of \(L/D = 10.67\), with a dimensional depth of \(D = 19.1\,\text{mm}\). For numerical convenience, the inflow density, velocity, and cavity depth are normalized to unity.
+The maximum non-dimensional physical time-step size is set to \(\Delta t_{max} = 0.01\) to adequately resolve unsteady flow features, based on prior results \cite{morgenstern1994hypersonic}. In each inner iteration, the CFL number for the local pseudo-time step, \(\text{CFL}_\tau\), is initialized at 0.5 and gradually increased to a maximum of 10 by the tenth iteration.
+Although the setup largely follows the reference study \cite{morgenstern1994hypersonic}, certain aspects remain ambiguous. These include the specification of the inlet velocity profile, the boundary layer mesh resolution near the wall, and the choice of time-step size. To the authors' knowledge, these details have not been explicitly discussed in the existing literature.
+}
+
+% \added[id=r2]
+% {
+% Following early computational research \cite{morgenstern1994hypersonic}, 
+% we use an inflow condition of $Ma=6.3$, Reynolds number per unit length (meter) is  $\Re=4.084\times10^6$. 
+% Air specific heat ratio and Prandtl number are taken as $\gamma = 1.4$ and $Pr=0.7$.
+% Inflow has stagnation temperature $1110\unit{K}$ and wall temperature is $300\unit{K}$.
+% In this test, viscosity obeys standard air's Sutherland's law and Prandtl number is set as $0.72$.
+% The cavity has length-to-depth ratio $L/D=10.67$ and the dimensional depth is $D=19.1\unit{mm}$.
+% In actual computation, 
+% inflow density, velocity and cavity depth are normalized as $1$.
+% The reference density and pressure are set as $\rho_0=1$ and $p_0=1.7997\times10^{-2}$, respectively.
+% Maximum non-dimensional time step is set to $\inc t_{max}=0.01$ to capture most of the unsteady features 
+% according to previous results \cite{morgenstern1994hypersonic}. 
+% In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.5$
+% and increased gradually up to its maximum $10$ at the tenth iteration.
+% Although the conditions above are all derived from the reference 
+% computation \cite{morgenstern1994hypersonic}, there are still some ambiguities
+% in the computational setup including 
+% the inlet velocity profile, the boundary layer mesh height and 
+% the choice of time step size, which has not been discussed in the literature
+% to the author's knowledge.
+% }
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_Mesh.png}
+    \caption{\added[id=r2]{Computational mesh near the cavity for the hypersonic flow past an open cavity problem.}}
+    \label{fig:Cavity_mesh}
+\end{figure}
+
+\added[id=r2]
+{
+A mixed two-dimensional unstructured mesh consisting of 121,747 quadrilateral and triangular cells is used for the simulation. The height of the first off-wall grid point is set to $10^{-4}D$. A portion of the mesh is shown in Figure \ref{fig:Cavity_mesh}.
+The simulation is initialized with freestream conditions in the region $y \geq 0$. In the region $y < 0$, freestream pressure, wall temperature, and zero velocity are prescribed as the initial condition. The simulation proceeds until the initial transients have dissipated.
+The positivity-preserving fourth-order variational finite volume method, combined with ESDIRK4 time integration, is employed for this test.
+% All positivity-preserving algorithms, including physical time step limiting,
+% pseudo time step limiting, increment correction and reconstruction polynomial
+% scaling are applied. 
+The reference density and pressure are set to \(\rho_0 = 1\) and \(p_0 = 1.7997 \times 10^{-2}\), respectively.
+}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_T.png}
+    \caption{\added[id=r2]{Time-averaged temperature contour of the hypersonic flow past an open cavity. The plot includes 24 contour lines ranging from 100 to 560.}}
+    \label{fig:Cavity_T}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{pics/Cavity_P.png}
+    \caption{\added[id=r2]{Contour of time-averaged normalized pressure for the hypersonic flow past an open cavity. The normalized pressure is computed as $p/(\rho_\infty U_\infty^2)$. The The plot includes 27 contour lines ranging from 0.01 to 0.07.}}
+    \label{fig:Cavity_P}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_q.pdf}
+        \caption[]{Heat transfer rate}
+        \label{sfig:Cavity1_q}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_p.pdf}
+        \caption[]{Pressure}
+        \label{sfig:Cavity1_p}
+    \end{subfigure}
+    \caption{\added[id=r2]{Time-averaged wall heat transfer rate and pressure.}}
+    % Compared with experiment \cite{hahn1969experimental} and computation \cite{morgenstern1994hypersonic}.}}
+    \label{fig:Cavity1}
+\end{figure}
+
+
+\added[id=r2]{
+After the initial transients subside, time-averaged flow properties are analyzed. Figures \ref{fig:Cavity_T} and \ref{fig:Cavity_P} show the time-averaged temperature and pressure distributions, respectively. The results generally agree with those reported in the reference computation \cite{morgenstern1994hypersonic}.
+Figure \ref{fig:Cavity1} compares the computed wall heat flux and pressure with experimental data from \cite{hahn1969experimental}. For comparison, both quantities are normalized using values at the upstream station $x/D = -1.33$. The computed heat flux aligns well with both the experimental data and the reference computation. The variation near the trailing edge of the cavity is attributed to large vortex structures; the experimental setup may not have provided sufficient spatial resolution to capture this behavior \cite{morgenstern1994hypersonic}.
+The pressure distribution along the cavity floor agrees closely with the reference simulation. However, the experimental pressure values are significantly lower near the cavity leading edge. 
+This discrepancy may be due to differences in flow conditions or setup details between the current simulation and the experimental study.
+% It is noted that, the discrepancy between the current and reference simulation results may be partially due to differences in flow conditions or setup details between the current simulation and the reference study.
+}
+
+% \added[id=r2]
+% {
+% After initial transients are eliminated, time-averaged properties 
+% are investigated. Figure \ref{fig:Cavity_T} and Figure \ref{fig:Cavity_P}
+% demonstrate time-averaged temperature and pressure distribution.  
+% % Temperature in Figure \ref{fig:Cavity_T} is in Kelvins and pressure in 
+% %  Figure \ref{fig:Cavity_P} is normalized value $p/(\rho_\infty U_\infty^2)$.
+% The time averaged field results generally agree with those from the reference computation \cite{morgenstern1994hypersonic}.
+% The computed wall heat flux rate and pressure are compared with the experimental data \cite{hahn1969experimental} in Figure \ref{fig:Cavity1}. To compare the wall heat flux rate and pressure with experimental data
+% \cite{hahn1969experimental}, 
+% computed values are normalized with heat transfer rate and 
+% pressure at a station $x/D=-1.33$. 
+% From Figure \ref{fig:Cavity1}, the computed heat transfer rate 
+% matches well with experimental data and reference computation.
+% The variation near the end of the cavity results from large 
+% vortex structures, and the experiment might have failed to 
+% provide enough resolution \cite{morgenstern1994hypersonic}.
+% The pressure distribution at the bottom of the cavity matches 
+% the reference computation, while the experimental pressure values 
+% are significantly lower at the start of the cavity. 
+% The difference between the current result and 
+% the reference computation might be a result of difference in 
+% flow condition setups.
+% }
+
+\added[id=r2]
+{
+To investigate the profit from using implicit time marching, 
+time steps and projected explicit time steps $\inc t_E$ are plotted in
+Figure \ref{fig:Cavity_time}. 
+The projected explicit time step size $\inc t_E$ is 
+calculated explicit physical time step CFL constraint being
+\begin{equation}
+    \label{eq:physical-time-step-CFL}
+    \inc t_E = \min_i{\left\{
+    \frac{\CFL \overline{\OO}_i }
+    {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
+    \right\}} 
+\end{equation} 
+using $\CFL = 1$.
+Even without any positivity-preserving restrictions, 
+explicit time marching schemes rely on this criterion to maintain 
+linear stability. It can be observed in Figure \ref{fig:Cavity_time} that 
+after initial transients, implicit time step size maintains a value of $0.01$, 
+while $\inc t_E$ stabilizes lower than $1.2\times 10^{-6}$. 
+This means implicit time marching has generally more than $8000$ times larger
+time steps compared with explicit time marching.
+Considering that each implicit ESDIRK4 step has 5 stages and each stage 
+takes at most 40 inner iterations to solve, and each implicit inner iteration
+is at most $20\%$ more expensive than explicit stages according to Table \ref{tab:cpu-time-cost},
+the implicit scheme still has efficiency more than 30 times higher than explicit ones. 
+If the cost of multi-stage explicit methods and the time step restriction based on some specific 
+positivity-preserving method are considered, the time step efficiency advantage
+of the implicit scheme might be even more significant.
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t.pdf}
+    \caption{Time step history and projected explicit time step in the 
+    hypersonic cavity problem.}
+    \label{fig:Cavity_time}
+\end{figure}
+
+\added[id=r2]
+{
+In order to further investigate the performance of implicit positivity-preserving time marching, 
+an explicit SSPRK3 positivity-preserving scheme based on weak monotonicity of 
+LLF-form viscous flux \cite{zhang2017positivity} is implemented in our finite volume code and run on the hypersonic cavity problem. 
+The original explicit Navier-Stokes positivity-preserving algorithm \cite{zhang2017positivity} adopts a very similar CFL number estimation 
+with the current work, with the $O(\Re \Delta x^2)$ term \cite{zhang2017positivity} provided by the viscous spectral radius estimation
+in \eqref{eq:lambda-face-estimation}.
+The current explicit time step size \eqref{eq:physical-time-step-CFL} should be at least $1/2$ of that in the original work \cite{zhang2017positivity}.
+According to the original work \cite{zhang2017positivity}, in SSPRK3 explicit 
+positivity-preserving method, when updated cell average values encounter 
+negative values, the time step size should be halved and the current time 
+step should be restarted.
+}
+
+\added[id=r2]
+{
+In the explicit SSPRK3 test, time is only integrated to $0.1$.
+The spacial discretization is switched to 2nd order Green-Gauss reconstruction for 
+both implicit and explicit positivity-preserving time marching.
+Using an explicit reconstruction avoids extra low efficiency on explicit time marching caused by variational reconstruction's implicit nature.
+The time step size history is shown in Figure \ref{fig:Cavity_time_explicitTest}.
+The implicit ESDIRK4 positivity-preserving method takes $13$ steps to 
+reach $t=0.1$, while SSPRK3 needs $153,213$ steps. 
+The actual time step is even smaller than the ones projected from the 
+implicit solution in Figure \ref{fig:Cavity_time}.
+From Figure \ref{fig:Cavity_0d1}, at $t=0.1$, the transient 
+solutions obtained with SSPRK3 and ESDIRK4 are almost identical.
+With the same test environment including hardware, software and 
+solver configuration, SSPRK3 takes $10,497$ seconds while 
+ESDIRK4 takes $73.8$, which means adopting an implicit positivity-preserving 
+time marching in the hypersonic cavity problem grants an acceleration factor of more than $140$.
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t_explicitTest.pdf}
+    \caption{Time step history in the hypersonic cavity problem compared with explicit positivity-preserving method.}
+    \label{fig:Cavity_time_explicitTest}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_0d1_Ma_SSPRK3.png}
+        \caption[]{SSPRK3}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.5\textwidth}
+        \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_0d1_Ma_ESDIRK4.png}
+        \caption[]{ESDIRK4}
+    \end{subfigure}
+    \caption{Mach number distribution at $t=0.1$, hypersonic cavity problem, at back edge of cavity, 32 lines from 0.2 to 6.2.}
+    \label{fig:Cavity_0d1}
+\end{figure}
+
+
+
+
+
+\subsection{Three-dimensional Noh problem}
+
+In the Noh problem \cite{noh1987errors}, an implosion at the origin generates a spherical shock wave with an infinite Mach number, propagating outward from the origin at a constant speed. 
+Due to its extreme conditions, the Noh problem has been widely used to evaluate the effectiveness of positivity-preserving numerical schemes for three-dimensional Euler equations \cite{hu2013positivity}.
+Following \cite{johnsen2010assessment}, 
+in our simulation, the computation domain is set as
+$[0,0.256]\times[0,0.256]\times[0,0.256]$. The ratio of specific heat is $\gamma=5/3$.
+The initial conditions are
+\begin{equation}
+\label{eq:initial-condition-Noh}
+    \begin{aligned}
+        \rho & = 1, \\
+        \mathbf{u}  &= -\mathbf{x} /\|\mathbf{x}\|_2, \\
+        p & = 10^{-6},\\
+    \end{aligned}
+\end{equation}
+where $\|\mathbf{x}\|_2$ is the distance to the 
+origin. The pressure is nominally zero and leads to an infinite Mach number for the imploding flow. While in practical computations, a lower bound on the pressure, such as $10^{-6}$ in \eqref{eq:initial-condition-Noh}, is imposed to prevent complex eigenvalues which would make the problem ill-posed \cite{johnsen2010assessment}.
+Symmetric boundary conditions are applied on the three boundary planes passing through the origin. For the remaining boundary planes, inflow pressure and velocity are specified based on the initial conditions, while the time-dependent density is set from the analytical solution.
+The analytic solution of density \cite{noh1987errors} is 
+\begin{equation}
+    \rho = 
+    \begin{dcases}
+        64, & \text{if } \ \|\mathbf{x}\|_2<t/3, \\
+        (1+t/\|\mathbf{x}\|_2)^2,  & \text{else}.
+    \end{dcases}
+\end{equation}
+The simulation is performed on a uniform hexahedral mesh with a grid size of $\inc x = \inc y= \inc z = 10^{-3}$, using a maximum time step size of $\inc t_{max}=5 \times 10^{-4}$. The simulation is terminated at $t=0.6$ to ensure that the 
+shock does not reach the inflow boundaries. 
+In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+and increased gradually up to its maximum $2$ at the tenth iteration.
+The reference density and pressure values used in reconstruction polynomial scaling are $\rho_0=1$ and $p_0=10^{-6}$, respectively. 
+
+Figures \ref{fig:noh0} and \ref{fig:noh1} present the numerical solution at $t = 0.6$, showing that neither negative density nor negative pressure appears.
+% The density profiles in Figure \ref{sfig:noh0-b} and the internal energy profiles in Figure \ref{sfig:noh0-e} are
+% close to those presented in \cite{hu2013positivity}. 
+The profiles in Figure \ref{fig:noh1} confirm that the computed shock position and the fluid conditions behind the shock are accurately captured. The discrepancy from the analytical solution near the origin arises from the three-dimensional nature of the system.
+Compared with the results computed on a $\inc x = \inc y= \inc z = 2 \times 10^{-3}$ Cartesian mesh using fifth- to tenth-order hybrid WENO/central difference schemes in \cite{johnsen2010assessment}, 
+the density profiles in Figure \ref{sfig:noh0-r} exhibit smaller errors near the origin.  
+Likewise, compared with the results computed on a $200 \times 30$ polar mesh by using a second-order Lagrangian discontinuous Galerkin scheme in \cite{li2014cell},
+the internal energy profiles in Figure \ref{sfig:noh0-e} show notably lower errors near the origin.
+Overall, these results for the Noh problem underscore the effectiveness of the proposed positivity-preserving algorithm for three-dimensional cases.
+
+% \begin{figure}[htbp]
+%     \centering
+%     \begin{subfigure}{0.4\textwidth}
+%         \includegraphics[width=\textwidth]{pics/PPRobust_NohR-256.png}
+%         \caption[]{density}
+%         \label{sfig:noh0-a}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.45\textwidth}
+%         \includegraphics[width=\textwidth]
+%         {pics/PPRobust_Noh-p-256.pdf}
+%         \caption[]{pressure}
+%         \label{sfig:noh0-p}
+%     \end{subfigure}
+%     \caption{Density contour and pressure profiles of the Noh problem at $t=0.6$.}
+%     \label{fig:noh0}
+% \end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.49\textwidth]{pics/PPRobust_NohR-256.png}
+    \caption{Density contour of the Noh problem at $t=0.6$.}
+    \label{fig:noh0}
+\end{figure}
+
+\begin{figure}[htbp!]
+    \centering
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-p-256.pdf}
+        \caption[]{Pressure}
+        \label{sfig:noh0-p}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-rho-256.pdf}
+        \caption[]{Density}
+        \label{sfig:noh0-r}
+    \end{subfigure}
+    \hfill
+    \vspace{5mm}
+    \begin{subfigure}{0.49\textwidth}
+        \includegraphics[width=\textwidth]
+        {pics/PPRobust_Noh-e-256.pdf}
+        \caption[]{Internal energy}
+        \label{sfig:noh0-e}
+    \end{subfigure}
+    \caption{Solution profiles along the $y=z=0$ (axial) and $y=x,z=0$ (diagonal) lines of the Noh problem at $t=0.6$.}
+    \label{fig:noh1}
+\end{figure}

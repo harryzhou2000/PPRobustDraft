@@ -31,14 +31,15 @@
 \usepackage{lineno}
 
 \usepackage{xcolor}
-
 \usepackage[draft]{changes}
 \setauthormarkup{} % use empty author markup
+\setdeletedmarkup{} % use empty deleted markup
 \definecolor{harryModColor}{rgb}{0.8, 0, 0.3}
 \definechangesauthor[name={Hanyu Zhou},color=harryModColor]{harry}
-
+\definechangesauthor[name={Reviewer 1},color=red]{r1}
+\definechangesauthor[name={Reviewer 2},color=blue]{r2}
+\definechangesauthor[name={Reviewer 1\&2},color=orange]{r12}
 \usepackage{siunitx}
-% \DeclareSIUnit{\fahrenheit}{\SIUnitSymbolDegree F}
 
 \journal{Journal of Computational Physics}
 
@@ -104,8 +105,14 @@
 \end{frontmatter}
 
 \linenumbers
-
-\input{content.tex}
+\input{sections/introduction.tex}
+\input{sections/implicitFV.tex}
+\input{sections/ppAlgorithm.tex}
+\input{sections/analysis.tex}
+\input{sections/numResults.tex}
+\input{sections/conclusions.tex}
+\input{sections/acknowledgments.tex}
+% \input{sections/appendix.tex}
 
 %%%% BIBLIOGRAPHY
 \bibliographystyle{elsarticle-num}

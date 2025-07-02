@@ -1,0 +1,636 @@
+% !TeX root = main.tex
+
+\section{Positivity-preserving algorithm}
+\label{sec:PP}
+
+Numerical methods, ranging from traditional second-order to recently developed high-order approaches, are widely employed for simulating compressible flows. However, these methods, especially the high-order ones, often suffer from reduced robustness when applied to challenging compressible flow problems. A critical robustness issue is the failure to maintain positive density or pressure, which can cause the numerical solution to blow up.
+
+% Numerical methods, including the traditional second-order and the recently developed high-order methods, have been widely used to perform simulations of compressible flows. However, these numerical methods, especially the high-order ones, often experience reduced robustness when applied to challenging compressible flow problems. 
+% A frequently encountered robustness issue is the failure to preserve positivity of density or pressure, which may cause blow-up of the numerical solution. 
+
+% In compressible flow simulations, density and pressure need to be preserved positive, to avoid nonphysical solutions or numerical instabilities. Therefore, a positivity-preserving property is desired for numerical methods, especially high-order numerical methods, to perform robust simulations of compressible flows.
+
+In recent decades, positivity-preserving algorithms have been extensively developed to enhance the robustness of numerical methods. However, most of these algorithms have primarily targeted numerical methods employing explicit time integration, with only a limited number of studies addressing positivity preservation in implicit numerical schemes \cite{qin2018implicit}. This scarcity arises from the inherent difficulty in verifying the positivity-preserving property of implicit methods, even for low-order schemes \cite{huang2024general}, primarily because implicit time-stepping updates solutions by iteratively solving nonlinear equation systems.
+
+% Over recent decades, positivity-preserving algorithms have been developed to enhance the robustness of numerical methods. However, most of these algorithms are designed for numerical methods employing explicit time integration. Only a few works exist in the literature concerning the positivity-preserving property of implicit numerical methods \cite{qin2018implicit}, as it is difficult to verify if an implicit numerical scheme is positivity-preserving, even for a low-order one \cite{huang2024general}. This difficulty comes from the fact that, in implicit time stepping, the solutions are updated by solving a system of nonlinear equations iteratively. 
+
+In this paper, we propose a positivity-preserving algorithm for arbitrary high-order implicit finite volume methods on unstructured grids, to perform robust simulations of complex compressible flows. The basic idea, detailed methodology, implementation, and theoretical analysis will be presented in the rest of this section.
+
+%The finite volume method with implicit time marching
+%is able to steadily produce numerical results in
+%a wide range of flow problems.
+%However, when flow conditions are extreme,
+%the numerical process could fail due to
+%emergence of invalid states including
+%negative density and negative internal energy.
+%High-order finite volume methods suffer from this issue especially,
+%which could even fail due to the initial transients
+%of a low Mach flow problem.
+%This kind of numerical failure is referred to
+%as positivity-preserving problems in the current research.
+%
+%The current section will introduce a series of simple
+%and straightforward algorithms
+%to mitigate the change of encountering positivity-preserving problems.
+
+\subsection{Overview of the algorithm}
+
+Positivity-preserving algorithms are employed to ensure that density and pressure remain positive throughout simulations. Formally, we define the set of admissible states as:
+\begin{equation}
+    G= \left\{
+    \U =  \begin{pmatrix}
+        \rho \\ \rho \mathbf{u} \\ \rho E
+    \end{pmatrix} \middle|
+    \rho >  0
+    \text{ and }
+    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) >  0
+    \right\}.
+\end{equation}
+Thus, a solution $\mathbf{U}$ is admissible if and only if $\mathbf{U} \in G$.
+Given the equation of state \eqref{eq:eos}, the following relation holds:
+\begin{equation}
+    \mathrm{if} \ \ \rho>0, \ \mathrm{then} \ \ p>0 \ \Leftrightarrow \ e >0,  
+\end{equation}
+where $e = C_p T / \gamma$ is the internal energy.
+From the definitions of conserved variables in \eqref{eq:def-U-F-Fv}, the density $\rho$ emerges as a linear function of $\mathbf{U}$, satisfying:
+\begin{equation}\label{eq:density-linear}
+\rho\left(w\mathbf{U}_1 + (1 - w)\mathbf{U}_2\right) = w\rho(\mathbf{U}_1) + (1 - w)\rho(\mathbf{U}_2), \quad 0 \leq w \leq 1.
+\end{equation}
+Furthermore, pressure $p$ is a concave function of $\mathbf{U}$, provided $\rho(\mathbf{U}) \geq 0$, and fulfills the inequality:
+\begin{equation}
+    \label{eq:pressure-Jensen}
+    p \left(w\U_1+(1-w)\U_2\right)  \geq w p\left(\U_1\right) + (1-w) p \left(\U_2\right), \ 0 \leq w \leq 1, \ \mathrm{if} \ \rho\left(\U_1\right) \geq 0, \ \rho\left(\U_2\right) \geq 0.
+\end{equation}
+These properties of density and pressure are essential for verifying solution positivity.
+
+% Positivity-preserving algorithms are employed to preserve positivity of density and pressure during the simulations. Accordingly, the set of admissible states is defined as
+% \begin{equation}
+%     G= \left\{
+%     \U =  \begin{pmatrix}
+%         \rho \\ \rho \mathbf{u} \\ \rho E
+%     \end{pmatrix} \middle|
+%     \rho >  0
+%     \text{ and }
+%     p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) >  0
+%     \right\}.
+% \end{equation}
+% It is note that, given the equation of state \eqref{eq:eos}, we have the following relation
+% \begin{equation}
+%     \mathrm{if} \ \rho>0, \ \mathrm{then} \ p>0 \ \Leftrightarrow \ e >0,  
+% \end{equation}
+% where $e= C_p T /\gamma$ is the internal energy. We now present properties of the density and pressure functions that are useful in examining the positivity of a solution. 
+% Density $\rho$ is a linear function of $\U$, and satisfies
+% \begin{equation}
+%     \label{eq:density-linear}
+%     \rho\left(w\U_1+(1-w)\U_2\right) = w\rho\left(\U_1\right) + (1-w) \rho \left(\U_2\right) , \quad 0 \leq w \leq 1.
+% \end{equation}
+% Pressure $p$ is a concave function of $\U$ if $\rho\left(\U\right) \geq 0$, and satisfies inequality
+% \begin{equation}
+%     \label{eq:pressure-Jensen}
+%     p \left(w\U_1+(1-w)\U_2\right)  \geq w p\left(\U_1\right) + (1-w) p \left(\U_2\right), \quad 0 \leq w \leq 1, \quad \mathrm{if} \ \rho\left(\U_1\right) \geq 0, \ \rho\left(\U_2\right) \geq 0.
+% \end{equation}
+% Based on the above definitions, a solution $\U$ is admissible if $\U \in G$. 
+
+A numerical scheme is said to be positivity-preserving if it satisfies the condition:
+\begin{equation}
+     \mathrm{if} \ \U^{n} \in G, \ \mathrm{then} \ \U^{n+1} \in G.
+\end{equation}
+In a finite volume method, the numerical solution at $t^{n+1}$ is
+\begin{equation}
+    %	\label{eq:FVRec}
+    \U^{n+1}_i (\x)= \UM^{n+1}_i + \sum_{l=1}^{\mathrm{N_b}(k)} \U_i^{n+1,l} \varphi_{i,l}(\x), \quad i=1, \cdots,N,
+\end{equation}
+where the degrees of freedom $\{\uu^{n+1}_i\}_{i=1}^{N}$ are updated based on the solution from the previous time step, and the reconstruction polynomial $\{\U^{n+1}_i (\x)\}_{i=1}^N$ are determined from the cell-averages $\{\uu^{n+1}_i\}_{i=1}^N$.
+By using an implicit finite volume method, a solution $\U^{n+1} \in G$ can be obtained in the following two steps:
+\begin{enumerate}[label=(\arabic*)]
+    \item Given $\U^n \in G$, obtain $\UM^{n+1} \in G$ through implicit time integration,
+    \item Given $\UM^{n+1} \in G$, obtain $\U^{n+1} \in G$ through reconstruction polynomial limiting.
+\end{enumerate}
+The second step can be accomplished by using the scaling limiter of Zhang et al. \cite{zhang2010positivity}. Therefore, the key of developing a positivity-preserving implicit finite volume method is to design an implicit time-stepping scheme that leads to admissible updated cell-averages.
+
+In this work, we design an algorithm to preserve positivity of cell-averages for implicit finite volume methods. It is known that, in implicit finite volume methods, the future state is obtained through iterations. For instance, in each of the final five stages of the ESDIRK4 time integration presented in Section \ref{ssec:TimeMarching}, inner iterations are performed to obtain the solution to a nonlinear equation system. The solution at next time step $\uu^{n+1}$ is the converged state of the last stage. Therefore, to obtain admissible numerical solution, we need to ensure that:
+\begin{enumerate}[label=(\alph*)]
+    \item the future state is admissible, i.e., $\uu^{n+1} \in G$;
+    \item the intermediate states are admissible, i.e., $\uu^{\left(s,m\right)} \in G$,
+\end{enumerate}
+where $\uu^{\left(s,m\right)}$ is the solution at inner iteration step $m$ of stage $s$. However, the solution at next time step or next pseudo time step, is unknown at the beginning of the time step or pseudo time step, posing significant challengs in designing positivity-preserving algorithms. 
+To address this challenge, we propose to estimate the solution change within one time step, based on a simple linear approximation. The estimated solution change is proportional to the time step size. Admissible solution at next time step can be guaranteed by limiting the time step size to ensure that the relative solution change is above a certain threshold, which imposes a lower bound for the estimated future state. If the lower bound is larger than the estimation error, the real future state is guaranteed to be positive.   
+
+The strategy to limit physical time step size is briefly presented to explain the basic idea of the proposed algorithm. Given an admissible state $\uu^n \in G$, the right-hand-side of the semi-discrete finite volume scheme, $\R^n$, can be computed through solution reconstruction and flux evaluation, as described in Section \ref{sec:CFV}. The future state can be estimated as
+\begin{equation}
+    \uu^{n+1} \approx \uu^{n+1,*}=\uu^n + \inc t^n \R^n,
+\end{equation}
+which is actually a linear approximation or first-order Taylor series approximation. The allowable time step size can be obtained by constraining the relative solution change. For instance, the following condition
+\begin{equation}
+    % \rho \left(\uu^n + \inc t^n_{pp} \R^n\right) - \rho \left(\uu^n\right) \geq -\eta \rho \left(\uu^n\right)  \ \Leftrightarrow \ \rho \left(\uu^n + \inc t^n_{pp} \R^n\right) \geq \left(1-\eta \right) \rho \left(\uu^n\right), \ \eta \in \left(0,1\right),
+    \rho \left(\uu^{n+1,*}\right) \geq \left(1-\eta_t \right) \rho \left(\uu^n\right), \ \eta_t \in \left(0,1\right),
+\end{equation}
+can be enforced to determine the allowable time step size for positivity of density. By choosing a sufficiently small $\eta_t$, the lower bound of estimated state is larger than the error of estimation, i.e.,
+\begin{equation}
+    \left(1-\eta_t \right) \rho \left(\uu^n\right) > \left|\rho\left(\uu^{n+1}\right)-\rho\left(\uu^{n+1,*}\right) \right|,
+\end{equation}
+then it can be guaranteed that the future state is positive, i.e.,
+\begin{equation}
+\begin{aligned}
+    \rho(\uu^{n+1}) &= \rho(\uu^{n+1,*}) + \rho\left(\uu^{n+1}\right)-\rho\left(\uu^{n+1,*}\right)  \\
+    &\geq \left(1-\eta_t \right) \rho \left(\uu^n\right) - 
+    \left|\rho\left(\uu^{n+1}\right)-\rho\left(\uu^{n+1,*}\right) \right| \\
+    &>0.
+\end{aligned}
+\end{equation}
+The fundamental concept behind time step limiting is illustrated in Figure \ref{fig:dt_limiting}.
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8\linewidth]{pics/dt_limiting.pdf}
+    \caption{Illustration on the principle of time step limiting.}
+    \label{fig:dt_limiting}
+\end{figure}
+
+The time step size limiting strategy can be also implemented in the direction of pseudo time. However, it is noted that, the solution at next pseudo time step, is obtained by solving the linearized stage equation using only one iteration. As a result, the updated solution is not the solution to the linearized stage equation and thus may be far from the estimation. Therefore, the positivity of the updated solution cannot be guaranteed by only limiting the pseudo time step size. To address this issue, an increment correction, which can be viewed as a local under-relaxation, is applied to ensure admissible updated states. 
+
+% In this paper, we propose a positivity-preserving algorithm for finite volume methods with implicit dual-time stepping. In this algorithm, the physical and pseudo time step sizes are limited by controlling the solution changes, to obtain admissible cell-averages at the next physical and pseudo time steps, respectively. 
+
+In summary, physical time step size limiting is performed to ensure admissible future state, and pseudo time step size limiting and increment correction are performed to ensure admissible intermediate states. The flowchart of the algorithm implementation in one time step is illustrated in Figure \ref{fig:sketch}. The details of the proposed positivity-preserving algorithm will be presented in the following subsections.
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=\linewidth]{pics/sketch.pdf}
+    \caption{Flowchart of the proposed positivity-preserving algorithm.}
+    \label{fig:sketch}
+\end{figure}
+
+\subsection{Preserving positivity of cell-averages}
+\subsubsection{Physical time step limiting}
+\label{ssec:physical-limiting}
+A limiting procedure for physical time step size is developed to ensure that the future state is admissible. However, the future state is unknown at the beginning of a time step, posing a significant challenging in designing algorithms to enforce positivity. To overcome this challenge, we propose to make an estimation of the future state, and then impose a lower bound on the estimated state. The future state is guaranteed to be admissible if the lower bound is positive and larger than the error of estimation. An allowable physical time step size can be determined by requiring that the estimated state is not smaller than the lower bound. 
+
+In this work, a simple linear approximation is used to estimate the future state. At time $t^n$, given an admissible state $\uu^n$, the future state $\uu^{n+1}$ is estimated as
+\begin{equation}
+\label{eq:linear-approximation}
+    \uu^{n+1} \approx \uu^{n+1,*}=\uu^n + \inc t^n \R^n.
+\end{equation}
+The estimation errors of density and pressure are
+\begin{equation}
+    % Es \left(\rho\right) = \rho\left(\uu^{n+1}\right) - \rho\left(\uu^{n+1,*}\right)  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right), \quad Es \left(p\right) = p\left(\uu^{n+1}\right) - p\left(\uu^{n+1,*}\right)  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right).
+    \begin{dcases}
+        &E_{\rho} = \left|\rho\left(\uu^{n+1}\right) - \rho\left(\uu^{n+1,*}\right)\right|  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right), \\
+        &E_{p} = \left|p\left(\uu^{n+1}\right) - p\left(\uu^{n+1,*}\right)\right|  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right).
+    \end{dcases}
+    % \rho\left(\uu^{n+1}\right) - \rho\left(\uu^{n+1,*}\right)  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right), \quad p\left(\uu^{n+1}\right) - p\left(\uu^{n+1,*}\right)  \sim \mathcal{O} \left(\left(\inc t^n\right)^2\right).
+\end{equation}
+We then impose lower bounds for estimated density and pressure as follows
+\begin{equation}
+\begin{dcases}
+\label{eq:impose-lower-bounds}
+    \rho\left(\uu^{n+1,*}\right) \geq \rho_{min}, \\
+    p\left(\uu^{n+1,*}\right) \geq p_{min},
+\end{dcases}
+\end{equation}
+where $\rho_{min}>0$ and $p_{min}>0$. If the lower bounds are larger than the estimation error, i.e.,
+\begin{equation}
+    \begin{dcases}
+        \rho_{min} > E_\rho, \\
+        p_{min} > E_p,
+    \end{dcases}
+\end{equation}
+then it is derived that
+\begin{equation}
+    \begin{dcases}
+        \rho\left(\uu^{n+1}\right) = \rho\left(\uu^{n+1,*}\right) + \rho\left(\uu^{n+1}\right) - \rho\left(\uu^{n+1,*}\right) \geq \rho_{min} - E_\rho>0, \\
+        p\left(\uu^{n+1}\right) = p\left(\uu^{n+1,*}\right) + p\left(\uu^{n+1}\right) - p\left(\uu^{n+1,*}\right) \geq \rho_{min} - E_p>0,
+    \end{dcases}
+\end{equation}
+which means that the future state is admissible, i.e., $\uu^{n+1} \in G$. Based on this analysis, the key is to design appropriate lower bounds. 
+
+In this work, the lower bounds are set as 
+\begin{equation}
+\label{eq:lower-bounds}
+    \begin{dcases}
+        \rho_{min}= (1-\eta_t) \rho \left(\uu^n\right), \\
+        p_{min}= (1-\eta_t) p \left(\uu^n\right),
+    \end{dcases}
+\end{equation}
+where $\eta_t \in (0,1)$ is a free parameter. It is observed that, 
+the lower bounds are of order $\mathcal{O}\left(1\right)$. Therefore,
+it is not difficult to find suitable value of $\eta_t$ to make the lower bounds larger than the errors of estimation which are of order $\mathcal{O}\left(\left(\inc t^n\right)^2\right)$. Substituting \eqref{eq:lower-bounds} to \eqref{eq:impose-lower-bounds}, we obtain
+\begin{equation}
+    \begin{dcases}
+        \left[\rho \left(\uu^{n+1,*}\right)- \rho \left(\uu^n\right)\right]/\rho \left(\uu^n\right) \geq -\eta_t , \\
+        \left[p \left(\uu^{n+1,*}\right)- p \left(\uu^n\right)\right]/p \left(\uu^n\right) \geq -\eta_t ,
+    \end{dcases}
+\end{equation}
+which means that the relative change of the estimated solution is constrained. Furthermore, the parameter $\eta_t$ can be used to control the allowable solution change. A larger $\eta_t$ leads to a smaller threshold for the relative solution change. The principle to select value of parameter $\eta_t$ is discussed in Section \ref{ssec:influence-parameters}.
+
+In unsteady flow simulations using implicit time stepping, the physical time step sizes are typically specified as user-defined constants, chosen based on a priori estimates of the flow’s characteristic time scales. 
+In this work, we also define a constant $\Delta t_{max}$ for each problem, serving as an upper bound on the physical time step size. At the beginning of each time step, an allowable time step size is computed, and the actual time step is taken as the minimum of the allowable and predefined values.
+The allowable physical time step size is determined by enforcing lower bounds on the estimated state variables, as shown in \eqref{eq:impose-lower-bounds}. For each cell, a local time step is computed to ensure that both the density and pressure in the estimated future state remain above their respective lower bounds. The allowable global time step size is then taken as the minimum of these local time steps.
+
+
+% For challenging problems, there are transient states with very low density or pressure, making it difficult for the numerical method to preserve positivity using the original time step size $\inc t_{max}$.
+% This issue may be addressed by reducing the time step size temporarily. Therefore, we propose to control the physical time step size dynamically based on a positivity-preserving principle
+% \begin{equation}
+%     \label{eq:ppLimit}
+%     %		\begin{aligned}
+%     \rho\left(\uu_i^{n+1} \right)  >0, \quad
+%     p\left(\uu_i^{n+1}\right) > 0 ,
+%     %		\end{aligned}
+% \end{equation}
+% for all cells $i=1, \cdots,N$.
+% However, the solution $\UM_i^{n+1}$ is unknown at the beginning of the time step. To overcome this challenge, we propose a solution estimation based on a forward Euler time discretization as follows
+% \begin{equation}
+%     \label{eq:estimation-dt}
+%     \UM_i^{n+1} \approx  \uu_i^n + \inc t^{n}  \R_i^n.
+% \end{equation}
+% A time step size $\inc t^{n}_{pp}$ satisfying the positivity-preserving principle \eqref{eq:ppLimit} can be determined by limiting the solution changes as follows
+% \begin{equation}
+%     \label{eq:ppLimitDt}
+%     \begin{aligned}
+%         \rho\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right)
+%          & \geq
+%         (1- \eta_t)
+%         \rho\left(\uu_i^n\right)
+%         >  0, 
+%         % \Leftrightarrow \rho\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right) - \rho\left(\uu_i^n\right)
+%         %  & \geq -\eta_t \rho\left(\uu_i^n\right),
+%          \\
+%         p\left(\uu_i^n + \inc t^{n}_{pp}\R_i^n\right)
+%          & \geq
+%         (1- \eta_t)
+%         p\left(\uu_i^n\right)
+%         >  0,
+%     \end{aligned}
+% \end{equation}
+% for all cells $i=1, \cdots,N$, where $\eta_t\in(0,1)$ is the parameter used to control the relative solution changes. A larger $\eta_t$ results in a larger allowable time step. The local truncation error of the forward Euler method \eqref{eq:estimation-dt} is approximately proportional to $\left(\inc t^{n}\right)^2$, resulting in estimation errors of density and pressure as follows 
+% % $\mathcal{O}(\inc t^2)$. 
+% \begin{equation}
+% \label{eq:estimation-error-dt}
+% \begin{aligned}
+%     e_\rho= \rho\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right) - \rho\left( \UM_i^{n+1}\right) \sim \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right),\\ 
+%     e_p= p\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right) - p\left( \UM_i^{n+1}\right) \sim \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right).
+% \end{aligned}
+% \end{equation}
+% These estimation errors are significantly smaller than the allowable solution changes
+% \begin{equation}
+%     \begin{aligned}
+%         -\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1), \\
+%         -\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1),
+%     \end{aligned}
+% \end{equation}
+% which are obtained from \eqref{eq:ppLimitDt}.
+% % $\eta_t \rho\left(\uu_i^n\right) \sim \mathcal{O}(1)$ and $\eta_t p\left(\uu_i^n\right) \sim \mathcal{O}(1)$, 
+% Therefore, the forward Euler time discretization is sufficiently accurate for solution estimation.
+% %the positivity of $\UM_i^{n+1}$  can be preserved, provided that $\eta_t$ is not overly large.
+% Based on \eqref{eq:ppLimit}, \eqref{eq:ppLimitDt} and \eqref{eq:estimation-error-dt}, we have
+% \begin{equation}
+%     \eta_t \geq \max \left\{\dfrac{\rho\left(\uu_i^n\right)-\rho\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right)}{\rho\left(\uu_i^n\right)}, \dfrac{p\left(\uu_i^n\right)-p\left( \UM_i^{n} + \inc t^{n}_{pp}\R_i^n \right)}{p\left(\uu_i^n\right)} \right\} \sim \mathcal{O} \left(\inc t^{n}_{pp}\right),
+% \end{equation}
+% and
+% \begin{equation}
+%     \eta_t < 1- \max \left\{\dfrac{e_\rho}{\rho\left(\uu_i^n\right)}, \dfrac{e_p}{p\left(\uu_i^n\right)} \right\} \sim 1- \mathcal{O}\left(\left(\inc t^{n}_{pp}\right)^2\right),
+% \end{equation}
+% indicating that the parameter $\eta_t$ must not be too close to zero or one to ensure the positivity of solution $\UM_i^{n+1}$. 
+
+The allowable local time step size for cell $i$ can be determined in two steps.
+First, we assume an allowable time step size
+$\alpha_{t,i}^{\rho} \inc t_{max}$, with $0 <\alpha_{t,i}^{\rho}\leq 1$, to preserve positivity of density. According to \eqref{eq:density-linear}, \eqref{eq:linear-approximation}, \eqref{eq:impose-lower-bounds} and \eqref{eq:lower-bounds}, we have
+\begin{equation}
+\label{eq:alpha-t-rho-ineq}
+    \begin{split}
+        \rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) &= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) \\
+    &\geq
+    (1- \eta_t)
+    \rho\left(\uu_i^n\right),
+    \end{split}
+\end{equation}
+and thus obtain
+\begin{equation}
+\label{eq:alpha-t-rho}
+    \alpha_{t,i}^{\rho} = \begin{dcases}
+    \min\left\{1, \dfrac{-\eta_t \rho\left(\UM^n_i\right)}{\delta \rho^n_i} \right\}, & \
+        \mathrm{if} \ 
+        \delta \rho^n_i= \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right) < 0,
+        \\
+        1,  & \ \mathrm{else}.
+    \end{dcases}
+\end{equation}
+% where 
+% \begin{equation}
+%     \delta \rho^n_i= \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right).
+% \end{equation}
+Second, we assume an allowable time step size
+$\alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$, with $0<\alpha_{t,i}^{p} \leq 1$,
+to preserve positivity of pressure. According to \eqref{eq:pressure-Jensen}, \eqref{eq:linear-approximation}, \eqref{eq:impose-lower-bounds} and \eqref{eq:lower-bounds}, we have
+\begin{equation}
+\begin{split}
+    p\left(\UM^n_i +  \alpha_{t,i}^{p} \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) &\geq \left(1-\alpha_{t,i}^{p}\right)p\left(\UM^n_i\right) + \alpha_{t,i}^{p} p\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) \\
+    &\geq
+    (1- \eta_t)
+    p\left(\uu_i^n\right),
+\end{split}
+\end{equation}
+and thus obtain a sufficient condition
+\begin{equation}
+\label{eq:alpha-t-p}
+    \alpha_{t,i}^{p} = \begin{dcases}
+        \min\left\{1, \dfrac{-\eta_t p \left(\UM^n_i\right)}{\delta p_i^n} \right\}, & \ 
+        \mathrm{if} \ \delta p_i^n=  p \left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right) -  p \left(\UM^n_i\right) <0, \\
+        1, & \ \mathrm{else}.
+    \end{dcases}
+\end{equation}
+Once these two steps are completed, we determine the allowable local time step size for cell $i$ as $\Delta t^n_i= \alpha_{t,i}^{p}  \alpha_{t,i}^{\rho} \inc t_{max}$.
+The global time step size is computed by
+\begin{equation}
+    \label{eq:alpha-t-global}
+    \inc t^n = \min_i \left\{\Delta t^n_i \right\}.
+\end{equation}
+% where
+% \begin{equation}
+%     \alpha_t = \min_i(\alpha_{t,i}^{\rho}\alpha_{t,i}^{p}).
+% \end{equation}
+% It can be observed from the above equation that $\inc t^n \leq \inc t_{max}$, as $0<\alpha_t \leq 1$, indicating an upper bound of the global physical time step size.
+From the equation above, we observe that $\Delta t^n \leq \Delta t_{\text{max}}$ since $\Delta t^n_i \leq \Delta t_{max}$. This establishes an upper bound for the global physical time step size.
+An analysis on the lower bound of the physical time step size is presented in Section \ref{ssec:analysis-time-step}. It is proved that, 
+\begin{equation}
+    \dfrac{\inc t^n}{\inc t_{max}} \sim \mathcal{O} \left(1\right),
+\end{equation}
+which means that the limited physical time step size $\inc t^n$ is not infinitely small compared to $\inc t_{max}$.
+
+% \subsubsection{Positive intermediate states}
+
+\subsubsection{Pseudo time step limiting}
+\label{ssec:pseudo-limiting}
+
+The physical time step limiting strategy described in the previous subsection is used to obtain an admissible state $\UM^{n+1} \in G$, which is the converged solution of the final stage of ESDIRK4 \eqref{eq:ESDIRK4}. However, intermediate solutions with negative density or pressure may arise during the inner iterations of each stage. To address this issue, we propose to control solution changes by limiting pseudo-time step sizes during the inner iteration process, following a similar limiting strategy to that used in the physical-time direction described in Section \ref{ssec:physical-limiting}. It is important to note, however, that since local time steps are used in the pseudo-time direction, the limiting is applied in an element-wise manner only.
+
+For the $m$-th inner iteration at the $s$-th stage of ESDIRK4, we have the following positivity-preserving requirement
+\begin{equation}
+    \label{eq:ppLimit-Tau}
+    %		\begin{aligned}
+    \rho\left(\uu_i^{\left(s,m+1\right)} \right)>0, \quad
+    p\left(\uu_i^{\left(s,m+1\right)}\right)>0,
+    %		\end{aligned}
+\end{equation}
+for all cells $i=1,\cdots,N$. However, $\UM^{\left(s,m+1\right)}_i$ is unknown at the beginning of the pseudo-time step. Therefore, we propose to use a linear approximation to estimate the solution at next pseudo-time step. Based on the dual-time discretized stage equation \eqref{eq:dual-time-stage-equation}, the pseudo-time derivative on cell $i$ can be approximated as:
+\begin{equation}
+    \dfrac{\uu^{\left(s,m+1\right)}_i-\uu^{\left(s,m\right)}_i}{\inc \tau_i} \approx \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)}_i + a_{ss} \R_i^{\left(s,m\right)} - \dfrac{\uu^{\left(s,m\right)}_i - \uu^{n}_i}{\inc t^n}= \tilde{\R}^{\left(s,m\right)}_i ,
+\end{equation}
+which leads to a linear approximation
+\begin{equation}
+    \label{eq:estimation-dtau}
+    \UM_i^{\left(s,m+1\right)} \approx  \UM_i^{\left(s,m\right)} + \inc \tau_i  \tilde{\R}^{\left(s,m\right)}_i,
+\end{equation}
+where the local time step size $\Delta \tau_i$ is computed by using \eqref{eq:local-pseudo-time-step}.
+% with $ \tilde{\R}_i^{n,s,m}$ defined in \eqref{eq:define-inc}.
+An allowable pseudo-time step size $ \inc \tau_{i,pp}$ can be determined by imposing lower bounds on the estimated density and pressure as follows
+\begin{equation}
+    \label{eq:ppLimitDtau}
+    \begin{aligned}
+        \rho\left(\uu_i^{\left(s,m\right)} +  \inc \tau_{i,pp} \tilde{\R}_i^{\left(s,m\right)}\right)
+         & \geq
+        (1- \eta_\tau)
+        \rho\left(\uu_i^{\left(s,m\right)}\right)
+        , \\
+        p\left(\uu_i^{\left(s,m\right)} + \inc  \tau_{i,pp} \tilde{\R}_i^{\left(s,m\right)}\right)
+         & \geq
+        (1- \eta_\tau)
+        p\left(\uu_i^{\left(s,m\right)}\right)
+        ,
+    \end{aligned}
+\end{equation}
+where $\eta_\tau \in (0,1)$ is the parameter used to control the relative solution changes.
+
+The allowable pseudo-time step size can be determined according to \eqref{eq:ppLimitDtau}
+using the same two-step procedure presented in Section \ref{ssec:physical-limiting}.
+The allowable time step size is 
+\begin{equation}
+    \label{eq:alpha-tau}
+    \inc \tau_{i,pp}= \alpha_{\tau,i}^{p}\alpha_{\tau,i}^{\rho} \inc  \tau_{i},
+\end{equation}
+where
+%\begin{equation}
+%	\rho\left(\UM^n_i + \alpha_{t,i}^{\rho} \inc t_{max} \R^n_i\right)= \left(1- \alpha_{t,i}^{\rho}\right)\rho\left(\UM^n_i\right) + \alpha_{t,i}^{\rho} \rho\left(\UM^n_i + \inc t_{max} \R^n_i\right)  \geq
+%	(1- \eta_t)
+%	\rho\left(\uu_i^n\right),
+%\end{equation}
+%and thus obtain
+\begin{equation}
+    \label{eq:alpha-tau-rho}
+    \alpha_{\tau,i}^{\rho} = \begin{dcases}
+        \min\left\{1, \dfrac{-\eta_\tau \rho\left(\UM^{\left(s,m\right)}_i\right)}{\delta \rho_i^{\left(s,m\right)}} \right\}, & \mathrm{if} \ \delta \rho_i^{\left(s,m\right)}= \rho\left(\UM^{\left(s,m\right)}_i + \inc \tau_{i} \tilde{\R}^{\left(s,m\right)}_i\right) - \rho\left(\UM^{\left(s,m\right)}_i\right) < 0, \\
+        1, & \mathrm{else},
+    \end{dcases}
+\end{equation}
+and
+\begin{equation}
+    \label{eq:alpha-tau-p}
+    \alpha_{\tau,i}^{p} = \begin{dcases}
+        \min\left\{1, \dfrac{-\eta_\tau p \left(\UM^{\left(s,m\right)}_i\right)}{\delta p_i^{\left(s,m\right)}} \right\}, & \mathrm{if} \ \delta p_i^{\left(s,m\right)} = p \left(\UM^{\left(s,m\right)}_i + \alpha_{\tau,i}^{\rho} \inc \tau_{i} \tilde{\R}^{\left(s,m\right)}_i\right) -p \left(\UM^{\left(s,m\right)}_i\right) < 0, \\
+        1, &\mathrm{else}.
+    \end{dcases}
+\end{equation}
+
+It is noted that, at each pseudo-time step, the updated intermediate solution is obtained through a single LU-SGS iteration. Consequently, this solution does not represent the fully converged state of the linear system described by \eqref{eq:linearTauUpdate}. As a result, the accuracy of the estimation in \eqref{eq:estimation-dtau} cannot be theoretically guaranteed, nor can the positivity of the updated solution. %$\UM^{n,s,m+1}_i$.
+To overcome this limitation, an increment correction will be introduced in the next subsection.
+
+\subsubsection{Increment correction}
+\label{ssec:increment-correction}
+
+As pointed out in the previous subsection, even with limited physical and pseudo time step sizes, the intermediate results may exhibit negative density or pressure prior to the convergence of the inner iteration.
+Therefore, a pseudo-time increment correction is designed to ensure the positivity of the updated intermediate solutions. The increment correction is performed in a cell-by-cell manner.
+For cell $i$, the increment $\inc \uu_i^{\left(s,m\right)}$ is corrected based on the following conditions
+\begin{equation}
+    \label{eq:ppLimitInc}
+    \begin{aligned}
+        \rho\left(\uu_i^{\left(s,m\right)} + \alpha_{\inc,i} \inc \uu_i^{\left(s,m\right)}\right)
+         & \geq
+        (1- \eta_\inc)
+        \rho\left(\uu_i^{\left(s,m\right)}\right), \\
+        p\left(\uu_i^{\left(s,m\right)} + \alpha_{\inc,i} \inc \uu_i^{\left(s,m\right)}\right)
+         & \geq
+        (1- \eta_\inc)
+        p\left(\uu_i^{\left(s,m\right)}\right),
+    \end{aligned}
+\end{equation}
+where $\eta_\inc \in (0,1)$ is a relaxation parameter to control the relative solution changes.
+By using the same two-step approach used in physical/pseudo time step limiting, the relaxation parameter is computed by
+\begin{equation}
+\label{eq:alpha-inc}
+    \alpha_{\inc,i}= \alpha_{\inc,i}^{\rho} \alpha_{\inc,i}^{p},
+\end{equation}
+where
+\begin{equation}
+\label{eq:alpha-inc-rho}
+    \alpha_{\inc,i}^{\rho} = \begin{dcases}
+        \min\left\{1, \dfrac{-\eta_\inc \rho\left(\UM^{\left(s,m\right)}_i\right)}{\delta \rho_{\inc,i}} \right\}, & \mathrm{if} \ \delta \rho_{\inc,i} = \rho\left(\UM^{\left(s,m\right)}_i +\inc \uu_i^{\left(s,m\right)}\right)  -\rho\left(\UM^{n,s,m}_i\right) < 0, \\
+        1, &
+        \mathrm{else},
+    \end{dcases}
+\end{equation}
+and
+\begin{equation}
+\label{eq:alpha-inc-p}
+    \alpha_{\inc,i}^{p} = \begin{dcases}
+        \min\left\{1, \dfrac{-\eta_\inc p \left(\UM^{\left(s,m\right)}_i\right)}{\delta p_{\inc,i}} \right\}, & \mathrm{if} \ \delta p_{\inc,i} = \ p \left(\UM^{\left(s,m\right)}_i + \alpha_{\inc,i}^{\rho} \inc \uu_i^{\left(s,m\right)}\right) - p \left(\UM^{\left(s,m\right)}_i\right) < 0, \\
+        1, &
+        \mathrm{else}.
+    \end{dcases}
+\end{equation}
+A solution $\uu^{\left(s,m+1\right)}_i \in G$ is then computed by
+\begin{equation}
+\label{eq:increment-correction}
+    \uu_i^{\left(s,m+1\right)} = \uu_i^{\left(s,m\right)} + \alpha_{\inc,i} \inc \uu_i^{\left(s,m\right)}.
+\end{equation}
+
+% By using the increment correction, the intermediate states and hence the converged state, can be guaranteed to be positive. As mentioned in Section \ref{ssec:TimeMarching}, the ESDIRK4 method is used to perform implicit time integration in this work. A notable feature of the ESDIRK methods is that, the last stage gives the solution at the new time level. This means that, if the last stage converges, the converged state is the solution at the new time level, which can be guaranteed to be admissible.
+By applying increment correction, the positivity of both intermediate states and the final converged state can be ensured. As discussed in Section~\ref{ssec:TimeMarching}, the ESDIRK4 method is employed for implicit time integration in this work. A notable feature of ESDIRK methods is that the final stage directly yields the solution at the new time level. Consequently, once the last stage converges, the resulting state becomes the updated solution and is guaranteed to be admissible. This offers a distinct advantage of ESDIRK methods over other implicit Runge–Kutta schemes, where additional reconstruction or projection steps may be required.
+
+\subsection{Preserving positivity of reconstruction polynomials}
+\label{ssec:rec-pp-limiter}
+
+The density and pressure at quadrature points, interpolated using high-order reconstruction polynomials, may not remain positive despite the positivity of the cell-averaged values. To address this issue, we employ the scaling limiter developed by Zhang et al. \cite{zhang2010maximum,zhang2010positivity,zhang2012positivity}, which ensures positive density and pressure distributions within control volumes, given admissible cell-averages. Additionally, this scaling limiter is proven to be accuracy-preserving \cite{zhang2010positivity}.
+
+% The indices $n$,$s$ and $m$ are omitted here for all the discussions concerning reconstruction limiting happens within each implicit iteration and only the current mean values $\uu_i^{n,s,m}$  and reconstruction polynomials $\Ulim_i^{n,s,m}$of that iteration are considered. 
+
+To prevent the interpolated point values from being too close to zero, which may cause numerical difficulties, we introduce a new admissible set $G^\varepsilon \subset G$ defined as
+\begin{equation}
+    G^\varepsilon= \left\{
+    \U =  \begin{pmatrix}
+        \rho \\ \rho \mathbf{u} \\ \rho E
+    \end{pmatrix} \middle|
+    \rho  \geq \varepsilon_\rho
+    \text{ and }
+    p=\left(\gamma-1\right) \left(\rho E - \dfrac{1}{2} \rho \mathbf{u} \cdot \mathbf{u}\right) \geq \varepsilon_p
+    \right\},
+\end{equation}
+where $\varepsilon_\rho$ and $\varepsilon_p$ are problem-specific lower bounds computed by
+\begin{equation}\label{eq:epsilons}
+    \varepsilon_\rho=\min\left\{\varepsilon \rho_0, \min_i\{\rho(\uu_i)\}\right\}, \quad 
+    \varepsilon_p=\min\left\{\varepsilon p_0, \min_i\{p(\uu_i)\}\right\}.
+\end{equation}
+Here $\rho_0$ and $p_0$ are characteristic density and pressure, respectively, and $\varepsilon=10^{-11}$. The definitions in \eqref{eq:epsilons} inherently ensure that the cell-averages are included in the admissible set, i.e., $\uu_i \in G^\varepsilon$.
+
+By using the scaling limiter, the reconstruction polynomial on control volume $\Omega_i$
+\begin{equation}
+    \U_{i} \left(\x\right) = \uu_{i} + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l\varphi_{i,l}(\x)},
+\end{equation}
+is compressed as
+\begin{equation}
+\label{eq:polynomial-scaling}
+    \hat{\U}_{i} \left(\x\right) = \uu_{i} + \beta_i \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l\varphi_{i,l}(\x)}, \quad 0 \leq \beta_i \leq 1,
+\end{equation}
+to ensure an admissible state at each quadrature point, i.e.,
+\begin{equation}
+    \hat{\U}_{i} \left(\x_{i,g}\right) \in G^{\varepsilon},
+\end{equation}
+where $\x_{i,g}$ denotes a quadrature point for volume or surface integral. We refer to \cite{zhang2010positivity} for the detailed computation of $\beta_i$. 
+It is proved in \cite{zhang2010positivity} that, the scaling limiter preserves accuracy in smooth regions.
+
+\subsection{Algorithm implementation}
+
+The proposed positivity-preserving algorithm employs a physical time step limiting procedure to determine a time step size that ensures an admissible future state. Additionally, it applies a pseudo time step limiting procedure and an increment correction procedure to maintain the positivity of intermediate states. Together, these procedures guarantee the positivity of the updated cell averages. Given admissible cell averages, a scaling limiter is then used to preserve the positivity of the reconstruction polynomials.
+The implementation of the positivity-preserving algorithm for finite volume schemes with ESDIRK4 time integration is detailed in Algorithm \ref{alg:pp-algorithm}. An intuitive illustration of this algorithm is provided in Figure \ref{fig:sketch}.
+
+As shown in Algorithm \ref{alg:pp-algorithm}, the implementation does not require additional vector or matrix allocations, thereby incurring no extra memory cost. Furthermore, as discussed in the computational cost analysis in Section \ref{ssec:sedov}, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time when reconstruction polynomial scaling is applied to more than $20\%$ of the cells, demonstrating the algorithm’s computational efficiency.
+
+% The positivity-preserving algorithm developed in this paper is based on time step limiting, increment correction and reconstruction polynomial scaling.
+
+% The propose positivity-preserving algorithm uses a physical time step limiting procedure to determine a time step size that leads to admissible future state; a pseudo time step limiting procedure and an increment correction to ensure positivity of intermediate states. These together guarantees the positivity of updated cell-averages. Given admissible cell-averages, a scaling limiter is used to preserve positivity of the reconstruction polynomials. 
+
+% The implementation of the positivity-preserving algorithm for the finite volume schemes using ESDIRK4 time integration, as illustrated in Figure \ref{fig:sketch}, is described in detail in Algorithm \ref{alg:pp-algorithm}.
+
+% As observed in Algorithm \ref{alg:pp-algorithm}, no additional vectors or matrices are allocated during its implementation, ensuring no extra memory cost. Furthermore, according to the computational cost analysis in Section \ref{ssec:sedov}, the positivity-preserving algorithm accounts for only 10\% of the total CPU time when the reconstruction polynomial scaling is activated on more than $20\%$ of the cells, demonstrating computational efficiency of the algorithm.
+
+ \begin{algorithm}[htbp!]
+        \renewcommand{\baselinestretch}{1.3}\selectfont
+ 	\caption{Positivity-preserving algorithm for FV schemes using ESDIRK4 time integration.}  
+ 	\label{alg:pp-algorithm}
+ 	\begin{algorithmic}[1] 
+ 		%		\Require Array 
+ 		%		\Ensure no
+ 		% \Function{$\left[ \left\{\UM_i^{n+1}\right\}_{i=1}^N, \Delta t^n \right]$=PPFV}{$\left\{\UM_i^{n}\right\}_{i=1}^N, \Delta t_{max}, \mathrm{CFL}_\tau,\eta_t, \ \eta_\tau,\eta_\Delta, \varepsilon_\rho, \varepsilon_p,n_{iter}$}
+        \Function{$\left[ \UM^{n+1}, \Delta t^n \right]$=PPFV}{$\UM^{n}, \Delta t_{max}, \mathrm{CFL}_\tau,\eta_t, \eta_\tau,\eta_\Delta, \varepsilon_\rho, \varepsilon_p,n_{iter}$}
+        
+        \State Perform reconstruction (and limiting if needed) of solution $\UM^{n}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+                
+        \State Compute numerical flux integrals to obtain the right-hand-side of \eqref{eq:Semi-FV} %integrals to obtain residuals $\left\{\R_i^{n}\right\}_{i=1}^N$
+        \State Compute allowable physical time step size for each cell according to \eqref{eq:alpha-t-rho} and \eqref{eq:alpha-t-p}
+        \State Compute allowable global physical time step size $\Delta t^n$ according to \eqref{eq:alpha-t-global}
+        \State Perform the explicit first stage of ESDIRK4 by setting $\UM^{\left(1\right)} =\UM^{n}$ %, for $i=1, \cdots,N$
+        \For {$s= 2, 6$}
+
+        \State Initialize intermediate solution by setting $\UM^{\left(s,1\right)}=\UM^{\left(s-1\right)}$ 
+        
+        \For {$m=1, n_{iter}$}
+
+        \State Perform reconstruction (and limiting if needed) of solution $\UM^{\left(s,m\right)}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+        \State Compute numerical flux integrals to obtain the right-hand-side of \eqref{eq:linearTauUpdate} %integrals to obtain residuals $\left\{\R_i^{n}\right\}_{i=1}^N$
+        
+        \State Compute local pseudo-time step size for each cell according to \eqref{eq:local-pseudo-time-step}
+
+        \State Compute allowable local pseudo-time step size for each cell according to \eqref{eq:alpha-tau} to \eqref{eq:alpha-tau-p}
+        \State Determine solution increments by solving \eqref{eq:linearTauUpdate} using the LU-SGS approach  %$\left\{\Delta \UM_i^{n,s,m}\right\}^N_{i=1}$
+
+        \State Correct the increment for each cell according to \eqref{eq:alpha-inc} to \eqref{eq:alpha-inc-p}
+
+        \State Obtain updated intermediate solution $\UM^{\left(s,m+1\right)}$ according to \eqref{eq:increment-correction} %$\UM_i^{n,s,m+1}=\UM_i^{n,s,m} + \Delta \UM_i^{n,s,m}$
+
+        \State Exit the inner iteration if convergence is reached
+        %the $L_1$-norm of the pseudo-time derivative has decreased by a certain number of orders of magnitude
+		\EndFor
+        \State Take the converged solution as the solution of the stage by setting $\UM^{\left(s\right)}=\UM^{\left(s,m+1\right)}$ %, for $i=1, \cdots,N$
+		\EndFor
+ 	
+        \State Obtain the solution at time step $n+1$ by setting $\UM^{n+1} =\UM^{\left(6\right)}$ %, for $i=1, \cdots,N$
+
+        % \State Perform reconstruction (and limiting if needed) of solution $\UM^{n+1}$ %at time step $n$ %$\left\{\UM_i^{n}\right\}_{i=1}^N$
+ 	\EndFunction 
+ 		
+ 		% \item[]
+ 		
+ 		% \Function {$\left[ \mathbf{u}_i, \mathbf{u}_{j_1},  \mathbf{u}_{j_2},  \mathbf{u}_{j_3} \right] $=VR}{$S_i, \overline{u}_{i}, \overline{u}_{j_1}, \overline{u}_{j_2}, \overline{u}_{j_3}, u_0, f_{\text{NN}}$} 
+ 		
+ 		% \State Compute the derivative weights on cell interfaces using \eqref{eqn:Derivative_weights_computation}
+ 		
+ 		% \State  Compute the elements of the reconstruction matrix $\mathbf{A}$ and right-hand-side $\mathbf{b}$ corresponding to cost function \eqref{eqn:forward_cost_function} using formulae \eqref{eqn:Matrix_Elements} and \eqref{eqn:DLU}
+ 		
+ 		% \State Compute $\mathbf{u}= \left\{\mathbf{u}_i, \mathbf{u}_{j_1},  \mathbf{u}_{j_2},  \mathbf{u}_{j_3} \right\}$ by solving the linear equation system $\mathbf{A} \mathbf{u}= \mathbf{b}$
+ 		
+ 		% \EndFunction 
+ 		
+ 	\end{algorithmic}  
+ \end{algorithm}  
+
+ 
+
+\subsection{Application to steady-state problems}
+\label{ssec:application-to-steady-state}
+
+The numerical solution of a steady-state compressible flow is the solution to the following nonlinear equation
+\begin{equation}
+% \label{eq:dual-time-stage-equation}
+    0 = \R \left(\uu\right).
+\end{equation}
+In the framework of dual time stepping, this equation is solved by advancing the solution to the following equation
+\begin{equation}
+% \label{eq:dual-time-stage-equation}
+    \dfrac{\partial \uu}{\partial \tau} = \R \left(\uu\right),
+\end{equation}
+in the direction of pseudo time $\tau$, until convergence. By employing the backward Euler difference for pseudo time derivative
+\begin{equation}
+    \dfrac{\partial \uu}{\partial \tau} \approx \dfrac{\uu^{(m+1)}-\uu^{(m)}}{\inc t^m},
+\end{equation}
+and the linear approximation for residual
+\begin{equation}
+    \R^{(m+1)} \approx \R^{(m)} + \dfrac{\partial \R}{\partial \uu} \left(\uu^{(m+1)}-\uu^{(m)}\right),
+\end{equation}
+the intermediate state can be updated by solving the following linear equation system
+\begin{equation}
+    % \label{eq:pseudo-time-equation}
+    \left(\frac{\eye}{\inc \tau^m} -\partialderivative{\R }{\uu} \right) \inc \uu^{\left(m\right)}
+    = \R^{\left(m\right)},
+    % \label{eq:linearTauUpdate}
+\end{equation}
+where $m$ denotes the iteration step. 
+
+Towards an admissible converged state, the cell-averages and the reconstruction polynomials need to be guaranteed positive at each iteration step. The pseudo time step limiting in Section \ref{ssec:pseudo-limiting}, and the increment correction in Section \ref{ssec:increment-correction}, can be applied to preserve positivity of the intermediate states. Given positive cell-averages, the scaling limiter is used to ensure admissible states at quadrature points on cell interfaces. 

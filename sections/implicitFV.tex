@@ -1,0 +1,947 @@
+% !TeX root = main.tex
+
+\section{Implicit finite volume method}
+\label{sec:CFV}
+
+\newcommand{\trans}{^\mathrm{T}}
+\newcommand{\U}{\mathbf{U}}
+\newcommand{\Ulim}{\widetilde{\mathbf{U}}}
+\renewcommand{\F}{\mathbf{F}}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\OO}{\mathbf{\Omega}}
+\newcommand{\UM}{\overline{\U}}
+\newcommand{\Fn}{\tilde{\F}}
+\newcommand{\n}{\mathbf{n}}
+\newcommand{\uu}{\overline{\mathbf{U}}}
+\newcommand{\R}{\mathbf{R}}
+\newcommand{\inc}{\mathrm\Delta}
+\newcommand{\Tau}{\mathrm{T}}
+\renewcommand{\real}{\mathrm{Re}}
+\newcommand{\imag}{\mathrm{Im}}
+
+\newcommand{\CFLt}{\text{CFL}_t}
+\newcommand{\CFLtau}{\text{CFL}_\tau}
+\newcommand{\CFL}{\text{CFL}}
+\newcommand{\eeqref}[1]{Eq.\eqref{#1}}
+\renewcommand{\um}{\overline{u}}
+\renewcommand{\us}{\mathbf{u}}
+\newcommand{\SAll}{\mathcal{S}}
+
+\newcommand{\FF}{\mathcal{F}}
+
+\newcommand{\eye}{\mathbf{I}}
+\newcommand{\uv}{\mathbf{u}}
+
+\newcommand{\supsm}{^{\left(s,m\right)}}
+% \newcommand{\supsmp1}{^{\left(s,m+1\right)}}
+\newcommand{\supsmPOne}{^{\left(s,m\right)}}
+
+\subsection{Governing equations}
+\label{ssec:GovEq}
+
+The Navier-Stokes equations describing compressible viscous flows can be expressed as
+\begin{equation}
+    \label{eq:NS}
+    \dfrac{\partial \U}{\partial t} +
+    \nabla \cdot (\F - \F_v)= 0,
+\end{equation}
+where $\U$ is the conservative variable vector, $\F$ is the inviscid flux tensor and $\F_v$
+is the viscous flux tensor defined by
+\begin{equation}
+\label{eq:def-U-F-Fv}
+    \U = \begin{pmatrix}
+        \rho \\ \rho \mathbf{u} \\ \rho E
+    \end{pmatrix},\ \
+    \F= \begin{pmatrix}
+        \rho \mathbf{u}                                \\
+        \rho \mathbf{u}\otimes \mathbf{u}+p \mathbf{I} \\
+        (\rho E+p)\mathbf{u}                           \\
+    \end{pmatrix},\ \
+    \F_{v} = \begin{pmatrix}
+        0                                                    \\
+        \boldsymbol{\tau}                                    \\
+        \boldsymbol{\tau} \cdot \mathbf{u} + \kappa \nabla T \\
+    \end{pmatrix}.
+\end{equation}
+Here $\rho$ is the density, $\mathbf{u}$ is the velocity, $p$ is the pressure and $T$ is the temperature of the fluid. $\mathbf{I}$ is the identity tensor. $E$ is the total energy defined as
+\begin{equation}
+    E = \dfrac{1}{\gamma-1} \dfrac{p}{\rho} + \frac{1}{2} \mathbf{u} \cdot \mathbf{u},
+\end{equation}
+where $\gamma$ is the ratio of specific heat. The shear stress tensor $\boldsymbol{\tau}$ is defined as
+\begin{equation}
+    \boldsymbol{\tau}= \mu \left[ \nabla \mathbf{u} + \left(\nabla \mathbf{u}\right)\trans - \frac{2}{3} \left(\nabla \cdot \mathbf{u}\right) \mathbf{I} \right],
+\end{equation}
+\replaced[id=r1]{with $\mu$ being the dynamic viscosity computed by using Sutherland's law \cite{white2006viscous}}{with $\mu$ being the dynamic viscosity}. The heat conductivity is computed by $\kappa=C_p \mu /Pr$, where $C_p$ is the specific heat at constant pressure and $Pr$ is the Prandtl number. Equation \eqref{eq:NS} is closed by an equation of state
+\begin{equation}
+\label{eq:eos}
+    p= \rho R T,
+\end{equation}
+where $R= \left(\gamma-1\right) C_p/\gamma$.
+Neglecting viscous effects, i.e., $\mu=0$, the Navier-Stokes equations reduce to the Euler equations describing compressible inviscid flows.
+
+\subsection{Semi-discrete finite volume scheme}
+\label{ssec:FV}
+
+This subsection presents the general framework of high-order cell-centered finite volume method on unstructured grids for compressible flows.
+The computational domain $\OO$ is partitioned into $N$ non-overlapping control volumes, i.e., $\OO= \cup^N_{i=1}{\OO_i}$. \added[id=r1]{A control volume \(\OO_i\) can be a triangle or quadrilateral in a two-dimensional mesh, or a tetrahedron, prism, hexahedron, or pyramid in a three-dimensional mesh, as shown in Figure \ref{fig:controlvolume}.} 
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.8 \linewidth]{pics/control_volume.pdf}
+    \caption{\replaced[id=r1]{Two- and three-dimensional control volumes}{A triangular element}.}
+    \label{fig:controlvolume}
+\end{figure}
+
+% \begin{figure}[htbp!]
+%     \centering
+%     \includegraphics[width=0.6\linewidth]{pics/3d_control_volume.pdf}
+%     \caption{\added[id=r1]{Three-dimensional control volumes}.}
+%     \label{fig:3dcontrolvolume}
+% \end{figure}
+
+By integrating the governing equation \eqref{eq:NS} over control volume $\OO_i$, a semi-discrete finite volume scheme is obtained as
+\begin{equation}
+    \label{eq:Semi-FV}
+    \dfrac{ \dd\UM_i }{\dd t} = -\dfrac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A,
+\end{equation}
+where $\overline{\OO}_i$ is the volume of $\OO_i$, $\partial \OO_i$ is the boundary of $\OO_i$ and $\n$ is the outward unit normal of $\partial \OO_i$, as shown in Figure \ref{fig:controlvolume}. The cell-average defined by
+\begin{equation}
+    \label{eq:FVMean}
+    \UM_i \left(t\right)= \frac{1}{\overline{\OO}_i}\int_{\OO_i}\U \left(\x,t\right)\ \dd V,
+\end{equation}
+is the degree of freedom (DOF) of the finite volume method on cell $\OO_i$.
+%where $\overline{\OO}_i$ is the volume of $\OO_i$.
+The flux integral in \eqref{eq:Semi-FV} is computed by using a Gauss quadrature
+\begin{equation}
+    \label{eq:Flux-Integral}
+    % \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A \approx \sum_{f \in \partial \OO_i} \sum_{g=1}^{N_g} w_g \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f \ A_f,
+    \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A \approx \sum_{f \in \partial \OO_i} \sum_{g=1}^{N_g} w_g \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f \ A_f,
+\end{equation}
+where $\n_f$ and $A_f$ are the outward unit normal and area of element interface $f$, respectively. $N_g$ is the number of quadrature points. $\x_{f,g}$ and $w_g$ are the position and weight of the $g$-th quadrature point on $f$, respectively.
+\added[id=r1]{In this work, Gauss-Legendre quadrature formulas are employed to evaluate the flux integral along a line segment. Tensor products of the one-dimensional Gauss-Legendre quadrature are used to compute the flux integral on a quadrilateral. Symmetric quadrature rules based on triangular coordinates \cite{dunavant1985high} are used to compute the flux integral on a triangle.}
+
+Given known cell-averages, a reconstruction is performed to obtain an approximate solution distribution on the computational domain $\OO$, to compute the states at quadrature points on element interfaces. Specifically, the solution on each control volume is approximated by a polynomial, i.e.,
+\begin{equation}
+    \label{eq:FVRec}
+    \U_i(\x,t) = \UM_i \left(t\right) + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l \left(t\right) \varphi_{i,l}(\x) }, \quad \forall \ \x \in \OO_i, \quad i=1, \cdots, N,
+\end{equation}
+where $k$ is the degree of the polynomial, $\{\varphi_{i,l}(\x)\}$ are the polynomial basis functions and $\mathrm{N_b}(k)$ is the number of basis functions. The basis coefficients $\{\U^l_i\}$ are determined by using a reconstruction scheme, such as the variational reconstruction \cite{wang2017compact_VR} that will be presented in Section \ref{ssec:VR}.
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.3\linewidth]{pics/Riemann}
+    \caption{\replaced[id=r1]{Riemann problem on the interface between two triangular elements}{Riemann problem on cell interface}.}
+    \label{fig:Riemann}
+\end{figure}
+
+Flux schemes based on solutions of Riemann problems are used to compute the numerical flux at the quadrature points in \eqref{eq:Flux-Integral}, since the piece-wise polynomial distribution \eqref{eq:FVRec} is discontinuous across cell interfaces, as shown in Figure \ref{fig:Riemann}.
+The numerical flux is computed by
+\replaced[id=r2]{
+\begin{equation}
+    \label{eq:num-flux}
+    % \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
+    \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f \approx \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right),
+\end{equation}
+}{\begin{equation}
+    \label{eq:num-flux}
+    % \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
+    \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right),
+\end{equation}}
+where $\tilde{\F}$ and $\tilde{\F}_v$ are the inviscid and viscous flux schemes, respectively, with the left and right states at the quadrature point defined by
+\begin{equation}
+    \begin{dcases}
+         & \U_L= \U_i\left(\x_{f,g},t \right), \quad \nabla \U_L= \nabla \U_i\left(\x_{f,g},t \right),\\
+         & \U_R= \U_j\left(\x_{f,g} ,t \right), \quad \nabla \U_R= \nabla \U_j\left(\x_{f,g},t \right).
+    \end{dcases}
+\end{equation}
+\replaced[id=r1]{In this work, the inviscid flux scheme $\tilde{\F}$ is given by the local Lax-Friedrichs (LLF) flux 
+\begin{equation}
+    % \tilde{\F} \left(\U_L, \U_R,\n_f\right)= \dfrac{1}{2}\left(\F\left(\U_L\right)+\F\left(\U_R\right)\right) \cdot \n_f - \dfrac{1}{2}\lambda_{\max} \left(\U_R-\U_L\right),
+    \tilde{\F} \left(\U_L, \U_R,\n_f\right) = \dfrac{1}{2} \left[\F\left(\U_L\right) + \F\left(\U_R\right)\right]\cdot\n_f - \dfrac{1}{2} \max \left\{\lambda\left(\U_L\right), \lambda\left(\U_R\right)\right\} \left(\U_R - \U_L\right),
+\end{equation}
+where $\lambda\left(\U\right)$ denotes the spectral radius of the Jacobian 
+$\partial \left(\F \cdot \n_f\right)/\partial \U$, computed as
+\begin{equation}
+    % \lambda_{\max}= \max\left(\abs{\mathbf{u}_L\cdot \n_f}+ \sqrt{\gamma \dfrac{p_L}{\rho_L}}, \ \abs{\mathbf{u}_R\cdot \n_f}+ \sqrt{\gamma \dfrac{p_R}{\rho_R}}\right).
+    \lambda\left(\U\right)= \abs{\mathbf{u}\cdot \n_f}+ \sqrt{\gamma p/\rho}.
+\end{equation}
+The viscous flux scheme $\tilde{\F}_v$ adopts the dGRP-type formulation \cite{gassner2007contribution,gassner2008discontinuous}, as developed in \cite{wang2017compact_VR}:
+\begin{equation}
+    \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right)= \F_v \left( \tilde{\mathbf{W}}, \nabla \tilde{\mathbf{W}}\right) \cdot \n_f,
+\end{equation}
+where $\tilde{\mathbf{W}}$ and $\nabla \tilde{\mathbf{W}}$ are the averaged state and gradient of the primitive variable $\mathbf{W}=\left(\rho, \mathbf{u},p\right)^\top$, respectively,  computed by
+% where $\tilde{\mathbf{W}}$ and $\nabla \tilde{\mathbf{W}}$ are, respectively, the averaged primitive state and its gradient. The primitive variable is defined as $\mathbf{W} = \left(\rho, \mathbf{u}, p\right)^\top$, with
+\begin{equation}
+% \begin{aligned}
+    \tilde{\mathbf{W}}= \dfrac{1}{2}\left[\mathbf{W}\left(\U_L\right)+\mathbf{W}\left(\U_R\right)\right], \quad
+    %\ \mathbf{W}_L= \mathbf{W}\left(\U_L\right), \ \mathbf{W}_R= \mathbf{W}\left(\U_R\right),\\
+    \nabla \tilde{\mathbf{W}}= \left. \left(\dfrac{\partial \U}{\partial \mathbf{W}}\right)^{-1} \right|_{\mathbf{W}=\tilde{\mathbf{W}}} \nabla \tilde{\U}.
+% \end{aligned}
+\end{equation}
+The averaged gradient of the conservative variable is computed by
+\begin{equation}
+    \nabla \tilde{\U}=\dfrac{1}{2} \left(\nabla \U_L + \nabla \U_R\right) + \dfrac{1}{2} \dfrac{\left(\U_R- \U_L\right)}{L_f}\n_f,
+\end{equation}
+where the characteristic length scale $L_f$ is defined, according to Hartmann et al. \cite{hartmann2006symmetric}, as $L_f=\min\left(\overline{\OO}_L,\overline{\OO}_R\right)/A_f$.
+}
+{In this work, $\tilde{\F}$ is the local Lax-Friedrichs scheme and $\tilde{\F}_v$ is the viscous flux scheme in \cite{wang2017compact_VR}.}
+
+%In this work, the inviscid numerical flux is computed by using the local Lax-Friedrichs scheme
+%\begin{equation}
+%	\label{eq:LLF}
+%	\F \left(\U \left(\x_{f,g},t\right)\right) \cdot \n_f = \dfrac{1}{2} \left[\F\left(\U_L\right) + \F\left(\U_R\right)\right]\cdot\n_f - \dfrac{1}{2} \max \left(\lambda\left(\U_L\right), \lambda\left(\U_R\right)\right) \left(\U_R - \U_L\right),
+%\end{equation}
+%where 
+%\begin{equation}
+%	\U_L= \U_i\left(\x_{f,g},t \right), \quad \U_R= \U_j\left(\x_{f,g} ,t \right), \quad \lambda\left(\U\right)= \abs{\mathbf{u} \cdot \n_f} + \sqrt{\gamma p/\rho},
+%\end{equation}
+%with $j$ being the face-neighboring cell that shares $f$ with cell $i$, i.e., $\OO_i \cap \OO_j= f$.
+%The viscous numerical flux is computed by using the dGRP \cite{gassner2007contribution,gassner2008discontinuous} type scheme in \cite{wang2017compact_VR} 
+%\begin{equation}
+%		\label{eq:dGRP}
+%	\F_v \left(\U \left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right) \cdot \n_f = \F_v \left(\tilde{\U}, \nabla \tilde{\U}  \right) \cdot \n_f,
+%\end{equation}
+%where 
+%\begin{equation}
+%	\tilde{\U} = \dfrac{1}{2} \left(\U_L+\U_R\right), \quad \nabla \tilde{\U}= \dfrac{1}{2}\left(\nabla \U_L+ \nabla \U_R\right) + \dfrac{1}{2 \Delta \tilde{x}} \left(\U_R - \U_L\right), \quad \Delta \tilde{x} = \dfrac{\min \left(\overline{\OO}_i,\overline{\OO}_j\right)}{A_f}.
+%\end{equation}
+
+\replaced[id=r1]{Once the right-hand-side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
+% \begin{equation}
+%     \label{eq:FVODECell}
+%     \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
+% \end{equation}
+\begin{equation}
+    \label{eq:FVODECell}
+    \derivative{\uu_i}{t} = \R_i,
+\end{equation}
+where $\R_i= -\oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A/\overline{\OO}_i$ is the right-hand-side of \eqref{eq:Semi-FV}. The spatial discretization procedures, including data reconstruction and flux computation, inherently couple the solutions across different control volumes. As a result, the cell-averages cannot be updated independently. Accordingly, the temporal evolution of the solution is governed by a system of ODEs
+\begin{equation}
+    \label{eq:FVODE}
+    \derivative{\uu}{t} = \R \left(\uu\right),
+\end{equation}
+where 
+\begin{equation}
+    \uu= \left(\uu_1,\cdots,\uu_N\right)^\top, \quad \R= \left(\R_1,\cdots,\R_N\right)^\top.
+\end{equation}
+The ODE system \eqref{eq:FVODE} can be integrated in time to update the cell-averages in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
+{Once the right-hand-side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
+% \begin{equation}
+%     \label{eq:FVODECell}
+%     \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
+% \end{equation}
+\begin{equation}
+    \label{eq:FVODECell}
+    \derivative{\uu_i}{t} = \R_i,
+\end{equation}
+which can be integrated in time to update the cell-average in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
+
+\subsection{Variational reconstruction}
+\label{ssec:VR}
+
+This subsection presents a variational reconstruction \cite{wang2017compact_VR} that can achieve arbitrary high-order accuracy on a compact stencil involving only the current cell and its face-neighboring cells. The compact reconstruction stencil $S_i= \left\{i,j_1,j_2,j_3\right\}$ of a triangular element $i$ is shown in Figure \ref{fig:compactstencil}. 
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.3\linewidth]{pics/compact_stencil}
+    \caption{Compact reconstruction stencil of a triangular element.}
+    \label{fig:compactstencil}
+\end{figure}
+
+% \added[id=r1]{The key component of a FV method to achieve high-order accuracy is the high-order representation of physical data inside the cell. 
+% The large stencil has been the major drawback of conventional high-order reconstructions on unstructured grids, which can cause stability and efficiency issues \cite{abgrall2011construction,zhang2012class,li2014efficient}. A series of reconstruction procedures, which can achieve high-order accuracy on a compact stencil, have been developed to overcome solve this bottleneck problem \cite{wang2016compact1_VR,wang2017compact_VR,zhang2019compact_VR}. The reconstruction \cite{wang2017compact_VR} is provably non-singular and is thus used in this work.
+\added[id=r1]{A key factor in enabling high-order accuracy in FV methods is the high-order representation of the physical solution within each cell. In traditional high-order reconstructions on unstructured grids, such as $k$-exact \cite{delanaye1999quadratic,barth1990higher,ollivier2002high} and ENO \cite{abgrall1994essentially}/WENO \cite{friedrich1998weighted_WENO,hu1999weighted_WENO,dumbser2007quadrature_WENO}, the polynomial approximation of the solution within each control volume is determined by enforcing a mean-preserving condition across a local stencil. 
+% This condition leads to large reconstruction stencils because the number of neighboring cells required must at least match the number of unknown coefficients in the polynomial, which grows rapidly with the polynomial degree. 
+However, this condition necessitates large reconstruction stencils, as the number of neighboring cells included must at least equal the number of polynomial coefficients, which increases rapidly with polynomial degree. Such large reconstruction stencils can pose challenges in terms of numerical stability and computational efficiency \cite{abgrall2011construction, zhang2012class, li2014efficient}. The large reconstruction stencil has been the major bottleneck problem in developing high-order finite volume schemes on unstructured grids. To address this limitation, several reconstruction procedures have been developed to achieve high-order accuracy on compact stencils \cite{wang2016compact1_VR, wang2017compact_VR, zhang2019compact_VR}. Among these compact reconstructions, the variational reconstruction proposed in \cite{wang2017compact_VR} is provably non-singular and is therefore adopted in this study. For clarity, the two-dimensional case will be used to illustrate the variational reconstruction.}
+\deleted[id=r1]{In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner. For the sake of presentation, the two-dimensional case is considered to illustrate the variational reconstruction.}
+
+\added[id=r1]{In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner.} On control volume $\OO_i$, a conservative variable $u \in \U$ is approximated as
+\begin{equation}
+    \label{eq:recon_u}
+    u_i \left(\x\right)= \overline{u}_i + \sum^{\mathrm{N_b}\left(k\right)}_{l=1} u_i^l \varphi_{i,l} \left(\x\right),
+\end{equation}
+where $\{\varphi_{i,l}\}$ are the basis functions, $\{u^l_i\}$ are the unknown basis coefficients and $\mathrm{N_b}(k)$ is the number of basis functions. For a two-dimensional case, $\mathrm{N_b}(k)=  (k+2)(k+1)/2 -1$. In \eqref{eq:recon_u}, the time $t$ is omitted as it remains a constant during the reconstruction procedure.
+%In order to determine the coefficients of polynomial bases $\U_i^l$ (or $u_i^l$ for each scalar) in
+%\eeqref{eq:FVRec}, a reconstruction method needs to be specified.
+%Traditional 2nd order FV methods for unstructured grid
+%needs only to reconstruct a $k=1$ polynomial, namely linear
+%distribution on each cell.
+%The variational reconstruction \cite{wang2017compact_VR}
+%is a compact high-order
+%reconstruction scheme, and it achieves high-order
+%accuracy on a compact stencil.
+%The current section will explain the variational reconstruction briefly
+%and specify details concerning following numerical tests.
+In this work, the basis functions with the zero-mean property
+\begin{equation}
+    \frac{1}{\overline{\OO}_i} \int_{\OO_i} \varphi_{i,l} \left(\x\right) \ \dd V=0,
+\end{equation}
+are used to make the reconstruction polynomial \eqref{eq:recon_u} automatically satisfy the conservation condition
+\begin{equation}
+    \label{eq:zero-mean}
+    \frac{1}{\overline{\OO}_i}\int_{\OO_i}u_i \left(\x\right)\ \dd V= \overline{u}_i.
+\end{equation}
+The zero-mean basis functions are defined by
+\begin{equation}
+    \varphi_{i,l} =
+    \left(\frac{x - x_{i}}{\inc x_i}\right)^{p_l}
+    \left(\frac{y - y_{i}}{\inc y_i}\right)^{q_l}
+    -
+    \overline{
+        \left(\frac{x - x_{i}}{\inc x_i}\right)^{p_l}
+        \left(\frac{y - y_{i}}{\inc y_i}\right)^{q_l}
+    },
+\end{equation}
+with
+\begin{equation}
+    \overline{
+        \left(\frac{x - x_{i}}{\inc x_i}\right)^{p_l}
+        \left(\frac{y - y_{i}}{\inc y_i}\right)^{q_l}
+    }= \dfrac{1}{\overline{\OO}_i}\int_{\OO_i}   \left(\frac{x - x_{i}}{\inc x_i}\right)^{p_l}
+    \left(\frac{y - y_{i}}{\inc y_i}\right)^{q_l}  \dd V,
+\end{equation}
+where $\left(x_i,y_i\right)$ and $\left(\inc x_i, \inc y_i\right)$ are the barycenter and characteristic length scales of cell $i$, respectively, and $\left(p_l,q_l\right)$ are the powers of the basis functions organized in ascending order of $p_l+q_l$. For instance, the powers of the cubic ($k=3$) reconstruction polynomial are
+\begin{equation}
+    \left\{ \left(p_l,q_l\right) \right\}^9_{l=1}= \left\{ \left(1,0\right), \left(0,1\right), \left(2,0\right),\left(1,1\right),\left(0,2\right),\left(3,0\right),\left(2,1\right),\left(1,2\right),\left(0,3\right) \right\}.
+\end{equation}
+%The mean value term makes the basis zero-mean, which is calculated with:
+%\begin{equation}
+%    \overline{
+%        \left(\frac{x - x_{c,i}}{\inc x_i}\right)^{p_l}
+%        \left(\frac{y - y_{c,i}}{\inc y_i}\right)^{q_l}
+%    }
+%    =
+%    \frac{1}{\overline{\OO}_j}\int_{\OO_j}{
+%        \left(\frac{x - x_{c,i}}{\inc x_i}\right)^{p_l}
+%        \left(\frac{y - y_{c,i}}{\inc y_i}\right)^{q_l}
+%    }\dd \Omega
+%\end{equation}
+The characteristic length scales are used to non-dimensionalize the basis functions, to avoid a growth of the condition number of the reconstruction matrix during grid refinement \cite{abgrall1994essentially,friedrich1998weighted_WENO}. In this work, the length scales are set as $ \inc x_i = \inc y_i = \max_{\x \in \OO_i} \left\{\|\x - \x_{i}\|_2\right\}$.
+%\begin{equation}
+%    \inc x_i = \inc y_i = \max_{\x \in \OO_i} \left\{\|\x - \x_{i}\|_2\right\}.
+%\end{equation}
+
+The objective of a reconstruction is to determine the unknown basis coefficients $u_i^l$,  $l=1$, $\cdots$, $\mathrm{N_b}\left(k\right)$, $i=1,\cdots,N$, given the cell-averages $\overline{u}_j$, $j=1,\cdots,N$. In the variational reconstruction \cite{wang2017compact_VR}, the linear equation system to determine the unknown basis coefficients is derived by minimizing a cost function using the variational method. Different cost function results in different reconstruction schemes. \replaced[id=r1]{In this work, the cost function is defined as
+\begin{equation}
+    \label{eq:cost-function}
+    I = \sum^{N_f}_{f=1} \omega_f {I_f},
+\end{equation}
+where $N_f$ is the number of cell interfaces on the computational domain, $I_f$ is an interfacial jump integration (IJI) on cell interface $f$ defined as
+\begin{equation}
+    \label{eq:IJI}
+    I_f =  \sum_{p+q=0}^{k} \omega_{p,q} \int_{f}{ 
+            \left(
+            \pdv{^{p+q}u_L}{x^p\partial y^q} \left(d_{LR}\right)^{p+q}
+            -
+            \pdv{^{p+q}u_R}{x^p\partial y^q} \left(d_{LR}\right)^{p+q}
+            \right)^2
+        \ \dd A
+    },
+\end{equation}
+and $\omega_f >0 $ is the weight of $I_f$.
+In the IJI definition \eqref{eq:IJI}, $\left\{\omega_{p,q}|\omega_{p,q}>0\right\}_{p+q=0}^k$ are the weights of the integral terms, $L$ and $R$ are the two cells sharing the interface $f$, and $d_{LR}= \left\| \x_L -\x_R \right\|_2$ is the distance between the centroids of elements $L$ and $R$. The IJI measures the jumps of the reconstruction polynomial and its spatial derivatives on the cell interface. The cost function \eqref{eq:cost-function} is the weighted sum of the IJIs over the entire computational domain.}{The cost function is defined as
+\begin{equation}
+    \label{eq:cost-function}
+    I = \sum^{N_f}_{f=1} {I_f},
+\end{equation}
+where $I_f$ is an interfacial jump integration (IJI) on cell interface $f$ and $N_f$ is the total number of cell interfaces on the computational domain. In this work, the IJI is defined as
+\begin{equation}
+    \label{eq:IJI}
+    I_f = \omega_f^G \sum_{p+q=0}^{k} \int_{f}{
+        \left[
+            \omega_f^D(p,q)
+            \left(
+            \partialderivative{^{p+q}u_L}{x^p\partial y^q}
+            -
+            \partialderivative{^{p+q}u_R}{x^p\partial y^q}
+            \right)
+            \right]^2
+        \dd A
+    },
+\end{equation}
+where $L$ and $R$ are the two cells sharing the interface $f$, $\omega_f^G$ is the geometric weight and $\omega_f^D$ is the derivative weight.
+The IJI measures the jumps of the reconstruction polynomial and its spatial derivatives on the cell interface.
+The derivative weights of the cubic variational reconstruction are
+\begin{equation}
+    \begin{aligned}
+        \omega_f^D(0,0) & = \omega_D(0),                                                                               \\
+        \omega_f^D(1,0) & = \omega_f^D(0,1) = \omega_D(1) ,                                                            \\
+        \omega_f^D(2,0) & = \omega_f^D(0,2) = \omega_D(2),\ \omega_f^D(1,1) = \sqrt{2}\ \omega_D(2)  ,                 \\
+        \omega_f^D(3,0) & = \omega_f^D(0,3) = \omega_D(3),\ \omega_f^D(1,2) = \omega_f^D(2,1) = \sqrt{3}\ \omega_D(3), \\
+    \end{aligned}
+    \label{eq:wdRotRatio}
+\end{equation}
+with
+\begin{equation}
+    \omega_D(0) = 1, \ \omega_D(1) = d_{LR}, \ \omega_D(2) = \frac{\left(d_{LR}\right)^2}{2}, \ \omega_D(3) = \frac{\left(d_{LR}\right)^3}{6},
+    \label{eq:wdHQMOPT}
+\end{equation}
+where $d_{LR}= \left\| \x_L -\x_R \right\|_2$ is the distance between the centroids of elements $L$ and $R$.
+As only nearly uniform and isotropic meshes are used in the numerical simulations in this paper,
+the geometric weights
+$\omega^G_f$ are all set as 1.}
+The unknown basis coefficients are determined by minimizing the cost function \eqref{eq:cost-function}, resulting in a \textquote{smoothest} piece-wise polynomial distribution which has the smallest jumps measured by the IJIs on cell interfaces.
+Linear reconstruction equations can be obtained by using the variational method, i.e.,
+\begin{equation}
+    \label{eq:minimization}
+    \partialderivative{I}{u_i^l} = 0, \ l=1,\cdots, \mathrm{N_b}(k),\  i=1,\cdots N.
+\end{equation}
+\replaced[id=r1]{It is observed from the definition \eqref{eq:IJI} that, the polynomial $u_i$ is only involved in the IJIs on the faces of of cell $i$. Therefore, linear equations can be derived according to \eqref{eq:minimization} to determine the unknown coefficients of cell $i$ using the unknown reconstruction polynomials of its face-neighbors, indicating that the variational reconstruction is compact and implicit. Substituting \eqref{eq:recon_u}, \eqref{eq:cost-function} and \eqref{eq:IJI} into \eqref{eq:minimization}, we obtain the following linear equations
+\begin{equation}
+\label{eq:variational-linear-equation}
+\begin{aligned}
+    \sum_{f \in \partial \OO_i} \omega_{f} \sum_{p+q=0}^{k} \omega_{p,q} d^{2p+2q}_{ij} 
+           \int_{f}{ \partialderivative{^{p+q}\varphi_{i,l}}{x^p\partial y^q}
+             \partialderivative{^{p+q}}{x^p\partial y^q} \left(\overline{u}_i + \sum^{\mathrm{N_b}\left(k\right)}_{m=1} u_i^m \varphi_{i,m} - \overline{u}_j - \sum^{\mathrm{N_b}\left(k\right)}_{n=1} u_j^n \varphi_{j,n} 
+             \right)
+            \ \dd A}
+            =0, &\\
+        %     &\sum_{j \in S_i, j \neq i} \sum^{\mathrm{N_b}\left(k\right)}_{n=1} \omega_f \int_{f}{
+        %     \sum_{p+q=0}^{k}
+        %     \omega_{p,q} d^{2p+2q}_{ij}
+        %     \partialderivative{^{p+q}\varphi_{i,l}}{x^p\partial y^q}
+        %     \partialderivative{^{p+q}\varphi_{j,n}}{x^p\partial y^q}
+        %     \ \dd A} \ u_j^n
+        %     +
+        %     \sum_{j \in S_i, j \neq i}
+        % \omega_f \ \omega_{0,0}
+        % \int_{f}{
+        %     \varphi_{i,l} \left(\overline{u}_j - \overline{u}_i\right)
+        %     \ \dd A}, \\
+            l=1,\cdots, \mathrm{N_b}(k), \quad  i=1,\cdots N,&
+\end{aligned}
+\end{equation}
+where $j$ is the neighboring cell sharing interface $f$ with cell $i$.
+The linear equation system \eqref{eq:variational-linear-equation} can be written in a matrix form
+\begin{equation}
+    \label{eq:vrBlockEq}
+    \mathbf{A}_{i} \us_i
+    =
+    \sum_{j \in S_i, j \neq i} \mathbf{B}^j_{i} \us_j + \mathbf{b}_{i}, \quad i=1, \cdots, N,
+\end{equation}
+where the elements of matrices
+$\mathbf{A}_i$, $\mathbf{B}^j_i \in \mathbb{R}^{\mathrm{N_b}(k) \times \mathrm{N_b}(k)}$
+and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathrm{N_b}(k)}$ are
+\begin{equation}
+    \label{eq:vrCoeffs}
+    \begin{aligned}
+         & \mathbf{A}_{i} [l,m]= \sum_{j \in S_i, j \neq i} \omega_{f} 
+           \int_{f}{
+             \sum_{p+q=0}^{k} \omega_{p,q} d^{2p+2q}_{ij}
+            \partialderivative{^{p+q}\varphi_{i,l}}{x^p\partial y^q}
+            \partialderivative{^{p+q}\varphi_{i,m}}{x^p\partial y^q}
+            \ \dd A},
+        \\
+         & \mathbf{B}^j_{i} [l,n]=
+        \omega_f \int_{f}{
+            \sum_{p+q=0}^{k}
+            \omega_{p,q} d^{2p+2q}_{ij}
+            \partialderivative{^{p+q}\varphi_{i,l}}{x^p\partial y^q}
+            \partialderivative{^{p+q}\varphi_{j,n}}{x^p\partial y^q}
+            \ \dd A},
+        \\
+         & \mathbf{b}_{i} [l]=
+        \sum_{j \in S_i, j \neq i}
+        \omega_f \ \omega_{0,0}
+        \int_{f}{
+            \varphi_{i,l} \left(\overline{u}_j - \overline{u}_i\right)
+            \ \dd A},
+        \\
+         & \mathbf{u}_i [m]= u^m_i, \\
+             & \mathbf{u}_j [n]= u^n_j.
+    \end{aligned}
+\end{equation}
+The face integral terms in the reconstruction matrices can be computed exactly using Gauss quadrature formulas with an adequate number of quadrature points.}
+{By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function} and \eqref{eq:minimization}, a linear equation system is obtained as follows
+\begin{equation}
+    \label{eq:vrBlockEq}
+    \mathbf{A}_{i} \us_i
+    =
+    \sum_{j \in S_i, j \neq i} \mathbf{B}^j_{i} \us_j + \mathbf{b}_{i}, \quad i=1, \cdots, N,
+\end{equation}
+where the elements of matrices
+$\mathbf{A}_i$, $\mathbf{B}^j_i \in \mathbb{R}^{\mathrm{N_b}(k) \times \mathrm{N_b}(k)}$
+and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathrm{N_b}(k)}$ are
+\begin{equation}
+    \label{eq:vrCoeffs}
+    \begin{aligned}
+         & \mathbf{A}_{i} [m,n]=
+        \sum_{j \in S_i, j \neq i} \omega_f^G\int_{f}{
+            \sum_{p+q=0}^{k}
+            \left(\omega_f^D(p,q)\right)^2
+            \partialderivative{^{p+q}\varphi_{i,m}}{x^p\partial y^q}
+            \partialderivative{^{p+q}\varphi_{i,n}}{x^p\partial y^q}
+            \ \dd A},
+        \\
+         & \mathbf{B}^j_{i} [m,n]=
+        \omega_f^G\int_{f}{
+            \sum_{p+q=0}^{k}
+            \left(\omega_f^D(p,q)\right)^2
+            \partialderivative{^{p+q}\varphi_{i,m}}{x^p\partial y^q}
+            \partialderivative{^{p+q}\varphi_{j,n}}{x^p\partial y^q}
+            \ \dd A},
+        \\
+         & \mathbf{b}_{i} [m]=
+        \sum_{j \in S_i, j \neq i}
+        \omega_f^G \left(\omega_f^D(0,0)\right)^2
+        \int_{f}{
+            \varphi_{i,m} \left(\overline{u}_j - \overline{u}_i\right)
+            \ \dd A},
+        \\
+         & \mathbf{u}_i [m]= u^m_i, \\
+         & \mathbf{u}_j [m]= u^m_j,
+    \end{aligned}
+\end{equation}
+with $f= \partial \OO_i \cap \partial \OO_j$ being the cell interface.}
+\deleted[id=r1]{It is observed from \eqref{eq:vrBlockEq} that the variational reconstruction is implicit, as the unknown coefficients of the face-neighboring cells are required to determine the unknown coefficients of the current cell.}
+By assembling the linear equations \eqref{eq:vrBlockEq} of all cells, we obtain a global linear equation system
+\begin{equation}
+    \label{eq:global-system}
+    \mathbf{A} \mathbf{u} = \mathbf{b},
+\end{equation}
+where
+\begin{equation}
+    \begin{aligned}
+         & \mathbf{A}= \mathbf{D} -  \mathbf{L} -  \mathbf{U},
+        \ \mathbf{D}= \left\{\mathbf{A}_i\right\},
+        \ \mathbf{L}= \left\{\mathbf{B}^j_i, j<i\right\},
+        \ \mathbf{U}= \left\{\mathbf{B}^j_i, j>i\right\},
+        \\
+         & \mathbf{u}= \left\{\mathbf{u}_i\right\}, \ \mathbf{b}= \left\{\mathbf{b}_i\right\}.
+    \end{aligned}
+\end{equation}
+It is proved in \cite{wang2017compact_VR} that the large and sparse matrix $\mathbf{A}$ is symmetric and positive definite, which guarantees the existence and uniqueness of the solution of the linear equation system \eqref{eq:global-system}. This is a significant advantage of the variational reconstruction over other existing high-order reconstructions on unstructured grids. \replaced[id=r1]{The linear equation system \eqref{eq:global-system} is solved iteratively using a block Gauss-Seidel method
+\begin{equation}
+\label{eq:gauss-seidel-iteration}
+    \mathbf{u}_i^{\left(s+1\right)}= \sum_{j \in S_i, j < i} \mathbf{A}^{-1}_i \mathbf{B}^j_i \mathbf{u}^{\left(s+1\right)}_j + \sum_{j \in S_i, j > i} \mathbf{A}^{-1}_i \mathbf{B}^j_i \mathbf{u}^{\left(s\right)}_j + \mathbf{A}^{-1}_i \mathbf{b}_i, \quad i=1,\cdots,N,
+\end{equation}
+where $s$ denotes the iteration step. It is also proved in \cite{wang2017compact_VR} that the block Gauss-Seidel iteration converges for the linear equation system of variational reconstruction.}
+{The linear equation system \eqref{eq:global-system} is solved iteratively using the block Gauss-Seidel method, of which the convergence is proved in \cite{wang2017compact_VR}. Each block Gauss-Seidel iteration is compact as it only relies on the information of the current and face-neighboring cells.}
+%It is proved in \cite{wang2017compact_VR} that the block Gauss-Seidel method is convergent for the linear equation system \eqref{eq:global-system}.
+
+\added[id=r1]{A linear variational reconstruction, capable of approximating smooth solutions with second-order accuracy, is employed to demonstrate the fundamental procedures involved in variational reconstruction. For the triangular element $\OO_i$ shown in Figure \ref{fig:compactstencil}, the linear reconstruction polynomial is
+\begin{equation}
+    u_i\left(\x\right)= \overline{u}_i + \sum^{2}_{l=1} u_i^l \varphi_{i,l} \left(\x\right)= \overline{u}_i + u^1_i \dfrac{x-x_i}{\Delta x_i} + u^2_i \dfrac{y-y_i}{\Delta y_i},
+\end{equation}
+where $\mathbf{u}_i= \left(u^1_i,u^2_i\right)^\top$ are the coefficients to be determined. The unknown polynomial coefficients of all the cells in the computational domain are determined by minimizing the following cost function
+\begin{equation}
+    I= \sum^{N_f}_{f=1} \omega_f I_f,
+\end{equation}
+where the IJI is defined as
+\begin{equation}
+    % I_f=  \omega_{0,0} \int_f \left(u_L-u_R\right)^2 \dd A + \omega_{1,0} \int_f \left(\partialderivative{u_L}{x} d_{LR}-\partialderivative{u_R}{x} d_{LR} \right)^2 \dd A + \omega_{0,1} \int_f \left(\partialderivative{u_L}{y}d_{LR}-\partialderivative{u_R}{y}d_{LR}\right)^2 \dd A.
+    I_f=  \int_f \omega_{0,0}  \left(u_L-u_R\right)^2 + \omega_{1,0} \left(\partialderivative{u_L}{x} d_{LR}-\partialderivative{u_R}{x} d_{LR} \right)^2 + \omega_{0,1} \left(\partialderivative{u_L}{y}d_{LR}-\partialderivative{u_R}{y}d_{LR}\right)^2 \dd A.
+\end{equation}
+% Based on the following relations
+% \begin{equation}
+%     u_i= \overline{u}_i + u^1_i \varphi_{i,1} + u^2_i\varphi_{i,2}, \quad \partialderivative{u_i}{x}= u^1_i\partialderivative{\varphi_{i,1}}{x} + u^2_i\partialderivative{\varphi_{i,2}}{x}, \quad \partialderivative{u_i}{y}= u^1_i\partialderivative{\varphi_{i,1}}{y} + u^2_i\partialderivative{\varphi_{i,2}}{y},
+% \end{equation}
+By applying the variational method to the minimization of the cost function, a system of linear equations is obtained as follows
+\begin{equation}
+\label{eq:2nd-global-system}
+    \mathbf{A}_i \mathbf{u}_i= \mathbf{B}_i^{j_1} \mathbf{u}_{j_1} + \mathbf{B}_i^{j_2} \mathbf{u}_{j_2} + \mathbf{B}_i^{j_3} \mathbf{u}_{j_3} + \mathbf{b}_i, \quad i=1,\cdots,N,
+\end{equation}
+where the elements of matrices $\mathbf{A}_i$, $\mathbf{B}^j_i \in \mathbb{R}^{2 \times 2}$ and $\mathbf{b}_i \in \mathbb{R}^{2}$ are
+\begin{equation}
+    \begin{aligned}
+         & \mathbf{A}_{i} [l,m]= \sum^{j_3}_{j=j_1} \omega_{f} 
+           \int_{f}{ 
+             \omega_{0,0}
+            \varphi_{i,l}\varphi_{i,m}
+            +
+            \omega_{1,0} d^{2}_{ij}
+            \partialderivative{\varphi_{i,l}}{x}
+            \partialderivative{\varphi_{i,m}}{x}
+            +
+             \omega_{0,1} d^{2}_{ij}
+            \partialderivative{\varphi_{i,l}}{y}
+            \partialderivative{\varphi_{i,m}}{y}
+            \ \dd A},
+        \\
+         & \mathbf{B}^j_{i} [l,n]=
+        \omega_f \int_{f}{ 
+             \omega_{0,0}
+            \varphi_{i,l}\varphi_{j,n}
+            +
+            \omega_{1,0} d^{2}_{ij}
+            \partialderivative{\varphi_{i,l}}{x}
+            \partialderivative{\varphi_{j,n}}{x}
+            +
+             \omega_{0,1} d^{2}_{ij}
+            \partialderivative{\varphi_{i,l}}{y}
+            \partialderivative{\varphi_{j,n}}{y}
+            \ \dd A},
+        \\
+         & \mathbf{b}_{i} [l]=
+        \sum^{j_3}_{j=j_1}
+        \omega_f \ \omega_{0,0}
+        \int_{f}{
+            \varphi_{i,l} \left(\overline{u}_j - \overline{u}_i\right)
+            \ \dd A}.
+    \end{aligned}
+\end{equation}
+The linear equation system \eqref{eq:2nd-global-system} can be solved iteratively using the block Gauss-Seidel method \eqref{eq:gauss-seidel-iteration}.
+}
+
+\added[id=r1]{In the variational reconstruction, there are two categories of weights: the geometric weight $\omega_f$ in \eqref{eq:cost-function} that governs the relative significance of the IJIs on cell interfaces, and the derivative weights $\left\{\omega_{p,q}\right\}^k_{p+q=0}$ in \eqref{eq:IJI} that determine the relative importance assigned to jump integrals involving various spatial derivatives. These weights are the parameters that affect the accuracy and efficiency of the high-order FV method using the variational reconstruction. Different weights actually result in different variational reconstruction schemes. Therefore, the weights should be optimized for an improvement in accuracy or efficiency. However, optimization of numerical schemes on unstructured grids is challenging, due to the complexity of mesh geometry that makes widely used optimization techniques on structured grids, such as spectral property analysis \cite{sun2011class}, not applicable. Recently, Zhou et al. \cite{zhou2024machine} developed an optimization framework based on machine learning for variational reconstruction on triangular meshes. Optimal weights on general unstructured grids are still not available. The geometric weight is designed to work effectively mainly on grids with large aspect ratios. Therefore, the following geometric weight  
+\begin{equation}
+    \omega_f= \sqrt{\dfrac{A_f}{d_{LR}}},
+\end{equation}
+obtained through a spectral property optimization on highly stretched quadrilateral grids by Huang et al. \cite{huang2022high}, is adopted in this work.
+The following derivative weights
+\begin{equation}
+    \begin{aligned}
+        \omega_{0,0} &=1, \\
+        \omega_{1,0} & = \omega_{0,1} = 1,\\
+        \omega_{2,0} & = \omega_{0,2} = 1/4, \ \omega_{1,1} = 1/2,\\
+        \omega_{3,0} & = \omega_{0,3} = 1/36, \ \omega_{2,1} = \omega_{1,2} = 1/12,
+    \end{aligned}
+    \label{eq:wdRotRatio}
+\end{equation}
+which can be used in linear to cubic variational reconstructions, are derived from the factorial form used by Pan et al. \cite{pan2018high_VR}.
+Modifications are added to the cross-derivative weights to establish
+rotational invariance of the reconstruction functional.
+}
+
+\added[id=r1]{
+The global linear system to be solved in variational reconstruction is
+tested on 4 meshes displayed in Figure \ref{fig:meshes_test_cond}.
+Fourth order variational reconstruction (cubic polynomial) with 
+periodic boundary conditions is applied to the meshes and 
+the global reconstruction matrix $\mathbf{A}$ from \eqref{eq:global-system} 
+is analyzed for condition number. 
+Meanwhile, spectral radius of the iteration matrix arising from block Gauss-Seidel iteration in \eqref{eq:gauss-seidel-iteration}, $\rho_{GS}$, is calculated on these meshes to investigate the convergence behavior of variational reconstruction. 
+}
+
+\added[id=r1]{
+Results of condition number and iteration spectral radius for meshes in Figure \ref{fig:meshes_test_cond} are shown in Table \ref{tab:cond_and_rho}. 
+It is shown that on regular meshes, 4th order (cubic) variational reconstruction has relatively lower global condition number and 
+lower spectral radius in block Gauss-Seidel iteration.
+On distorted meshes, the condition number and spectral radius are increased,
+but still remain in reasonable ranges. 
+The spectral radius results all stay below $1$ according to the general theoretical
+analysis of block Gauss-Seidel iteration in varitaional reconstruction\cite{wang2017compact_VR}.
+}
+
+\begin{table}[htbp!]
+    \centering
+    \caption{}
+    \label{tab:cond_and_rho}
+    % \footnotesize
+    % \begin{tabular}{|c|c|c|c|c|}
+    \setlength{\tabcolsep}{12.5pt} % Increase column spacing
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{ c c c c c}
+        \toprule
+        Mesh & Quad & Quad distorted & Tri & Tri distorted \\
+        \midrule
+        Condition number &339.4 & 609.8 & 145.8 & 1438 \\
+        % \hline
+        $\rho_{GS}$ &0.7652 & 0.7820 & 0.7859 & 0.8422\\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+   \centering
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/IV_10_10_Quad.png}
+       \caption[]{Quadrilateral elements}
+   \end{subfigure}
+%    \hfill
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/IV_10_10_Quad_Pert0.png}
+       \caption[]{Quadrilateral elements, distorted}
+   \end{subfigure}
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/IV_10_10_Tri.png}
+       \caption[]{Triangular elements}
+   \end{subfigure}
+%    \hfill
+   \begin{subfigure}{0.4\textwidth}
+       \includegraphics[width=\textwidth]{pics/IV_10_10_Tri_Pert0.png}
+       \caption[]{Triangular elements, distorted}
+   \end{subfigure}
+   \caption{Meshes used for condition number and iteration spectral radius test of variational reconstruction.}
+   \label{fig:meshes_test_cond}
+\end{figure}
+
+\added[id=r1]{Boundary conditions, such as symmetry and non-slip solid wall, should be implemented in the reconstructions on boundary cells to ensure the accuracy of the numerical solution. The boundary conditions can be conveniently implemented in the variational reconstruction procedure by simply adding IJIs on the boundary faces to the cost function \cite{wang2017compact_VR} as follows
+\begin{equation}
+    I= \sum^{N_f}_{f=1} \omega_f I_f + \sum^{N_{bf}}_{bf=1} \omega_{bf} I_{bf},
+\end{equation}
+where $N_{bf}$ is the total number of boundary faces, $I_{bf}$ is the IJI on boundary face $bf$, and $\omega_{bf}$ is the geometric weight of $I_{bf}$.
+We take the non-slip solid wall boundary condition as an example to illustrate the construction of the boundary IJI term $I_{bf}$. A non-slip solid wall boundary face $bf$ that belongs to a triangular element $\OO_i$ is shown in Figure \ref{fig:bundary_cell}. The geometric weight $\omega_{bf}$ is computed by
+\begin{equation}
+    \omega_{bf}= \sqrt{\dfrac{A_{bf}}{2\|\x_{i} - \x_{bf} \|_2}},
+\end{equation}
+where $\x_{bf}$ is the midpoint of face $bf$.
+The boundary IJI term for a conservative variable $u \in \U$ is defined as
+\begin{equation}
+    I_{bf}= \int_{bf} \left( u_i - u_{bf} \right)^2 \ \dd A,
+\end{equation}
+where $u_{bf}$ is the boundary value of $u$, which is determined according to the specific boundary condition. For instance, given a stationary non-slip isothermal solid wall with a specified wall temperature $T_{wall}$, the boundary values of the conservative variables are defined as \cite{mengaldo2014guide} 
+\begin{equation}
+    \rho_{bf}= \rho_i, \ \left(\rho \mathbf{u}\right)_{bf}= -\left(\rho \mathbf{u}\right)_i, \ \left(\rho E\right)_{bf}= C_p \rho_i T_{wall}/\gamma.
+\end{equation}
+Boundary IJI terms for other types of boundary conditions can be constructed in a similar way.
+}
+
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[width=0.4\linewidth]{pics/bundary_cell}
+    \caption{\added[id=r1]{A boundary cell in a two-dimensional mesh.}}
+    \label{fig:bundary_cell}
+\end{figure}
+
+In the reconstruction of a solution that involves discontinuities, a WBAP limiter \cite{li2011multi,li2012multi} is used to suppress spurious oscillations. The limiting process on the element $i$ in Figure \ref{fig:compactstencil} is presented for illustration. The limited reconstruction polynomial
+\begin{equation}\label{eqn:Limited_Polynomial}
+    \tilde{u}_{i} \left(\x\right) = \overline{u}_{i} + \sum_{l=1}^{\mathrm{N_b}\left(k\right)} \tilde{u}_i^l \varphi_{i,l}  \left(\x\right),
+\end{equation}
+is a non-linearly weighted average of the reconstruction polynomial $u_i \left(\x\right)$ and three additional candidate polynomials $u_{j \rightarrow i} \left(\x\right)$, $j=j_1, j_2, j_3$ obtained through a secondary reconstruction \cite{li2012high}. The limited coefficients $\tilde{u}^l_i$ are computed by
+\begin{equation}\label{eq:Limiting}
+    \tilde{u}_i^l= L\left(u_i^l, u^l_{j_1 \rightarrow i}, u^l_{j_2 \rightarrow i}, u^l_{j_3 \rightarrow i}\right),
+\end{equation}
+where
+\begin{equation}
+    L(a_0,a_1,\cdots, a_J)=a_0\cdot{W\left(1,\frac{a_1}{a_0}, \cdots, \frac{a_J}{a_0}\right)},
+\end{equation}
+with the WBAP limiting function defined as
+\begin{equation}
+W(1,\theta_1,\cdots, \theta_J)=\frac{n+\sum_{m=1}^{J}{1/\theta_m^{p-1}}}{n+\sum_{m=1}^{J}{1/\theta_m^{p}}}.
+\end{equation}
+\added[id=r2]{In the WBAP limiting function, $n$ and $p$ are the two important parameters that affect the properties of the limiter. The parameter $n \geq 1$ controls the relative weighting of the first input, corresponding to the coefficient $u_i^l$ of the current cell in the limiting process described by equation \eqref{eq:Limiting}. Increasing $n$ allows the limited polynomial to more closely approximate its unlimited counterpart. However, excessively large values of $n$ can result in inadequate suppression of spurious numerical oscillations. The parameter $p$, which is an even integer, governs the dissipation introduced by the limiter. Larger values of $p$ are well-suited to limiting procedures in higher-order numerical schemes. Following previous studies \cite{wang2017compact_VR,zhang2019compact_VR,zhou2024machine}, the parameters of the limiting function as set as $n=10$ and $p=4$ in this work.} The limiting is performed in a successive manner in characteristic space \cite{li2012multi}.
+
+\subsection{Implicit time integration}
+\label{ssec:TimeMarching}
+
+\added[id=r2]{
+In engineering CFD simulations, implicit time marching methods are commonly employed to overcome linear stability constraints that restrict time step sizes, thus enhancing computational efficiency. Therefore, this research aims to develop positivity-preserving algorithms for finite volume methods that utilize implicit time marching, extending their applicability to practical engineering problems.
+% In engineering CFD scenarios, implicit time marching is widely adopted 
+% to overcome the strict linear stability constraint on the physical CFL number.
+% Therefore, the current research focuses on positivity-preserving implicit time marching methods to extend the application of positivity-preserving
+% algorithms to engineering problems.
+Another motivation for adopting implicit time marching is the implicit nature of the variational reconstruction.}
+As mentioned in the previous subsection, the linear equation system of the variational reconstruction is solved iteratively. The reconstruction will be very expensive if the iteration needs to reach convergence at each single time step. A reconstruction and implicit dual-time stepping coupled iteration procedure has been proposed in \cite{wang2016compact1_VR} to address this computational efficiency issue. In the coupled iteration procedure, the reconstruction iteration is performed only once at each pseudo time step. The coupling between the reconstruction and the time integration makes these two procedures achieve convergence synchronously. By using the coupled iteration, the implicit nature of the variational reconstruction does not result in additional cost, thus ensuring the high computational efficiency of the variational finite volume method.
+
+\added[id=r1]{For unsteady flow simulations, achieving high-order accuracy requires both high-order spatial and temporal discretizations. Multi-stage implicit Runge-Kutta methods \cite{butcher1964implicit} are widely adopted for high-order time integration. In this paper, a fourth-order finite volume scheme is used to perform the numerical experiments presented in Section \ref{sec:Results}. Specifically, a cubic variational reconstruction is used to achieve fourth-order accuracy in space, and a six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK} method is used to achieve fourth-order accuracy in time. 
+The ESDIRK4 method is designed to be $L$-stable and stiffly accurate while maintaining relatively high-order accuracy \cite{kennedy2003additiveARK}. Among its six stages, the solution at the explicit first stage is directly set as the solution at the current time, whereas the solutions for the subsequent five stages are obtained implicitly. 
+% Due to the diagonally implicit structure characteristic of ESDIRK methods, these implicit stages can be solved sequentially, each involving only a single unknown solution at a time. This feature reduces storage requirements and simplifies the implementation.
+Owing to the diagonally implicit structure characteristic of ESDIRK methods, these implicit stages can be solved sequentially, each involving only one unknown stage at a time, thus reducing storage requirements and simplifying the implementation. An important feature of ESDIRK methods is that the converged solution from the final stage directly becomes the updated solution, offering a significant advantage in preserving solution positivity. This aspect is discussed in detail in Section~\ref{sec:PP}.
+% ESDIRK4 is desgined to be $L$-stable and stiffly accurate with relatively high order of accuracy \cite{kennedy2003additiveARK}.
+% The explicit first stage in ESDIRK4 directly uses the $t^n$ solution, 
+% and all 5 subsequent unknown stages $\uu^{(s)}, s=2,3,\dots 6$ are implicitly solved. 
+% Due to the DIRK trait of ESDIRK methods,  stages $\uu^{(s)}, s=2,3,\dots 6$ can be solved one by one successively. 
+% With only one unknown stage to solve at a time, the stage solving procedure 
+% is similar with a steady problem, which reduces storage and simplifies implementation.
+% A significant feature of ESDIRK methods is that the converged solution from the final stage directly serves as the updated solution, providing a notable advantage in preserving its positivity. This aspect is further elaborated in Section~\ref{sec:PP}.
+}
+
+
+% In unsteady flow simulations, solutions are advanced in time in a step-by-step manner. Specifically, given the solution $\uu^n$ at time $t^n$, the solution at next time instance $t^{n+1}$, $\uu^{n+1}$, can be obtained by integrating the semi-discrete finite volume scheme \eqref{eq:FVODECell} over a time step $\inc t^n= t^{n+1} - t^n$ using the ESDIRK4 method as follows
+\replaced[id=r1]{In unsteady flow simulations, solutions are advanced step-by-step in time. Given the solution $\uu^{n}$ at time $t^n$, the solution at the subsequent time instance $t^{n+1}$, denoted as $\uu^{n+1}$, is obtained by integrating the ODE system \eqref{eq:FVODE} over the time step $\inc t^n= t^{n+1} - t^n$ using the ESDIRK4 method:% as follows:
+\begin{subequations}\label{eq:ESDIRK4}
+    \begin{align}
+         & \uu^{\left(1\right)} \ = \uu^{n}, \label{eq:esdirk4-1}                                                                  \\
+         & \uu^{\left(s\right)} \ = \uu^{n} + \inc t^n \sum_{q=1}^{s} a_{sq} \R^{\left(q\right)},\ \ s = 2, \cdots, 6, \label{eq:esdirk4-s} \\
+         & \uu^{n+1} = \uu^{\left(6\right)}, \label{eq:esdirk4-6}
+    \end{align}
+\end{subequations}
+%\begin{equation}
+%    \begin{aligned}
+%    	&\uu^{n,1}_i \ = \uu^{n}_i, \\        
+%        &\uu^{n,s}_i \ = \uu^{n}_i + \inc t^n \sum_{q=1}^{s} a_{sq} \R_i^{n,q},\ \ s = 2, \cdots, 6 \\
+%        &\uu^{n+1}_i = \uu^{n,6}_i, \\
+%    \end{aligned}
+%\end{equation}
+where
+\begin{equation}
+    \R^{\left(q\right)}  = \R \left(\uu^{\left(q\right)} \right).
+\end{equation}
+The coefficients $a_{sq}$ can be found
+in \cite{bijl2002implicitBDFvESDIRK}. 
+% It is worth noting that, although the ESDIRK4 method consists of six stages, only the final five require iterative solution to \eqref{eq:esdirk4-s} that can be rewritten as
+In the final five stages of the ESDIRK4 method, the stage equation \eqref{eq:esdirk4-s}, which can be rewritten as
+\begin{equation}
+\label{eq:stage-equation}
+    \dfrac{\uu^{\left(s\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss} \R^{\left(s\right)},
+\end{equation}
+needs to be solved iteratively, due to the implicit and nonlinear nature of $\R^{\left(s\right)}$. This is typically done using iterative methods such as the approximate-Newton iterative procedure \cite{rai1987navier} and the dual-time stepping approach \cite{jameson1991time,arnone1995integration,derango1997improvements}. Both methods employ inner (or sub-) iterations at each physical time level. 
+% The dual-time stepping method is the more general approach and the approximate-Newton method can be regarded as a subset of it \cite{venkateswaran1995dual}. 
+The dual-time stepping approach introduces a pseudo time derivative, in addition to the physical time derivative, to drive the solution toward steady-state at each stage. 
+% The approximate-Newton method is a special case of dual-time stepping, which offers greater flexibility by allowing the pseudo time to be tuned for improved convergence \cite{venkateswaran1995dual}.
+% % {\color{blue}The advantage of dual-time stepping over the approximate Newton is that the pseudo time derivative may be chosen so as to optimize the convergence of the inner iterations \cite{venkateswaran1995dual}.}
+This approach can be viewed within the broader context of pseudo-transient continuation techniques, which leverage the inherent time-dependent structure of PDEs to circumvent stagnation issues associated with local minima common in nonlinear solvers \cite{kelley1998convergence}.
+The approximate-Newton method can be regarded as a special case of dual-time stepping with an infinite pseudo-time step size \cite{venkateswaran1995dual}. By contrast, dual-time stepping provides greater flexibility, allowing the pseudo-time step size to be tuned for improved convergence. As a result, dual-time stepping has been widely adopted for implicit time integration in compressible flow simulations \cite{zhang2004block,jameson2009assessment,liu2018dynamic}.
+}
+{In this work, the time integration scheme for unsteady flow simulation is the six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK}. By integrating the ODE \eqref{eq:FVODECell} in time, the cell-average is updated by
+\begin{subequations}\label{eq:ESDIRK4}
+    \begin{align}
+         & \uu^{n,1}_i \ = \uu^{n}_i, \label{eq:esdirk4-1}                                                                  \\
+         & \uu^{n,s}_i \ = \uu^{n}_i + \inc t^n \sum_{q=1}^{s} a_{sq} \R_i^{n,q},\ \ s = 2, \cdots, 6, \label{eq:esdirk4-s} \\
+         & \uu^{n+1}_i = \uu^{n,6}_i, \label{eq:esdirk4-6}
+    \end{align}
+\end{subequations}
+%\begin{equation}
+%    \begin{aligned}
+%    	&\uu^{n,1}_i \ = \uu^{n}_i, \\        
+%        &\uu^{n,s}_i \ = \uu^{n}_i + \inc t^n \sum_{q=1}^{s} a_{sq} \R_i^{n,q},\ \ s = 2, \cdots, 6 \\
+%        &\uu^{n+1}_i = \uu^{n,6}_i, \\
+%    \end{aligned}
+%\end{equation}
+where
+\begin{equation}
+    \R^{n,q}_i  = \R_i \left(t^n + c_q \inc t^n, \left\{\U^{n,q}_j\right\}_{j \in S_i}\right),
+\end{equation}
+with $\inc t^n= t^{n+1} - t^n$ being the time step size, which is in general a user-specified constant.
+The coefficients $a_{sq}$ and $c_q$ of ESDIRK4 can be found
+in \cite{bijl2002implicitBDFvESDIRK}.}
+
+\replaced[id=r1]{
+In this work, the stage equation is solved iteratively using the dual-time stepping technique. In this approach, a pseudo-time derivative is introduced alongside the physical-time derivative, modifying equation~\eqref{eq:stage-equation} into the following form:
+% In this work, the stage equation is solved iteratively using the dual-time stepping technique \cite{jameson1991time, jameson2009assessment}, wherein a pseudo time derivative is introduced in addition to the physical time derivative in \eqref{eq:stage-equation}:
+\begin{equation}
+\label{eq:dual-time-stage-equation}
+    \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} +\dfrac{\uu^{\left(s\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss} \R^{\left(s\right)}.
+\end{equation}
+An inner iteration is performed to advance the solution in the direction of pseudo time $\tau$. The intermediate solution at iteration step $m$ is denoted as $\uu^{\left(s,m\right)}$. 
+The pseudo time derivative can be discretized by using a simple backward difference as 
+\begin{equation}
+\label{eq:backward-euler-tau}
+    \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} \approx \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m}.
+\end{equation}
+The solution at pseudo time step $m+1$ can be sought by solving the nonlinear equation system 
+\begin{equation}
+    \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m} +\dfrac{\uu^{\left(s,m+1\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss}\R^{\left(s,m+1\right)}.
+\end{equation}
+Based on the fact that the implicit right-hand-side term $\R$ can be linearized as
+\begin{equation}
+\label{eq:linarization-R}
+    \R^{\left(s,m+1\right)} \approx \R^{\left(s,m\right)} + \partialderivative{\R}{\uu} \left(\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}\right),
+\end{equation}
+the solution can be updated more conveniently by solving the following linear equation system 
+\begin{equation}
+    % \label{eq:pseudo-time-equation}
+    \left(\frac{\eye}{\inc \tau^m} + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R }{\uu} \right) \inc \uu^{\left(s,m\right)}
+    = \tilde{\R}^{\left(s,m\right)},
+    \label{eq:linearTauUpdate}
+\end{equation}
+where
+\begin{equation}
+    \label{eq:define-inc}
+    \inc \uu^{\left(s,m\right)}= 
+    \uu^{\left(s,m+1\right)} - \uu^{\left(s,m\right)}, \quad 
+    \tilde{\R}^{\left(s,m\right)}= 
+    \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + 
+    a_{ss} \R^{\left(s,m\right)} - 
+    \dfrac{\uu^{\left(s,m\right)} - \uu^{n}}{\inc t^n}.
+\end{equation}
+The linear equation system \eqref{eq:linearTauUpdate} is solved by using a matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo time until $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
+% When the pseudo time derivative vanishes, the intermediate solution $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$.
+}
+{The implicit and nonlinear equation \eqref{eq:esdirk4-s} is solved iteratively using a dual-time stepping technique, in which a pseudo-time variable $\tau$ is introduced. The pseudo-time integration scheme is %for  \eqref{eq:esdirk4-s} is
+\begin{equation}
+    \dfrac{\uu^{n,s,m+1}_i-\uu^{n,s,m}_i}{\inc \tau_i} + \dfrac{\uu^{n,s,m+1}_i - \uu^{n}_i}{\inc t^n} = \sum_{q=1}^{s-1} a_{sq} \R^{n,q}_i + a_{ss} \R_i^{n,s,m+1},
+\end{equation}
+where $m$ is the index for pseudo-time step, and
+\begin{equation}
+    \R^{n,s,m+1}_i  = \R_i \left(t^n + c_s \inc t^n, \left\{\U^{n,s,m+1}_j\right\}_{j \in S_i}\right).
+\end{equation}
+By using the linear approximation
+\begin{equation}
+    \R^{n,s,m+1}_i \approx \R^{n,s,m}_i + \sum_{j \in S_i} \dfrac{\partial \R_i}{\partial \UM_j} \left(\uu^{n,s,m+1}_j-\uu^{n,s,m}_j\right),
+\end{equation}
+we obtain a linear equation system to update the cell-average in the pseudo-time direction as follows
+\begin{equation}
+    % \label{eq:pseudo-time-equation}
+    \left(\frac{\eye}{\inc \tau_i} + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R_i }{\uu_i} \right) \inc \uu^{n,s, m}_i
+    -
+    a_{ss}\sum_{j\in S_i,j\neq i} {
+        \partialderivative{\R_i}{\uu_j} \inc \uu^{n,s, m}_j
+    }
+    = \tilde{\R}^{n,s,m}_i,
+    \label{eq:linearTauUpdate}
+\end{equation}
+where
+\begin{equation}
+    \label{eq:define-inc}
+    \inc \uu^{n,s,m}_i= \uu^{n,s,m + 1}_i - \uu^{n,s,m}_i, \quad \tilde{\R}^{n,s,m}_i= \sum_{q=1}^{s-1} a_{sq} \R^{n,q}_i + a_{ss} \R_i^{n,s,m} - \dfrac{\uu^{n,s,m}_i - \uu^{n}_i}{\inc t^n}.
+\end{equation}
+The linear equation system \eqref{eq:linearTauUpdate} is solved by using the matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo-time until $\uu^{n,s,m+1}_{i}$ converges to $\uu^{n,s}_{i}$, forming an inner iteration at the $s$-th stage of ESDIRK4. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
+}
+
+\replaced[id=r1]{In dual-time stepping, the physical time step size $\inc t^n$ is usually a constant specified according to the time scale of the underlying flow problem. The pseudo time step size can be adjusted based on local flow characteristics. In this work, the local pseudo time step size is computed by
+\begin{equation}
+    \label{eq:local-pseudo-time-step}
+    \inc \tau^m_{i} = \frac{\CFLtau \overline{\OO}_i }
+    {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}},
+\end{equation}
+where $\CFLtau$ is the CFL number used to control the convergence speed of inner iteration, and $\lambda_{f}$ is the spectral radius at cell interface $f$ defined as
+\begin{equation}
+    \begin{aligned}
+        &\lambda_f= \lambda_{c,f} + \lambda_{v,f} A_f \left(\dfrac{1}{\overline{\OO}_L}+\dfrac{1}{\overline{\OO}_R}\right),\\
+        &\lambda_{c,f}=\left|\mathbf{u}_f \cdot \n_f\right| + \sqrt{\gamma \dfrac{p_f}{\rho_f}}, \quad \lambda_{v,f}= \dfrac{\mu_f}{\rho_f} \max\left(\dfrac{4}{3},\dfrac{\gamma}{Pr}\right),
+    \end{aligned}
+    \label{eq:lambda-face-estimation}
+\end{equation}
+with the averaged primitive variables computed by
+\begin{equation}
+    \mathbf{W}_f= \left(\rho_f,\mathbf{u}_f,p_f\right)^\top=\dfrac{1}{2}\left[\mathbf{W} \left(\uu_L\right) + \mathbf{W} \left(\uu_R\right) \right].
+\end{equation}
+The dynamic viscosity on interface $f$ is computed by
+\begin{equation}
+    \mu_f= \mu \left(T_f\right), \quad T_f= \dfrac{p_f}{\rho_f R},
+\end{equation}
+using Sutherland's law \cite{white2006viscous}. 
+}
+{The local pseudo-time step size is computed by
+\begin{equation}
+    \label{eq:local-pseudo-time-step}
+    \inc \tau_{i} = \frac{\CFLtau \overline{\OO}_i }
+    {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
+\end{equation}
+where $\lambda_{f}$ is the spectral radius estimated on cell interface $f$ and $\CFLtau$ is the CFL number used to control the convergence speed of inner iteration.}
+
+% \added[id=r1]
+% {
+% Dual time stepping technique has been widely discussed within the 
+% general pseudo transient continuation framework.
+% Pseudo transient continuation, 
+% used for steady-state or implicit PDE solutions,
+% can take advantage of the PDE's time-dependent structure  and 
+% overcome the local minima stagnation problems of general nonlinear
+% solving methods \cite{kelley1998convergence}.
+% Due to the usage of linearized implicit Euler method in pseudo time, 
+% the iteration method \eqref{eq:linearTauUpdate} is a continuation of 
+% Newton-Raphson method. When $\inc\tau \rightarrow\infty$,  \eqref{eq:linearTauUpdate} becomes exactly the Newton-Raphson iteration.
+% Due to the algorithmic structure of dual time stepping, the solver can be directly extended to steady-state problems efficiently, with the positivity-preserving algorithms consistently extended to steady-state solving as well.
+% By simply substituting ESDIRK4 with implicit Euler and applying a infinitely large $\inc t$, the iteration \eqref{eq:linearTauUpdate} immediately becomes
+% \begin{equation}
+%     % \label{eq:pseudo-time-equation}
+%     \left(\frac{\eye}{\inc \tau^m} -\partialderivative{\R }{\uu} \right) \inc \uu^{\left(s,m\right)}
+%     = \R,
+%     \label{eq:linearTauUpdate}
+% \end{equation}
+% which is standard pseudo-time continuation of Newton-Raphson iteration for steady problems \cite{SU2economon2016su2, FUN3Dwang2021improvements}. 
+% }
+
+% \added[id=r1]{Another important reason to use dual time stepping is to provide physical based control of inner iteration. 
+% $\inc \tau$ in \eqref{eq:linearTauUpdate} can be viewed as  an implicit relaxation factor added to exact Newton-Raphson iteration.  
+% By using a smaller $\inc \tau$, the increment calculated is smaller asymptotically.
+% In Section \ref{sec:PP}, it will be shown that the addition of $\inc \tau$ to Newton-Raphson iteration provides a valuable opportunity to design positivity-preserving algorithms in the inner iterations.
+% }
+
+%The pseudo time step is determined locally on each cell to account for
+%the different time scales in the computational region.
+%The current paper uses first order LLF approximate evaluation
+%of the Jacobian terms in \eeqref{eq:linearTauUpdate} and uses matrix-free
+%LU-SGS to solve the increment values \cite{luo1998fast,luo2001accurate},
+%which grants enough convergence in unsteady problems. 
+%The pseudo time iteration is stopped when
+%\begin{equation}
+%    \|\FF^{n,s,m}\| \leq \varE_{\tau} \|\FF^{n,s,0}\|
+%\end{equation}
+%and $\FF^{n,s,m}$ is the globally assembled residual vector from 
+%$\FF^{n,s,m}_i$, $\varE_{\tau}$ is the convergence threshold for
+%the nonlinear residual $\FF^{n,s,m}$, and $\|\cdot\|$ is 
+%a norm. For transient flow the current research finds setting $\varE_{\tau}$
+%from $10^{-3}$ to $10^{-4}$ sufficiently accurate.

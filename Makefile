@@ -24,6 +24,8 @@ clean:
 	rm -f $(addsuffix .fls, $(targets))
 	rm -f $(addsuffix .bbl, $(targets))
 	rm -f $(addsuffix .spl, $(targets))
+	rm -f $(addsuffix .loc, $(targets))
+	rm -f $(addsuffix .soc, $(targets))
 
 	
 	

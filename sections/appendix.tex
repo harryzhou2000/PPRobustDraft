@@ -1,0 +1,200 @@
+% !TeX root = main.tex
+
+% Start of Appendix
+\appendix
+
+\section{Lower bound of the limited physical time step size}
+\label{sec:lower-bound-physical}
+An analysis can be performed on the lower bound of the physical time step size.
+The right-hand-side of the semi-discrete finite volume scheme is computed by
+\begin{equation}
+    \label{eq:Semi-FV-1}
+    \R_i = -\frac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \ \dd A.
+\end{equation}
+On a cell interface $f$, a spectral radius $\tilde{\lambda}_f>0$ can be found such that
+\begin{equation}
+    \left\| \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \right\| \leq \tilde{\lambda}_f \min \left\{\|\UM_L\|, \|\UM_R\| \right\},
+\end{equation}
+where $\|\cdot\|$ denotes the $L^2$ norm, if the ratio $\max \left\{\|\UM_L\|, \|\UM_R\| \right\}/\min \left\{\|\UM_L\|, \|\UM_R\| \right\}$ is bounded.
+Therefore, we have
+\begin{equation}
+    \left\| \R_i \right\| 
+    \leq \frac{1}{\overline{\OO}_i} \sum_{f \in \partial \Omega_i}{
+        A_{f} \tilde{\lambda}_{f} \min \left\{\|\UM_L\|, \|\UM_R\| \right\}
+    } 
+    \leq \frac{\sum_{f \in \partial \Omega_i} A_f\tilde{\lambda}_f}{\overline{\OO}_i}\|\UM_i\|
+    =
+    \frac{\CFL_i}{\inc t_{max}}\|\UM_i\|,
+\end{equation}
+where $\CFL_i= \inc t_{max}\sum_{f \in \partial \Omega_i} A_f \tilde{\lambda}_f/\overline{\OO}_i$. 
+Given that $\UM_i$ is finite and non-singular, we can find $\mathcal{O}(1)$ coefficients $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ such that
+\begin{equation}
+    \begin{aligned}
+        \left| \rho\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right|
+        & \leq
+        C^\rho_i \rho\left( \UM_i \right),\\
+        \left| \rho E\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right|
+        & \leq
+        C^{\rho E}_i \rho E\left( \UM_i \right),\\
+        \left\| \rho \uv\left( \frac{\inc t_{max}}{\CFL_i} \R_i \right) \right\|
+        & \leq
+        C^{\rho \uv}_i \left\| \rho \uv\left( \UM_i \right)              \right\|,\\
+    \end{aligned}
+\end{equation}
+where $\rho(\U)$, $\rho E(\U)$ and $\rho \uv(\U)$ are linear functions as they take directly the components of $\U$.
+% $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ are $\mathcal{O}(1)$ coefficients determined by $\UM_i$.
+We can show that $\alpha_{t,i}^{\rho}$ has a lower bound.
+By substituting the following inequality 
+\begin{equation}
+    |\delta \rho_i^n| = \left|\rho\left(\UM^n_i + \inc t_{max} \R^n_i\right) - \rho\left(\UM^n_i\right)\right|
+    =
+    \left|\rho\left(\inc t_{max} \R^n_i\right)\right|
+    \leq
+    \CFL_i C^\rho_i \rho\left(\UM^n_i\right),
+\end{equation}
+into \eqref{eq:alpha-t-rho}, we have
+\begin{equation}
+    \label{eq:alpha-t-rho-lb}
+    \alpha_{t,i}^{\rho} \geq \frac{\eta_t}{\CFL_i C_i^\rho},
+\end{equation}
+which indicates a finite lower bound for $\alpha_{t,i}^{\rho}$. 
+
+\newcommand{\uincT}{\inc\U_i^{n,\rho}}
+Next, we derive a lower bound for $\alpha_{t,i}^{p}$ using a similar approach.
+We define $\inc\U_i^{n,\rho} =\alpha_{t,i}^{\rho} \inc t_{max} \R^n_i$.
+According to \eqref{eq:alpha-t-rho-ineq}, we have 
+\begin{equation}
+    \rho\left(\UM^n_i+\uincT  \right) \geq (1-\eta_t)\rho\left(\UM^n_i\right).
+\end{equation}
+By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
+% {\small
+\begin{equation}
+    \begin{aligned}
+        \dfrac{|\delta p_i^n|}{\gamma-1} 
+        &=  \dfrac{1}{\gamma-1} \left| p \left(\UM^n_i + \inc\U_i^{n,\rho}\right) -  p \left(\UM^n_i\right) \right| \\
+        &=  \left| \rho E\left( \uincT \right) 
+         - \frac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i+\uincT  \right)
+         }
+         + \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)}
+        \right| \\
+        &\leq  \left| \rho E\left( \uincT \right) \right|
+         +
+         \dfrac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i+\uincT  \right)
+         }
+         +
+          \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
+        &\leq  \left| \rho E\left( \uincT \right) \right|
+         +
+         \frac{1}{1-\eta_t}
+         \frac{
+         \rho\uv\left(\uincT\right)^2
+         +
+         \rho\uv\left(\UM^n_i\right)^2
+         +
+         2\rho\uv\left(\uincT\right)\cdot\rho\uv\left(\UM^n_i\right)
+         }{
+         2\rho\left(\UM^n_i \right)
+         }
+         +
+          \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
+        &\leq \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  \rho E\left( \UM^n_i \right) 
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+        \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)},
+    \end{aligned}
+\end{equation}
+% }
+where $\rho\uv()^2$ is the short form of $\rho\uv()\cdot\rho\uv()$.
+As $p\left(\UM^n_i\right) > 0$, we have
+\begin{equation}
+    \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} < \rho E\left(\UM^n_i\right),
+\end{equation}
+and thus
+\begin{equation}
+    \begin{aligned}
+        |\delta p_i^n| &\leq
+        (\gamma-1)\left[
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+        \right]
+        \rho E\left( \UM^n_i \right).
+    \end{aligned}
+\end{equation}
+According to \eqref{eq:alpha-t-p}, we obtain
+\begin{equation}
+    \begin{aligned}
+        \label{eq:alpha-t-p-lb}
+        \alpha_{t,i}^{p} 
+        & \geq \dfrac{\eta_t}{\gamma-1} \frac{p\left(\UM^n_i\right)}{
+            \rho E\left(\UM^n_i\right)
+        }
+        \frac{1}{
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+            +\left(
+            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+            + \frac{2-\eta_t}{1-\eta_t}
+            \right)
+        } \\
+        & = \eta_t \frac{1}{
+           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
+        }
+        \frac{1}{
+         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+            +\left(
+            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+            + \frac{2-\eta_t}{1-\eta_t}
+            \right)
+        },
+    \end{aligned}
+\end{equation}
+where $Ma_i$ is the Mach number based on $\UM^n_i$. 
+Consequently, the global time step size is bounded below by
+\begin{equation}
+    \label{eq:delta-t-lb}
+    \frac{\inc t^n}{\inc t_{max}} \geq 
+    \eta_t^2
+    \min_i
+    \left\{
+    \frac{1}{
+           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
+        }
+    \frac{1}{\CFL_i C_i^\rho}
+    \frac{1}{
+     \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+    }
+    \right\}.
+\end{equation}
+We assume that the state $\UM^n_i$ yields a finite Mach number $Ma_i$.
+Under the conditions that $\eta_t\sim\mathcal{O}(1)$, $1-\eta_t\sim\mathcal{O}(1)$,
+$\CFL_i\sim\mathcal{O}(1)$ and ${1}/\left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\sim\mathcal{O}(1)$,
+$\inc t^n$ is not infinitely small compared to $\inc t_{max}$.
+In other words, when the CFL number $\CFL_i$ based on $\inc t_{max}$ is $\mathcal{O}(1)$, 
+the CFL number determined by the scaled $\inc t^n$ also remains $\mathcal{O}(1)$.

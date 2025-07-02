@@ -11,3 +11,5 @@
 *.gz
 *.lyx~
 # *.lyx
+*.loc
+*.soc
