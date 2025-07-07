@@ -1,4 +1,6 @@
 % !TeX root = main.tex
+\begingroup
+\color{r2color}
 
 \section{Analysis of the positivity-preserving algorithm}
 
@@ -10,10 +12,11 @@ The positivity-preserving algorithm consists of four fundamental procedures: phy
 
 It is well-established that reducing the physical time step size does not impact the order of accuracy of the time integration.
 % Generally, pseudo time step limiting and increment correction may be activated during the early stages of the inner iteration to stabilize the solution and are deactivated in later stages as the solution converges. 
-% {\color{red}Even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy.}
+% {\color{r1color}Even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy.}
 % Therefore, these techniques do not affect the accuracy of the converged solution in the inner iteration process.
-In general, pseudo-time step limiting and increment correction are often activated during the initial stages of the inner iteration to stabilize the solution. These techniques are typically deactivated in later stages as the solution converges. Importantly, even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy. As a result, these stabilization techniques do not compromise the accuracy of the converged solution in the inner iteration process.
-Furthermore, as noted earlier, the scaling limiter effectively preserves the accuracy of the reconstruction in smooth regions \cite{zhang2010positivity}.
+In general, pseudo-time step limiting and increment correction are often activated during the initial stages of the inner iteration to stabilize the solution. These techniques are typically deactivated in later stages as the solution converges. Importantly, even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy. As a result, these stabilization techniques in the inner iteration process do not compromise the accuracy of the converged solution.
+Furthermore, as noted earlier, the scaling limiter effectively preserves the 
+spatial accuracy of the reconstruction in smooth regions \cite{zhang2010positivity}.
 
 In conclusion, the positivity-preserving algorithm preserves accuracy in both space and time. The accuracy-preserving property is demonstrated through an accuracy test on a smooth vortex problem in Section \ref{ssec:accuracy-test}.
 
@@ -27,6 +30,12 @@ There is a upper bound for $\eta_t$ beyond which the time step limiting may fail
     \uu^{n+1,*}=\uu^n + \inc t^n \R^n,
 \end{equation}
 which has an error of order $\mathcal{O}\left(\left(\inc t^n\right)^2\right)$.
+As any time integration scheme with at least 
+1st order accuracy has truncation error 
+of order $\mathcal{O}\left(\left(\inc t^n\right)^k\right),k\geq2$
+(ESDIRK4's error being $\mathcal{O}\left(\left(\inc t^n\right)^5\right)$),
+the error between real numerical implicit solution and estimated
+solution is still $\mathcal{O}\left(\left(\inc t^n\right)^2\right)$.
 It is observed from \eqref{eq:alpha-t-rho} that, the limited time step size $\inc t^n$ is proportional to $\eta_t$ and $\inc t_{max}$. Therefore, the estimation error can be expressed as
 \begin{equation}
     E_\rho= K_\rho \left(\eta_t\right)^2 \rho\left(\uu^n\right) , \quad K_\rho \sim \mathcal{O}\left(\left(\inc t_{max}\right)^2\right).
@@ -45,10 +54,35 @@ which is simplified as
 \end{equation}
 Therefore, there is a critical upper bound $\eta^c_t$ that fulfills 
 \begin{equation}
-    1-\eta^c_t = K_\rho \left(\eta^c_t\right)^2,
+    1-\eta^c_t = K_\rho \left(\eta^c_t\right)^2
+    % ,\ \ 
+    % \eta_t^c = \frac{\sqrt{1 + 4K_\rho}-1}{2K_\rho}\approx1-K_\rho
 \end{equation}
 as shown in Figure \ref{fig:eta-t-curves}.
-The parameter $\eta_t$ should be selected in the range $\left(0,\eta^c_t\right)$. It  is observed from Figure \ref{fig:eta-t-curves} that, a smaller $K_\rho$ yields a larger $\eta^c_t$. As $K_\rho$ is of order $\mathcal{O}\left(\left(\inc t_{max}\right)^2\right)$, the upper bound of $\eta_t$ is close to one, allowing an easy parameter selection. A similar analysis can be performed to determine the upper bound of $\eta_t$ that can further ensure positivity of pressure. In actual implementation, it is difficult to compute the solution dependent coefficient $K_\rho$, thus not feasible to obtain the exact upper bound $\eta_t$. However, based on the fact that the upper bound is quite close to one, an iterative approach can be used to determine $\eta_t$ as follows:
+The parameter $\eta_t$ should be selected in the range $\left(0,\eta^c_t\right)$. 
+% It is observed from Figure \ref{fig:eta-t-curves} that, 
+It is obtained through analysis that, 
+a smaller $K_\rho$ yields a larger $\eta^c_t$,
+which can also be observed from Figure \ref{fig:eta-t-curves}. 
+As $K_\rho$ is of 
+order $\mathcal{O}\left(\left(\inc t_{max}\right)^2\right)$
+and $1-\eta_t^c\sim K_\rho$,
+the upper bound of $\eta_t$ is close to one, allowing an easy parameter selection. 
+A similar analysis can be performed to determine the upper bound of $\eta_t$ that can further ensure positivity of pressure. 
+In actual implementation, it is difficult to compute the solution dependent coefficient $K_\rho$, thus not feasible to obtain the exact upper bound $\eta_t$. 
+Meanwhile, the real future state is 
+obtained through a series of positivity-preserving inner iterations,
+thus the only criterion for detecting an inadmissible real future 
+state is the divergence of inner iterations.
+It is observed in numerical results, when physical time step is 
+too large (using no limiting for example), the solution might   
+fail to converge and the norm of residual blows up. 
+In the diverged scenarios, due to the usage of pseudo time limiting 
+and increment correction, the latest solution is always admissible, 
+but exponentially growing pressure or density is observed, rendering the 
+solution non-physical. 
+Based on the fact that the upper bound is quite close to one, an 
+iterative posteriori approach can be used to determine $\eta_t$ as follows:
 % \begin{enumerate} [label=(\alph*)]
 %     \item try a parameter value $\eta^0_t$ to perform one time step computation;
 %     \item if (a) fails, go back to the initial state, try with a halved parameter value;
@@ -56,11 +90,12 @@ The parameter $\eta_t$ should be selected in the range $\left(0,\eta^c_t\right)$
 % \end{enumerate}
 \begin{enumerate} [label=(\alph*)]
     \item initialize the parameter as $\eta_t= \eta^0_t \in \left(0,1\right)$;
-    \item compute a limited time step size $\inc t^n$, and then perform one step time integration to obtain updated solution $\uu^{n+1}$;
-    \item if $\uu^{n+1} \in G$, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
+    \item compute a limited time step size $\inc t^n$, and then perform one step time integration to obtain stage values $\uu^{(s)},s=2,3\dots6$ and updated solution $\uu^{n+1}$;
+    \item if $\uu^{(s)},s=2,3\dots6$ and $\uu^{n+1}$ all converged, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
 \end{enumerate}
 Since the upper bound $\eta^c_t$ is of order $\mathcal{O}(1)$, a value of $\eta_t$ that preserves positivity can be found within a finite number of iterations. 
-In the numerical experiments presented in Section~\ref{sec:Results}, the parameter is initialized as $\eta_t = 0.8$ for all test cases. This choice does not lead to negative solutions, and therefore the iterative search for the parameter is not triggered.
+In the numerical experiments presented in Section~\ref{sec:Results}, the parameter is initialized as $\eta_t = 0.8$ for all test cases. 
+This choice does not lead to solution divergence, and therefore the iterative posteriori search for the parameter is not triggered.
 
 \begin{figure}[htbp!]
     \centering
@@ -70,11 +105,30 @@ In the numerical experiments presented in Section~\ref{sec:Results}, the paramet
 \end{figure}
 
 % There is not an upper bound for the parameter $\eta_\tau$ to be used to preserve positivity, since the pseudo time step limiting is followed by an increment correction that can guarantee positivity of the updated intermediate states. There is also not an upper bound for the parameter $\eta_{\inc}$, as the lower bounds are directly imposed on the updated intermediate states.
-There is no upper bound required for the parameter $\eta_\tau$ to preserve positivity, as the pseudo-time step limiting is followed by an increment correction that ensures the positivity of the updated intermediate states. Similarly, no upper bound is needed for the parameter $\eta_{\inc}$, since lower bounds are directly enforced on the updated intermediate states. In summary, both $\eta_\tau$ and $\eta_{\inc}$ can be chosen within the range $(0,1)$.
+There is no upper bound required for the parameter $\eta_\tau$ to preserve positivity, 
+as the pseudo-time step limiting is followed by an increment correction 
+that ensures the positivity of the updated intermediate states. 
+Similarly, no upper bound is needed for the parameter $\eta_{\inc}$, 
+since lower bounds are directly enforced on the updated intermediate states. 
+However, there exists asymptotic relation between $\eta_t$ and $\eta_\inc$,
+which is discussed in Section \ref{ssec:analysis-time-step}.
+A preferable choice is to make $\eta_\inc > \eta_\tau$, so that 
+asymptotically increment correction does not take effect after 
+pseudo time limiting and primarily act as a safe guard.
+In summary, the current work 
+chooses both $\eta_\tau$ and $\eta_{\inc}$ to be within the range $(0,1)$, 
+with $\eta_\inc > \eta_\tau$ required. 
 
 \subsection{Time step size bounds}
 \label{ssec:analysis-time-step}
-In this subsection, we analyze the upper and lower bounds of the physical and pseudo time step sizes. As mentioned in Section \ref{ssec:physical-limiting}, the upper bound of the limited physical time step is the user-defined constant $\inc t_{max}$. It is observed from \eqref{eq:alpha-tau} that, the upper bound of the limited pseudo time step for cell $i$ is the original pseudo time step $\inc \tau_i$, which is computed according to \eqref{eq:local-pseudo-time-step}. 
+In this subsection, we analyze the upper and lower bounds of the physical and pseudo time step sizes. As mentioned in Section \ref{ssec:physical-limiting}, the upper bound of the limited physical time step is the user-defined constant $\inc t_{max}$.
+It is observed from \eqref{eq:alpha-tau} that, the upper bound of the limited pseudo time step for cell $i$ is the original pseudo time step $\inc \tau_i$, which is computed according to \eqref{eq:local-pseudo-time-step}. 
+The following of this subsection analyzes the lower bounds
+of the physical time step and pseudo time step after positivity-preserving limiting. 
+Along with the pseudo time step's lower bound, the effect of 
+increment correction is also investigated.
+
+\subsubsection{Lower bound for physical time step limiting}
 
 An analysis can be performed on the lower bound of the physical time step size.
 The right-hand-side of the semi-discrete finite volume scheme is computed by
@@ -272,6 +326,8 @@ $\inc t^n$ is not infinitely small compared to $\inc t_{max}$.
 In other words, when the CFL number $\CFL_i$ based on $\inc t_{max}$ is $\mathcal{O}(1)$, 
 the CFL number determined by the scaled $\inc t^n$ also remains $\mathcal{O}(1)$.
 
+\subsubsection{Lower bound for pseudo time step limiting}
+
 A similar analysis can be carried out for the lower bounds of the local pseudo-time step sizes. In this case, the residual $\R_i$ is simply replaced with $\tilde{\R}_i^{(s,m)}$, for which an inequality analogous to \eqref{eq:upper-bound-residual} can be derived in the same spirit. 
 
 For $\inc\tau$ analysis, 
@@ -345,7 +401,7 @@ Non-singularity of the current state $\UM_i\supsm$ leads to
     \end{aligned}
 \end{equation}
 with coefficients $C^{\rho ,\tau}_i$,$C^{\rho E,\tau}_i$ and $C^{\rho \uv,\tau}_i$
-of order $O(1)$.
+of order $\ord(1)$.
 Making
 \begin{equation}
     \begin{aligned}
@@ -414,22 +470,24 @@ $\frac{\left| \rho E\left(\inc\tau_i \hat\R_i\right) \right|}
 { \CFL_\tau\rho E\left( \UM_i\supsm \right)}$ and 
 $\frac{\left\|\rho\uv\left(\inc\tau_i \hat\R_i\right) \right\|}
 { \CFL_\tau\left\|\rho \uv\left( \UM_i\supsm \right)\right\|}$
-are of order $O(1)$. 
+are of order $\ord(1)$. 
 Moreover, we also know that physical and pseudo-time CFL number $\CFL_i$, $\CFL_\tau$ and 
 Runge-Kutta coefficient $a_{ii}$.
 In summary, the new coefficients $D^{\rho,\tau}_i$, $D^{\rho E,\tau}_i$ 
 and $D^{\rho \uv,\tau}_i$ defined in \eqref{eq:inc_upper_cond_const_coef_tau_recast_method}
-are of order $O(1)$. 
+are of order $\ord(1)$. 
 
 As the inequalities \eqref{eq:inc_upper_cond_const_coef_tau_recasted}
 are of the same form as \eqref{eq:inc_upper_cond_const_coef}, 
 subsequent analysis remains the same as that for $\inc t$ analysis. 
-It can be derived that simlilar to $\inc t$, the CFL number 
-for $\inc \tau _i$ after limiting is still of order $O(1)$.
-In other words, the limited pseudo time step size $\inc \tau_{i,pp}$ is not infinitely small compared to $\inc \tau_i$.
+It can be derived that similar to $\inc t$, the CFL number 
+for $\inc \tau _i$ after limiting is still of order $\ord(1)$.
+In other words,
+under the same assumptions we used to analyze physical time step limiting,
+the limited pseudo time step size $\inc \tau_{i,pp}$ is not infinitely small compared to $\inc \tau_i$.
 
-% Assuming that $a_{ss}$ and $\CFL_i$ are $O(1)$, 
-% while obviously constant term $\hat{\R}_i$ has $O(1)$ value, 
+% Assuming that $a_{ss}$ and $\CFL_i$ are $\ord(1)$, 
+% while obviously constant term $\hat{\R}_i$ has $\ord(1)$ value, 
 % a non-singular $\UM_i\supsm$ leads to finite constant coefficients in 
 % \eqref{eq:inc_upper_cond_const_coef_tau}. 
 % The only difference between \eqref{eq:inc_upper_cond_const_coef} and 
@@ -440,11 +498,151 @@ In other words, the limited pseudo time step size $\inc \tau_{i,pp}$ is not infi
 % The lower bounds of $\alpha_{\tau,i}^\rho$ and $\alpha_{\tau,i}^{p}$ are similar to \eqref{eq:alpha-t-rho-lb} and \eqref{eq:alpha-t-p-lb}.
 % The additional constant intercept values in \eqref{eq:inc_upper_cond_const_coef_tau} will lead to additional constant values added to the denominators $\alpha_{\tau,i}^\rho$ and $\alpha_{\tau,i}^{p}$'s lower bounds. 
 % However, it has be shown that any additional constants added to the denominators
-% will be of $O(1)$ magnitude, which does not affect the qualitative result of 
+% will be of $\ord(1)$ magnitude, which does not affect the qualitative result of 
 % the lower bounds.
 % It can be concluded that, the limited pseudo time step size $\inc \tau_{i,pp}$ is not infinitely small compared to $\inc \tau_i$.
 
-A rigorous analysis of the lower bound of the relaxation factor $\alpha_{\inc,i}$ in the increment correction, computed according to \eqref{eq:alpha-inc}–\eqref{eq:alpha-inc-p}, is not feasible. This is because the increment of the intermediate state is obtained using only a single LU-SGS iteration, and therefore does not represent the exact solution of the linearized system \eqref{eq:linearTauUpdate}. As a result, the discrepancy between the theoretical and actual increments cannot be accurately estimated. Nevertheless, since the increment is computed using a limited pseudo-time step size, it remains inherently bounded. In practical computations, the increment correction is typically activated during the early stages of the inner iterations and tends to become inactive in later stages.
+\subsubsection{Analysis on increment correction}
+
+A rigorous analysis of the lower bound of the relaxation factor $\alpha_{\inc,i}$ in the increment correction, computed according to \eqref{eq:alpha-inc}–\eqref{eq:alpha-inc-p}, is not feasible. 
+This is because the increment of the intermediate state is obtained using LU-SGS approximation, and therefore does not represent the exact solution of the linearized system \eqref{eq:linearTauUpdate}. 
+The exact increment calculated by LU-SGS relies on 
+the ordering of cells, which is hard to analyze 
+for a general case.
+As a result, the discrepancy between the theoretical and actual increments cannot be accurately estimated. 
+Nevertheless, since the increment is computed using a limited pseudo-time step size, it remains inherently bounded. 
+
+Consider the increment defined in the linear system \eqref{eq:linearTauUpdate},
+which can be rewritten to a more precise expression
+\begin{equation}
+    % \label{eq:pseudo-time-equation}
+    \left(\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R }{\uu} \right) \inc \uu^{\left(s,m\right)}
+    = \tilde{\R}^{\left(s,m\right)},
+    \label{eq:linearTauUpdate_re}
+\end{equation}
+where $\eye_{c,i}$ is 
+the identity matrix for cell $i$ and zero for others.
+Then, the LU-SGS leads to the increment being
+\begin{equation}
+    \begin{aligned}
+        \inc \uu^{\left(s,m\right)}
+     = &
+    \left(\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) + \frac{\eye}{\inc t^n} -a_{ss}(D+U) \right)^{-1}
+    \left(\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) + \frac{\eye}{\inc t^n} -a_{ss}D \right)\\
+    &
+    \left(\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) + \frac{\eye}{\inc t^n} -a_{ss}(D+L) \right)^{-1}
+    \tilde{\R}^{\left(s,m\right)} \\
+    = & (\hat{D}+\hat{U})^{-1}\hat{D}(\hat{D}+\hat{L})^{-1}
+    \tilde{\R}^{\left(s,m\right)} , 
+    \end{aligned}
+    \label{eq:linearTauUpdate_re_lusgs}
+\end{equation}
+where $L$, $U$ and $D$ are strict block-lower, strict block-upper and block-diagonal 
+parts of Jacobian $\partialderivative{\R }{\uu}$ and $\partialderivative{\R }{\uu} = L + D + U$.
+The $\hat L$, $\hat U$ and $\hat D$ are strict block-lower, strict block upper and block-diagonal 
+parts of the Jacobian $-\partialderivative{\tilde\R }{\uu}$ in \eqref{eq:linearTauUpdate_re}.
+Taking partial derivative of $\inc\tau^m_{i,pp}$ on \eqref{eq:linearTauUpdate_re_lusgs} leads to
+\begin{equation}
+    \begin{aligned}
+       \pdv{\inc \uu^{\left(s,m\right)}}{\inc\tau^m_{i,pp}}
+    = & \frac{1}{\left(\inc\tau^m_{i,pp}\right)^2}
+    (\hat{D}+\hat{U})^{-1}\eye_{c,i}(\hat{D}+\hat{U})^{-1}\hat{D}(\hat{D}+\hat{L})^{-1}
+    \tilde{\R}^{\left(s,m\right)} \\
+    - & \frac{1}{\left(\inc\tau^m_{i,pp}\right)^2}
+    (\hat{D}+\hat{U})^{-1}\eye_{c,i}(\hat{D}+\hat{L})^{-1}
+    \tilde{\R}^{\left(s,m\right)} \\
+    + & \frac{1}{\left(\inc\tau^m_{i,pp}\right)^2}
+    (\hat{D}+\hat{U})^{-1}\hat{D}(\hat{D}+\hat{L})^{-1}\eye_{c,i}(\hat{D}+\hat{L})^{-1}
+    \tilde{\R}^{\left(s,m\right)}.
+    \end{aligned}
+    \label{eq:linearTauUpdate_re_lusgs_pdvtau}
+\end{equation}
+When $\inc\tau^m_{i,pp}\rightarrow 0^+$, clearly 
+$\hat D $, $\hat D + \hat L$ and $\hat D + \hat U$ all 
+approximate
+$\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) $,
+and the inverse matrices  $(\hat D + \hat L)^{-1}$ and 
+$(\hat D + \hat U)^{-1}$ approximate $\sum_i\inc\tau^m_{i,pp}\eye_{c,i}$,
+therefore
+\begin{equation}
+    \begin{aligned}
+       \lim_{\inc\tau^m_{j,pp}\rightarrow 0^+, \forall j}\pdv{\inc \uu^{\left(s,m\right)}}{\inc\tau^m_{i,pp}}
+    = & \eye_{c,i}
+    \tilde{\R}^{\left(s,m\right)}.
+    \end{aligned}
+    \label{eq:linearTauUpdate_re_lusgs_pdvtau_limit}
+\end{equation}
+This limit means that although LU-SGS does not 
+produce precise solution of the linearized system, 
+it is consistent with the continuous local pseudo time evolution. 
+From \eqref{eq:linearTauUpdate_re_lusgs_pdvtau_limit},
+there is 
+\begin{equation}
+    \inc \uu^{\left(s,m\right)}
+    =
+    \sum_i{\inc\tau^m_{i,pp}\eye_{c,i}} \tilde\R^{\left(s,m\right)}
+    +
+    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right)
+\end{equation}
+and for each cell
+\begin{equation}
+\label{eq:linearTauUpdate_lusgs_expand_tau}
+    \inc \uu^{\left(s,m\right)}_i
+    =
+    \inc\tau^m_{i,pp}
+    \tilde\R^{\left(s,m\right)}_i
+    +
+    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right)
+\end{equation}
+
+Considering the limit in \eqref{eq:linearTauUpdate_re_lusgs_pdvtau_limit} 
+and \eqref{eq:linearTauUpdate_lusgs_expand_tau}
+when $\inc\tau_i\rightarrow 0$,
+the difference between LU-SGS increment and 
+Taylor expansion term \eqref{eq:estimation-dtau} used in pseudo time step limiting
+is of order $\ord(\inc\tau^2)$. 
+Meanwhile, when we use $\eta_\inc > \eta_\tau$,
+and $\eta_\inc - \eta_\tau \sim \ord(1)$,
+the margin between the 
+lower bound of 
+increment correction and pseudo time limiting
+would be 
+\begin{equation}
+\rho_{min,\tau} - \rho_{min,\inc}= 
+\rho\left(\uu^{(m)}\right) (\eta_\inc - \eta_\tau),\ \ 
+p_{min,\tau} - p_{min,\inc}= 
+p\left(\uu^{(m)}\right) (\eta_\inc - \eta_\tau).
+\end{equation}
+When pseudo time step limiting or increment correction is triggered,
+the current state should be close enough to zero density or 
+pressure state by the order of $\eta\inc\tau\tilde\R$.
+It would be appropriate to assume 
+$p\sim\ord(\inc\tau), \rho\sim\ord(1)$ 
+or $p\sim\ord(1), \rho\sim\ord(\inc\tau)$
+or $p\sim\ord(\inc\tau), \rho\sim\ord(\inc\tau)$
+is true.
+As a result,
+\begin{equation}
+\rho_{min,\tau} - \rho_{min,\inc} \gtrsim \ord (\inc \tau),\ \ 
+p_{min,\tau} - p_{min,\inc} \gtrsim \ord (\inc \tau),
+\end{equation}
+which indicates asymptotically
+the lower bound for density or pressure in pseudo time step limiting 
+is far larger than that of increment correction, 
+with a margin large enough to tolerate the error between 
+linear estimation and real LU-SGS increment expressed in \eqref{eq:linearTauUpdate_lusgs_expand_tau}.
+This means after pseudo time limiting, 
+the increment is already positivity-preserving 
+in an asymptotic manner without the involvement of 
+increment limiting.
+
+In practical computations, we use a finite $\inc \tau$, which 
+does not guarantee positivity-preserving without increment correction.
+However, when the solution converges, the 
+residual $\tilde\R$ and increment value $\inc\UM$ both tends to zero,
+which does not induce pseudo time limiting or increment correction.
+The increment correction is typically activated during the early part of the inner iterations and tends to become inactive in later inner iterations. 
+
 
 \subsection{Applicability of the algorithm}
 % Finally, we analyze the applicability of the proposed positivity-preserving algorithm. 
@@ -463,3 +661,5 @@ The proposed positivity-preserving algorithm is applicable to a wide range of im
 For the time discretization, positivity preservation of cell-averages is achieved within a dual-time stepping framework, which makes the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration scheme and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited to the proposed algorithm. Compared to other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, ESDIRK methods that are $L$-stable offer improved robustness. Moreover, the solution at the next time level in ESDIRK methods corresponds to the converged state of the final stage. This naturally aligns with the design of our algorithm, as admissibility is preserved throughout all intermediate stages.
 
 
+
+\endgroup

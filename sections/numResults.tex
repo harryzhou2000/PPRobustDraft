@@ -45,7 +45,7 @@ Physical-time step limiting is disabled to maintain constant
 time step sizes of $\Delta t = h/50$.
 }
 % The time step size is proportional to the grid size, because both the
-% spacial and temporal schemes have fourth order accuracy.
+% spatial and temporal schemes have fourth order accuracy.
 
 The CFL number for the pseudo-time step is $\CFLtau = 100$. 
 The convergence criterion for inner iteration is that the $L^1$ norm of the pseudo-time derivative 
@@ -591,7 +591,7 @@ The governing equations are the Euler equations with $\gamma = 1.4$.
 The computational domain is the union of $[0,1]\times[6,11]$ and $[1,13]\times[0,11]$.
 The initial condition is a Mach $5.09$ shock located at $x=0.5$,
 moving into undisturbed air ahead of the shock at a state $(\rho, u, v, p)=(1.4,0,0,1)$.
-%{\color{red}The boundary conditions are inflow at $x = 0, \ 6\leq y \leq 11$, outflow at $x = 13, \ 0\leq y \leq 11$, $1 \leq x \leq 13, \ y = 0$ and $0 \leq x \leq 13, \ y = 11$, and non-slip at the walls $0\leq x \leq 1, \ y = 6$ and $x = 1, \ 0\leq y \leq 6$.}
+%{\color{r1color}The boundary conditions are inflow at $x = 0, \ 6\leq y \leq 11$, outflow at $x = 13, \ 0\leq y \leq 11$, $1 \leq x \leq 13, \ y = 0$ and $0 \leq x \leq 13, \ y = 11$, and non-slip at the walls $0\leq x \leq 1, \ y = 6$ and $x = 1, \ 0\leq y \leq 6$.}
 Inflow and slip solid wall boundary conditions are imposed on
 the left side $x = 0$, $6\leq y \leq 11$ and other boundaries, respectively.
 %The boundary at $x=0$ is set to match the left state of the shock, and 
@@ -733,12 +733,12 @@ The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times1
 % Figure \ref{sfig:CylinderFront_mesh}.
 % The inflow condition is $(\rho, u, v, p) = (1, 1, 0, 1.78571\times10^{-3})$ and $\gamma=1.4$.
 % The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times10^{-3}$, respectively.
-% Steady calculations are performed using 1st order, 2nd order and 4th order spacial discretizations.
-% The 4th order spacial discretization is 4th order VFV.
-% The 2nd order spacial discretization is 2nd order FV using Green Gauss reconstruction.
-% The 1st order spacial discretization is 1st order FV using piecewise constant reconstruction.
+% Steady calculations are performed using 1st order, 2nd order and 4th order spatial discretizations.
+% The 4th order spatial discretization is 4th order VFV.
+% The 2nd order spatial discretization is 2nd order FV using Green Gauss reconstruction.
+% The 1st order spatial discretization is 1st order FV using piecewise constant reconstruction.
 % The 1st and 2nd order methods use midpoint rule instead of high order quadrature rule.
-% All spacial discretizations still use LLF flux as numerical inviscid flux.
+% All spatial discretizations still use LLF flux as numerical inviscid flux.
 % }
 
 \added[id=r1]
@@ -851,7 +851,12 @@ Although the setup largely follows the reference study \cite{morgenstern1994hype
 
 \added[id=r2]
 {
-A mixed two-dimensional unstructured mesh consisting of 121,747 quadrilateral and triangular cells is used for the simulation. The height of the first off-wall grid point is set to $10^{-4}D$. A portion of the mesh is shown in Figure \ref{fig:Cavity_mesh}.
+A mixed two-dimensional unstructured mesh consisting of 121,747 quadrilateral and triangular cells is used for the simulation. 
+The height of the first off-wall grid point is set to $10^{-4}D$, and the maximum element aspect ratio reaches $5400$.
+% Due to the boundary layer mesh, the maximum aspect ratio in all cells is $5400$,
+% which induces strong geometrical stiffness.
+% maximum. 
+A portion of the mesh is shown in Figure \ref{fig:Cavity_mesh}.
 The simulation is initialized with freestream conditions in the region $y \geq 0$. In the region $y < 0$, freestream pressure, wall temperature, and zero velocity are prescribed as the initial condition. The simulation proceeds until the initial transients have dissipated.
 The positivity-preserving fourth-order variational finite volume method, combined with ESDIRK4 time integration, is employed for this test.
 % All positivity-preserving algorithms, including physical time step limiting,
@@ -925,83 +930,109 @@ This discrepancy may be due to differences in flow conditions or setup details b
 % flow condition setups.
 % }
 
-\added[id=r2]
-{
-To investigate the profit from using implicit time marching, 
-time steps and projected explicit time steps $\inc t_E$ are plotted in
-Figure \ref{fig:Cavity_time}. 
-The projected explicit time step size $\inc t_E$ is 
-calculated explicit physical time step CFL constraint being
+% \added[id=r2]
+% {
+% To investigate the profit from using implicit time marching, 
+% time steps and projected explicit time steps $\inc t_E$ are plotted in
+% Figure \ref{fig:Cavity_time}. 
+% The projected explicit time step size $\inc t_E$ is 
+% calculated explicit physical time step CFL constraint being
+% \begin{equation}
+%     \label{eq:physical-time-step-CFL}
+%     \inc t_E = \min_i{\left\{
+%     \frac{\CFL \overline{\OO}_i }
+%     {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
+%     \right\}} 
+% \end{equation} 
+% using $\CFL = 1$.
+% Even without any positivity-preserving restrictions, 
+% explicit time marching schemes rely on this criterion to maintain 
+% linear stability. It can be observed in Figure \ref{fig:Cavity_time} that 
+% after initial transients, implicit time step size maintains a value of $0.01$, 
+% while $\inc t_E$ stabilizes lower than $1.2\times 10^{-6}$. 
+% This means implicit time marching has generally more than $8000$ times larger
+% time steps compared with explicit time marching.
+% Considering that each implicit ESDIRK4 step has 5 stages and each stage 
+% takes at most 40 inner iterations to solve, and each implicit inner iteration
+% is at most $20\%$ more expensive than explicit stages according to Table \ref{tab:cpu-time-cost},
+% the implicit scheme still has efficiency more than 30 times higher than explicit ones. 
+% If the cost of multi-stage explicit methods and the time step restriction based on some specific 
+% positivity-preserving method are considered, the time step efficiency advantage
+% of the implicit scheme might be even more significant.
+% }
+
+% \begin{figure}[htbp!]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t.pdf}
+%     \caption{Time step history and projected explicit time step in the 
+%     hypersonic cavity problem.}
+%     \label{fig:Cavity_time}
+% \end{figure}
+
+\added[id=r2]{
+A significant advantage of implicit time stepping over explicit time stepping is its ability to accommodate larger time steps, particularly for stiff problems such as high-Reynolds number flows on meshes with large aspect-ratio grids near the wall. To validate this benefit, we conduct two additional simulations of hypersonic flow over an open cavity using second-order finite volume methods with explicit and implicit time integration, respectively.
+Both methods employ Green-Gauss reconstruction. Variational reconstruction is not used due to its implicit nature, which requires iterative procedures at each time step, making it inefficient for explicit finite volume schemes due to increased computational cost.
+The explicit method uses the third-order strong stability preserving Runge-Kutta (SSPRK3) scheme, while the implicit method uses the fourth-order explicit first-stage, singly diagonally implicit Runge-Kutta (ESDIRK4) scheme. The positivity-preserving algorithm proposed in this work is applied to the implicit scheme, whereas the positivity-preserving algorithm proposed in \cite{zhang2017positivity} is applied to the explicit method.
+The algorithm in \cite{zhang2017positivity} employs an LLF-type positivity-preserving flux, a scaling limiter, and the SSPRK time integration ensure  a weak positivity property of finite volume type schemes for compressible Navier-Stokes equations. The time step size for the explicit finite volume scheme is computed as
 \begin{equation}
     \label{eq:physical-time-step-CFL}
     \inc t_E = \min_i{\left\{
     \frac{\CFL \overline{\OO}_i }
     {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
-    \right\}} 
+    \right\}} ,
 \end{equation} 
-using $\CFL = 1$.
-Even without any positivity-preserving restrictions, 
-explicit time marching schemes rely on this criterion to maintain 
-linear stability. It can be observed in Figure \ref{fig:Cavity_time} that 
-after initial transients, implicit time step size maintains a value of $0.01$, 
-while $\inc t_E$ stabilizes lower than $1.2\times 10^{-6}$. 
-This means implicit time marching has generally more than $8000$ times larger
-time steps compared with explicit time marching.
-Considering that each implicit ESDIRK4 step has 5 stages and each stage 
-takes at most 40 inner iterations to solve, and each implicit inner iteration
-is at most $20\%$ more expensive than explicit stages according to Table \ref{tab:cpu-time-cost},
-the implicit scheme still has efficiency more than 30 times higher than explicit ones. 
-If the cost of multi-stage explicit methods and the time step restriction based on some specific 
-positivity-preserving method are considered, the time step efficiency advantage
-of the implicit scheme might be even more significant.
-}
-
-\begin{figure}[htbp!]
-    \centering
-    \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t.pdf}
-    \caption{Time step history and projected explicit time step in the 
-    hypersonic cavity problem.}
-    \label{fig:Cavity_time}
-\end{figure}
-
-\added[id=r2]
-{
-In order to further investigate the performance of implicit positivity-preserving time marching, 
-an explicit SSPRK3 positivity-preserving scheme based on weak monotonicity of 
-LLF-form viscous flux \cite{zhang2017positivity} is implemented in our finite volume code and run on the hypersonic cavity problem. 
-The original explicit Navier-Stokes positivity-preserving algorithm \cite{zhang2017positivity} adopts a very similar CFL number estimation 
-with the current work, with the $O(\Re \Delta x^2)$ term \cite{zhang2017positivity} provided by the viscous spectral radius estimation
-in \eqref{eq:lambda-face-estimation}.
-The current explicit time step size \eqref{eq:physical-time-step-CFL} should be at least $1/2$ of that in the original work \cite{zhang2017positivity}.
-According to the original work \cite{zhang2017positivity}, in SSPRK3 explicit 
-positivity-preserving method, when updated cell average values encounter 
-negative values, the time step size should be halved and the current time 
-step should be restarted.
+using a CFL number of $\CFL = 1$, where the spectral radius is computed as described in \eqref{eq:lambda-face-estimation}. According to the positivity-preserving algorithm in \cite{zhang2017positivity}, f negative values arise during the simulation, the time step is halved, and the entire SSPRK3 time integration for that step is recomputed.
 }
 
 \added[id=r2]
-{
-In the explicit SSPRK3 test, time is only integrated to $0.1$.
-The spacial discretization is switched to 2nd order Green-Gauss reconstruction for 
-both implicit and explicit positivity-preserving time marching.
-Using an explicit reconstruction avoids extra low efficiency on explicit time marching caused by variational reconstruction's implicit nature.
-The time step size history is shown in Figure \ref{fig:Cavity_time_explicitTest}.
-The implicit ESDIRK4 positivity-preserving method takes $13$ steps to 
-reach $t=0.1$, while SSPRK3 needs $153,213$ steps. 
-The actual time step is even smaller than the ones projected from the 
-implicit solution in Figure \ref{fig:Cavity_time}.
-From Figure \ref{fig:Cavity_0d1}, at $t=0.1$, the transient 
-solutions obtained with SSPRK3 and ESDIRK4 are almost identical.
-With the same test environment including hardware, software and 
-solver configuration, SSPRK3 takes $10,497$ seconds while 
-ESDIRK4 takes $73.8$, which means adopting an implicit positivity-preserving 
-time marching in the hypersonic cavity problem grants an acceleration factor of more than $140$.
+{The simulations using the two second-order finite volume methods are performed up to $t = 0.1$. The implicit positivity-preserving finite volume method requires only $13$ time steps to reach $t = 0.1$, whereas the explicit positivity-preserving finite volume method requires $153,213$ steps. The evolution of the time step size during the simulation is illustrated in Figure~\ref{fig:Cavity_time_explicitTest}, which indicates that the time step size of the implicit method is approximately four orders of magnitude larger than that of the explicit method. The numerical solutions at $t = 0.1$ are presented in Figure~\ref{fig:Cavity_0d1}, demonstrating that the results obtained from both methods are nearly identical.
+In terms of computational cost, the explicit method requires $10,497$ seconds of CPU time, while the implicit method completes the simulation in just $73.8$ seconds, yielding an acceleration factor of more than $140$. These results clearly demonstrate the significant efficiency advantage of implicit time stepping for high-Reynolds number flows on large aspect-ratio grids.
+% The simulations using the two second-order finite volume methods are performed to $t=0.1$. 
+% The implicit ESDIRK4 positivity-preserving method takes $13$ steps to 
+% reach $t=0.1$, while SSPRK3 needs $153,213$ steps. The time step evolution is shown in Figure \ref{fig:Cavity_time_explicitTest}. The numerical solutions at $t=0.1$ are shown in Figure \ref{fig:Cavity_0d1}, which demonstrate that numerical solutions of the two methods are almost identical.
+% The CPU time cost of the explicit method is $10,497$ seconds, while only
+% $73.8$ seconds for the implicit method, indicating an acceleration factor of more than $140$ by using implicit positivity-preserving time stepping. These results demonstrate the significant advantage of the implicit time stepping in solving high-Reynolds number flows on large aspect ratio grids.
 }
+
+
+% \added[id=r2]
+% {
+% In order to further investigate the performance of implicit positivity-preserving time marching, 
+% an explicit SSPRK3 positivity-preserving scheme based on weak monotonicity of 
+% LLF-form viscous flux \cite{zhang2017positivity} is implemented in our finite volume code and run on the hypersonic cavity problem. 
+% The original explicit Navier-Stokes positivity-preserving algorithm \cite{zhang2017positivity} adopts a very similar CFL number estimation 
+% with the current work, with the $O(\Re \Delta x^2)$ term \cite{zhang2017positivity} provided by the viscous spectral radius estimation
+% in \eqref{eq:lambda-face-estimation}.
+% The current explicit time step size \eqref{eq:physical-time-step-CFL} should be at least $1/2$ of that in the original work \cite{zhang2017positivity}.
+% According to the original work \cite{zhang2017positivity}, in SSPRK3 explicit 
+% positivity-preserving method, when updated cell average values encounter 
+% negative values, the time step size should be halved and the current time 
+% step should be restarted.
+% }
+
+% \added[id=r2]
+% {
+% In the explicit SSPRK3 test, time is only integrated to $0.1$.
+% The spatial discretization is switched to 2nd order Green-Gauss reconstruction for 
+% both implicit and explicit positivity-preserving time marching.
+% Using an explicit reconstruction avoids extra low efficiency on explicit time marching caused by variational reconstruction's implicit nature.
+% The time step size history is shown in Figure \ref{fig:Cavity_time_explicitTest}.
+% The implicit ESDIRK4 positivity-preserving method takes $13$ steps to 
+% reach $t=0.1$, while SSPRK3 needs $153,213$ steps. 
+% The actual time step is even smaller than the ones projected from the 
+% implicit solution in Figure \ref{fig:Cavity_time}.
+% From Figure \ref{fig:Cavity_0d1}, at $t=0.1$, the transient 
+% solutions obtained with SSPRK3 and ESDIRK4 are almost identical.
+% With the same test environment including hardware, software and 
+% solver configuration, SSPRK3 takes $10,497$ seconds while 
+% ESDIRK4 takes $73.8$, which means adopting an implicit positivity-preserving 
+% time marching in the hypersonic cavity problem grants an acceleration factor of more than $140$.
+% }
 
 \begin{figure}[htbp!]
     \centering
-    \includegraphics[width=0.5\textwidth]{pics/PPRobust_Cavity_t_explicitTest.pdf}
-    \caption{Time step history in the hypersonic cavity problem compared with explicit positivity-preserving method.}
+    \includegraphics[width=0.55\textwidth]{pics/PPRobust_Cavity_t_explicitTest.pdf}
+    \caption{\added[id=r2]{Time step evolution in the simulations of the hypersonic flow past an open cavity problem using the explicit and implicit second-order positivity-preserving finite volume methods.}}
     \label{fig:Cavity_time_explicitTest}
 \end{figure}
 
@@ -1009,13 +1040,13 @@ time marching in the hypersonic cavity problem grants an acceleration factor of 
     \centering
     \begin{subfigure}{0.5\textwidth}
         \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_0d1_Ma_SSPRK3.png}
-        \caption[]{SSPRK3}
+        \caption[]{Explicit second-order FV}
     \end{subfigure}\hfill
     \begin{subfigure}{0.5\textwidth}
         \includegraphics[width=\textwidth]{pics/PPRobust_Cavity_0d1_Ma_ESDIRK4.png}
-        \caption[]{ESDIRK4}
+        \caption[]{Implicit second-order FV}
     \end{subfigure}
-    \caption{Mach number distribution at $t=0.1$, hypersonic cavity problem, at back edge of cavity, 32 lines from 0.2 to 6.2.}
+    \caption{\added[id=r2]{Mach number contours near the trailing edge of the cavity at $t = 0.1$, using 32 contour levels from 0.2 to 6.2.}}
     \label{fig:Cavity_0d1}
 \end{figure}
 

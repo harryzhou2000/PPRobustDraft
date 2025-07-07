@@ -1,4 +1,5 @@
-\documentclass[preprint, 10pt]{elsarticle}
+\documentclass[review, 10pt]{elsarticle}
+% \documentclass[preprint, 10pt]{elsarticle}
 
 \usepackage{amsmath,amsthm,amsfonts,amssymb,mathtools}
 \usepackage{graphicx} 
@@ -35,9 +36,11 @@
 \setauthormarkup{} % use empty author markup
 \setdeletedmarkup{} % use empty deleted markup
 \definecolor{harryModColor}{rgb}{0.8, 0, 0.3}
+\definecolor{r1color}{rgb}{0.8, 0.1, 0.1}
+\definecolor{r2color}{rgb}{0.1, 0.1, 0.8}
 \definechangesauthor[name={Hanyu Zhou},color=harryModColor]{harry}
-\definechangesauthor[name={Reviewer 1},color=red]{r1}
-\definechangesauthor[name={Reviewer 2},color=blue]{r2}
+\definechangesauthor[name={Reviewer 1},color=r1color]{r1}
+\definechangesauthor[name={Reviewer 2},color=r2color]{r2}
 \definechangesauthor[name={Reviewer 1\&2},color=orange]{r12}
 \usepackage{siunitx}
 
@@ -67,40 +70,56 @@
 	%% \address{Address\fnref{label3}}
 	%% \fntext[label3]{}
 
-    \title{Positivity-preserving implicit finite volume methods on unstructured grids for compressible flows}
-	% \title{Positivity-preserving algorithm for implicit finite volume methods simulating compressible flows}
-    % \title{Implicit positivity-preserving finite volume schemes on unstructured grids for compressible Euler and Navier-Stokes equations}
+\title{Positivity-preserving implicit finite volume methods on unstructured grids for compressible flows}
+% \title{Positivity-preserving algorithm for implicit finite volume methods simulating compressible flows}
+% \title{Implicit positivity-preserving finite volume schemes on unstructured grids for compressible Euler and Navier-Stokes equations}
+
+%% use optional labels to link authors explicitly to addresses:
+%% \author[label1,label2]{}
+%% \address[label1]{}
+%% \address[label2]{}
+
+\author[THU]{Hanyu Zhou}
+\ead{zhy22@mails.tsinghua.edu.cn}
+\author[CSRC]{Qian Wang\corref{cor1}}
+\cortext[cor1]{Corresponding author.}
+\ead{qian.wang@csrc.ac.cn}
+
+\address[THU]{Department of Engineering Mechanics, Tsinghua University, Beijing 100084, China}
+\address[CSRC]{Mechanics Division, Beijing Computational Science Research Center, Beijing 100193, China}
 	
-	%% use optional labels to link authors explicitly to addresses:
-	%% \author[label1,label2]{}
-	%% \address[label1]{}
-	%% \address[label2]{}
 	
-	\author[THU]{Hanyu Zhou}
-	\ead{zhy22@mails.tsinghua.edu.cn}
-	\author[CSRC]{Qian Wang\corref{cor1}}
-	\cortext[cor1]{Corresponding author.}
-	\ead{qian.wang@csrc.ac.cn}
+\begin{abstract}
+    %% Text of abstract
+    \hspace{10pt}  
+    A frequently encountered issue in numerical simulations of complex compressible flows is the failure to preserve positivity of density or pressure, which leads to nonphysical solutions or numerical instabilities. It is a significant challenge to develop efficient and accurate positivity-preserving algorithms for numerical schemes with implicit time integration, where solutions are updated by solving nonlinear equations iteratively. To address this challenge, we propose a positivity-preserving algorithm for finite volume schemes with implicit time integration on unstructured grids. 
+    \replaced[id=r2]
+    {
+    In this algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution variations, 
+    while increment correction is introduced to directly enforce positivity 
+    during iteration.
+    }
+    {
+    In this algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution variations.
+    }
+    \replaced[id=r2]{
+    To overcome the difficulty of unknown solution changes in time step limiting, we employ a simple linear approximation to estimate the future state, based on the available residual of the semi-discrete finite volume scheme.}
+    {To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states.} Allowable time step sizes are determined by constraining the relative solution changes to ensure the positivity of the updated solutions. Given positive cell-averages, admissible reconstruction polynomials are obtained by using a scaling limiter. Importantly, the proposed positivity-preserving algorithm is also accuracy-preserving. This algorithm is applied to a high-order variational finite volume method with explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration. Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution,
+    \added[id=r2]{
+        high efficiency
+    }
+    and robustness of the positivity-preserving implicit high-order finite volume method. 
+\end{abstract}
 	
-	\address[THU]{Department of Engineering Mechanics, Tsinghua University, Beijing 100084, China}
-	\address[CSRC]{Mechanics Division, Beijing Computational Science Research Center, Beijing 100193, China}
-	
-	
-	\begin{abstract}
-		%% Text of abstract
-		\hspace{10pt}  
-		A frequently encountered issue in numerical simulations of complex compressible flows is the failure to preserve positivity of density or pressure, which leads to nonphysical solutions or numerical instabilities. It is a significant challenge to develop efficient and accurate positivity-preserving algorithms for numerical schemes with implicit time integration, where solutions are updated by solving nonlinear equations iteratively. To address this challenge, we propose a positivity-preserving algorithm for finite volume schemes with implicit time integration on unstructured grids. In this algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution variations. To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states. Allowable time step sizes are determined by constraining the relative solution changes to ensure the positivity of the updated solutions. Given positive cell-averages, admissible reconstruction polynomials are obtained by using a scaling limiter. Importantly, the proposed positivity-preserving algorithm is also accuracy-preserving. This algorithm is applied to a high-order variational finite volume method with explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration. Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution and robustness of the positivity-preserving implicit high-order finite volume method. 
-	\end{abstract}
-	
-	\begin{keyword}
-		%% keywords here, in the form: keyword \sep keyword
-		Positivity-preserving algorithm \sep Finite volume method \sep Implicit time stepping \sep Accuracy-preserving property \sep Compressible flows
-		%% PACS codes here, in the form: \PACS code \sep code
-		
-		%% MSC codes here, in the form: \MSC code \sep code
-		%% or \MSC[2008] code \sep code (2000 is the default)
-		
-	\end{keyword}
+\begin{keyword}
+    %% keywords here, in the form: keyword \sep keyword
+    Positivity-preserving algorithm \sep Finite volume method \sep Implicit time stepping \sep Accuracy-preserving property \sep Compressible flows
+    %% PACS codes here, in the form: \PACS code \sep code
+    
+    %% MSC codes here, in the form: \MSC code \sep code
+    %% or \MSC[2008] code \sep code (2000 is the default)
+    
+\end{keyword}
 	
 \end{frontmatter}
 

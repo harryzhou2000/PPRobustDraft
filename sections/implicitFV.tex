@@ -31,6 +31,7 @@
 
 \newcommand{\eye}{\mathbf{I}}
 \newcommand{\uv}{\mathbf{u}}
+\newcommand{\ord}{\mathcal{O}}
 
 \newcommand{\supsm}{^{\left(s,m\right)}}
 % \newcommand{\supsmp1}{^{\left(s,m+1\right)}}
@@ -254,7 +255,11 @@ This subsection presents a variational reconstruction \cite{wang2017compact_VR} 
 However, this condition necessitates large reconstruction stencils, as the number of neighboring cells included must at least equal the number of polynomial coefficients, which increases rapidly with polynomial degree. Such large reconstruction stencils can pose challenges in terms of numerical stability and computational efficiency \cite{abgrall2011construction, zhang2012class, li2014efficient}. The large reconstruction stencil has been the major bottleneck problem in developing high-order finite volume schemes on unstructured grids. To address this limitation, several reconstruction procedures have been developed to achieve high-order accuracy on compact stencils \cite{wang2016compact1_VR, wang2017compact_VR, zhang2019compact_VR}. Among these compact reconstructions, the variational reconstruction proposed in \cite{wang2017compact_VR} is provably non-singular and is therefore adopted in this study. For clarity, the two-dimensional case will be used to illustrate the variational reconstruction.}
 \deleted[id=r1]{In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner. For the sake of presentation, the two-dimensional case is considered to illustrate the variational reconstruction.}
 
-\added[id=r1]{In general, the conservative variables are reconstructed separately, allowing an implementation of solution reconstruction in a variable-by-variable manner.} On control volume $\OO_i$, a conservative variable $u \in \U$ is approximated as
+\added[id=r1]{
+In general, the conservative variables are reconstructed separately, 
+allowing an implementation of solution reconstruction 
+in a variable-by-variable manner.
+} On control volume $\OO_i$, a conservative variable $u \in \U$ is approximated as
 \begin{equation}
     \label{eq:recon_u}
     u_i \left(\x\right)= \overline{u}_i + \sum^{\mathrm{N_b}\left(k\right)}_{l=1} u_i^l \varphi_{i,l} \left(\x\right),
@@ -450,8 +455,10 @@ and vectors $\mathbf{u}_i$, $\mathbf{u}_j$, $\mathbf{b}_i \in \mathbb{R}^{\mathr
              & \mathbf{u}_j [n]= u^n_j.
     \end{aligned}
 \end{equation}
-The face integral terms in the reconstruction matrices can be computed exactly using Gauss quadrature formulas with an adequate number of quadrature points.}
-{By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function} and \eqref{eq:minimization}, a linear equation system is obtained as follows
+The face integral terms in the reconstruction matrices can be computed exactly using Gauss quadrature formulas with an adequate number of quadrature points.
+}
+{
+By substituting \eqref{eq:recon_u} into \eqref{eq:IJI}, \eqref{eq:cost-function} and \eqref{eq:minimization}, a linear equation system is obtained as follows
 \begin{equation}
     \label{eq:vrBlockEq}
     \mathbf{A}_{i} \us_i
@@ -618,7 +625,8 @@ It is shown that on regular meshes, 4th order (cubic) variational reconstruction
 lower spectral radius in block Gauss-Seidel iteration.
 On distorted meshes, the condition number and spectral radius are increased,
 but still remain in reasonable ranges. 
-The spectral radius results all stay below $1$ according to the general theoretical
+The spectral radius results all stay below $1$ 
+agreeing with the general theoretical
 analysis of block Gauss-Seidel iteration in varitaional reconstruction\cite{wang2017compact_VR}.
 }
 
@@ -769,7 +777,7 @@ needs to be solved iteratively, due to the implicit and nonlinear nature of $\R^
 % The dual-time stepping method is the more general approach and the approximate-Newton method can be regarded as a subset of it \cite{venkateswaran1995dual}. 
 The dual-time stepping approach introduces a pseudo time derivative, in addition to the physical time derivative, to drive the solution toward steady-state at each stage. 
 % The approximate-Newton method is a special case of dual-time stepping, which offers greater flexibility by allowing the pseudo time to be tuned for improved convergence \cite{venkateswaran1995dual}.
-% % {\color{blue}The advantage of dual-time stepping over the approximate Newton is that the pseudo time derivative may be chosen so as to optimize the convergence of the inner iterations \cite{venkateswaran1995dual}.}
+% % {\color{r2color}The advantage of dual-time stepping over the approximate Newton is that the pseudo time derivative may be chosen so as to optimize the convergence of the inner iterations \cite{venkateswaran1995dual}.}
 This approach can be viewed within the broader context of pseudo-transient continuation techniques, which leverage the inherent time-dependent structure of PDEs to circumvent stagnation issues associated with local minima common in nonlinear solvers \cite{kelley1998convergence}.
 The approximate-Newton method can be regarded as a special case of dual-time stepping with an infinite pseudo-time step size \cite{venkateswaran1995dual}. By contrast, dual-time stepping provides greater flexibility, allowing the pseudo-time step size to be tuned for improved convergence. As a result, dual-time stepping has been widely adopted for implicit time integration in compressible flow simulations \cite{zhang2004block,jameson2009assessment,liu2018dynamic}.
 }

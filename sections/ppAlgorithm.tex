@@ -1,7 +1,12 @@
 % !TeX root = main.tex
 
+\begingroup
+\color{r1color}
+
 \section{Positivity-preserving algorithm}
 \label{sec:PP}
+
+
 
 Numerical methods, ranging from traditional second-order to recently developed high-order approaches, are widely employed for simulating compressible flows. However, these methods, especially the high-order ones, often suffer from reduced robustness when applied to challenging compressible flow problems. A critical robustness issue is the failure to maintain positive density or pressure, which can cause the numerical solution to blow up.
 
@@ -108,7 +113,7 @@ By using an implicit finite volume method, a solution $\U^{n+1} \in G$ can be ob
 \end{enumerate}
 The second step can be accomplished by using the scaling limiter of Zhang et al. \cite{zhang2010positivity}. Therefore, the key of developing a positivity-preserving implicit finite volume method is to design an implicit time-stepping scheme that leads to admissible updated cell-averages.
 
-In this work, we design an algorithm to preserve positivity of cell-averages for implicit finite volume methods. It is known that, in implicit finite volume methods, the future state is obtained through iterations. For instance, in each of the final five stages of the ESDIRK4 time integration presented in Section \ref{ssec:TimeMarching}, inner iterations are performed to obtain the solution to a nonlinear equation system. The solution at next time step $\uu^{n+1}$ is the converged state of the last stage. Therefore, to obtain admissible numerical solution, we need to ensure that:
+In this work, we design an algorithm to preserve positivity of cell-averages for implicit finite volume methods. In implicit finite volume methods, the future state is obtained through iterations. For instance, in each of the final five stages of the ESDIRK4 time integration presented in Section \ref{ssec:TimeMarching}, inner iterations are performed to obtain the solution to a nonlinear equation system. The solution at next time step $\uu^{n+1}$ is the converged state of the last stage. Therefore, to obtain admissible numerical solution, we need to ensure that:
 \begin{enumerate}[label=(\alph*)]
     \item the future state is admissible, i.e., $\uu^{n+1} \in G$;
     \item the intermediate states are admissible, i.e., $\uu^{\left(s,m\right)} \in G$,
@@ -634,3 +639,8 @@ the intermediate state can be updated by solving the following linear equation s
 where $m$ denotes the iteration step. 
 
 Towards an admissible converged state, the cell-averages and the reconstruction polynomials need to be guaranteed positive at each iteration step. The pseudo time step limiting in Section \ref{ssec:pseudo-limiting}, and the increment correction in Section \ref{ssec:increment-correction}, can be applied to preserve positivity of the intermediate states. Given positive cell-averages, the scaling limiter is used to ensure admissible states at quadrature points on cell interfaces. 
+
+
+
+
+\endgroup
