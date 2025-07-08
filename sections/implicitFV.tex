@@ -104,12 +104,12 @@ By integrating the governing equation \eqref{eq:NS} over control volume $\OO_i$,
     \label{eq:Semi-FV}
     \dfrac{ \dd\UM_i }{\dd t} = -\dfrac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A,
 \end{equation}
-where $\overline{\OO}_i$ is the volume of $\OO_i$, $\partial \OO_i$ is the boundary of $\OO_i$ and $\n$ is the outward unit normal of $\partial \OO_i$, as shown in Figure \ref{fig:controlvolume}. The cell-average defined by
+where $\overline{\OO}_i$ is the volume of $\OO_i$, $\partial \OO_i$ is the boundary of $\OO_i$ and $\n$ is the outward unit normal of $\partial \OO_i$, as shown in Figure \ref{fig:controlvolume}. The cell averages defined by
 \begin{equation}
     \label{eq:FVMean}
     \UM_i \left(t\right)= \frac{1}{\overline{\OO}_i}\int_{\OO_i}\U \left(\x,t\right)\ \dd V,
 \end{equation}
-is the degree of freedom (DOF) of the finite volume method on cell $\OO_i$.
+are the degrees of freedom (DOFs) of the finite volume method on cell $\OO_i$.
 %where $\overline{\OO}_i$ is the volume of $\OO_i$.
 The flux integral in \eqref{eq:Semi-FV} is computed by using a Gauss quadrature
 \begin{equation}
@@ -120,7 +120,7 @@ The flux integral in \eqref{eq:Semi-FV} is computed by using a Gauss quadrature
 where $\n_f$ and $A_f$ are the outward unit normal and area of element interface $f$, respectively. $N_g$ is the number of quadrature points. $\x_{f,g}$ and $w_g$ are the position and weight of the $g$-th quadrature point on $f$, respectively.
 \added[id=r1]{In this work, Gauss-Legendre quadrature formulas are employed to evaluate the flux integral along a line segment. Tensor products of the one-dimensional Gauss-Legendre quadrature are used to compute the flux integral on a quadrilateral. Symmetric quadrature rules based on triangular coordinates \cite{dunavant1985high} are used to compute the flux integral on a triangle.}
 
-Given known cell-averages, a reconstruction is performed to obtain an approximate solution distribution on the computational domain $\OO$, to compute the states at quadrature points on element interfaces. Specifically, the solution on each control volume is approximated by a polynomial, i.e.,
+Given known cell averages, a reconstruction is performed to obtain an approximate solution distribution on the computational domain $\OO$, to compute the states at quadrature points on element interfaces. Specifically, the solution on each control volume is approximated by a polynomial, i.e.,
 \begin{equation}
     \label{eq:FVRec}
     \U_i(\x,t) = \UM_i \left(t\right) + \sum_{l=1}^{\mathrm{N_b}(k)}{\U_i^l \left(t\right) \varphi_{i,l}(\x) }, \quad \forall \ \x \in \OO_i, \quad i=1, \cdots, N,
@@ -206,7 +206,7 @@ where the characteristic length scale $L_f$ is defined, according to Hartmann et
 %	\tilde{\U} = \dfrac{1}{2} \left(\U_L+\U_R\right), \quad \nabla \tilde{\U}= \dfrac{1}{2}\left(\nabla \U_L+ \nabla \U_R\right) + \dfrac{1}{2 \Delta \tilde{x}} \left(\U_R - \U_L\right), \quad \Delta \tilde{x} = \dfrac{\min \left(\overline{\OO}_i,\overline{\OO}_j\right)}{A_f}.
 %\end{equation}
 
-\replaced[id=r1]{Once the right-hand-side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
+\replaced[id=r1]{Once the right-hand side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
 % \begin{equation}
 %     \label{eq:FVODECell}
 %     \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
@@ -215,7 +215,7 @@ where the characteristic length scale $L_f$ is defined, according to Hartmann et
     \label{eq:FVODECell}
     \derivative{\uu_i}{t} = \R_i,
 \end{equation}
-where $\R_i= -\oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A/\overline{\OO}_i$ is the right-hand-side of \eqref{eq:Semi-FV}. The spatial discretization procedures, including data reconstruction and flux computation, inherently couple the solutions across different control volumes. As a result, the cell-averages cannot be updated independently. Accordingly, the temporal evolution of the solution is governed by a system of ODEs
+where $\R_i= -\oint_{\partial \OO_i} \left(\F - \F_v \right) \cdot \n \ \dd A/\overline{\OO}_i$ is the right-hand side of \eqref{eq:Semi-FV}. The spatial discretization procedures, including data reconstruction and flux computation, inherently couple the solutions across different control volumes. As a result, the cell averages cannot be updated independently. Accordingly, the temporal evolution of the solution is governed by a system of ODEs
 \begin{equation}
     \label{eq:FVODE}
     \derivative{\uu}{t} = \R \left(\uu\right),
@@ -224,8 +224,8 @@ where
 \begin{equation}
     \uu= \left(\uu_1,\cdots,\uu_N\right)^\top, \quad \R= \left(\R_1,\cdots,\R_N\right)^\top.
 \end{equation}
-The ODE system \eqref{eq:FVODE} can be integrated in time to update the cell-averages in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
-{Once the right-hand-side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
+The ODE system \eqref{eq:FVODE} can be integrated in time to update the cell averages in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
+{Once the right-hand side is computed, the semi-discrete finite volume scheme \eqref{eq:Semi-FV} is reduced to an ordinary differential equation (ODE)
 % \begin{equation}
 %     \label{eq:FVODECell}
 %     \derivative{\uu_i}{t} = \R_i \left(t, \left\{\U_j\right\}_{j \in S_i} \right),
@@ -234,7 +234,7 @@ The ODE system \eqref{eq:FVODE} can be integrated in time to update the cell-ave
     \label{eq:FVODECell}
     \derivative{\uu_i}{t} = \R_i,
 \end{equation}
-which can be integrated in time to update the cell-average in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
+which can be integrated in time to update the cell averages in a step-by-step manner. The time integration method used in this work will be presented in Section \ref{ssec:TimeMarching}.}
 
 \subsection{Variational reconstruction}
 \label{ssec:VR}
@@ -325,7 +325,7 @@ The characteristic length scales are used to non-dimensionalize the basis functi
 %    \inc x_i = \inc y_i = \max_{\x \in \OO_i} \left\{\|\x - \x_{i}\|_2\right\}.
 %\end{equation}
 
-The objective of a reconstruction is to determine the unknown basis coefficients $u_i^l$,  $l=1$, $\cdots$, $\mathrm{N_b}\left(k\right)$, $i=1,\cdots,N$, given the cell-averages $\overline{u}_j$, $j=1,\cdots,N$. In the variational reconstruction \cite{wang2017compact_VR}, the linear equation system to determine the unknown basis coefficients is derived by minimizing a cost function using the variational method. Different cost function results in different reconstruction schemes. \replaced[id=r1]{In this work, the cost function is defined as
+The objective of a reconstruction is to determine the unknown basis coefficients $u_i^l$,  $l=1$, $\cdots$, $\mathrm{N_b}\left(k\right)$, $i=1,\cdots,N$, given the cell averages $\overline{u}_j$, $j=1,\cdots,N$. In the variational reconstruction \cite{wang2017compact_VR}, the linear equation system to determine the unknown basis coefficients is derived by minimizing a cost function using the variational method. Different cost function results in different reconstruction schemes. \replaced[id=r1]{In this work, the cost function is defined as
 \begin{equation}
     \label{eq:cost-function}
     I = \sum^{N_f}_{f=1} \omega_f {I_f},
@@ -781,7 +781,7 @@ The dual-time stepping approach introduces a pseudo time derivative, in addition
 This approach can be viewed within the broader context of pseudo-transient continuation techniques, which leverage the inherent time-dependent structure of PDEs to circumvent stagnation issues associated with local minima common in nonlinear solvers \cite{kelley1998convergence}.
 The approximate-Newton method can be regarded as a special case of dual-time stepping with an infinite pseudo-time step size \cite{venkateswaran1995dual}. By contrast, dual-time stepping provides greater flexibility, allowing the pseudo-time step size to be tuned for improved convergence. As a result, dual-time stepping has been widely adopted for implicit time integration in compressible flow simulations \cite{zhang2004block,jameson2009assessment,liu2018dynamic}.
 }
-{In this work, the time integration scheme for unsteady flow simulation is the six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK}. By integrating the ODE \eqref{eq:FVODECell} in time, the cell-average is updated by
+{In this work, the time integration scheme for unsteady flow simulation is the six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK}. By integrating the ODE \eqref{eq:FVODECell} in time, the cell averages are updated by
 \begin{subequations}\label{eq:ESDIRK4}
     \begin{align}
          & \uu^{n,1}_i \ = \uu^{n}_i, \label{eq:esdirk4-1}                                                                  \\
@@ -821,7 +821,7 @@ The solution at pseudo time step $m+1$ can be sought by solving the nonlinear eq
 \begin{equation}
     \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m} +\dfrac{\uu^{\left(s,m+1\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss}\R^{\left(s,m+1\right)}.
 \end{equation}
-Based on the fact that the implicit right-hand-side term $\R$ can be linearized as
+Based on the fact that the implicit right-hand side term $\R$ can be linearized as
 \begin{equation}
 \label{eq:linarization-R}
     \R^{\left(s,m+1\right)} \approx \R^{\left(s,m\right)} + \partialderivative{\R}{\uu} \left(\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}\right),
@@ -858,7 +858,7 @@ By using the linear approximation
 \begin{equation}
     \R^{n,s,m+1}_i \approx \R^{n,s,m}_i + \sum_{j \in S_i} \dfrac{\partial \R_i}{\partial \UM_j} \left(\uu^{n,s,m+1}_j-\uu^{n,s,m}_j\right),
 \end{equation}
-we obtain a linear equation system to update the cell-average in the pseudo-time direction as follows
+we obtain a linear equation system to update the cell averages in the pseudo-time direction as follows
 \begin{equation}
     % \label{eq:pseudo-time-equation}
     \left(\frac{\eye}{\inc \tau_i} + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R_i }{\uu_i} \right) \inc \uu^{n,s, m}_i

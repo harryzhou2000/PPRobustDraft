@@ -8,15 +8,15 @@ This section analyzes the properties of the positivity-preserving algorithm intr
 
 \subsection{Accuracy-preserving property}
 
-The positivity-preserving algorithm consists of four fundamental procedures: physical time step limiting, pseudo time step limiting, increment correction, and reconstruction polynomial scaling. In this subsection, we analyze the impact of these procedures on the accuracy of the overall finite volume method.
+The positivity-preserving algorithm consists of four fundamental procedures: physical time step limiting, pseudo time step limiting, increment correction, and reconstruction polynomial scaling. In this subsection, we analyze the impact of these procedures on the accuracy of the overall implicit finite volume method.
 
 It is well-established that reducing the physical time step size does not impact the order of accuracy of the time integration.
 % Generally, pseudo time step limiting and increment correction may be activated during the early stages of the inner iteration to stabilize the solution and are deactivated in later stages as the solution converges. 
 % {\color{r1color}Even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy.}
 % Therefore, these techniques do not affect the accuracy of the converged solution in the inner iteration process.
-In general, pseudo-time step limiting and increment correction are often activated during the initial stages of the inner iteration to stabilize the solution. These techniques are typically deactivated in later stages as the solution converges. Importantly, even if pseudo-time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy. As a result, these stabilization techniques in the inner iteration process do not compromise the accuracy of the converged solution.
+In general, pseudo time step limiting and increment correction are often activated during the initial stages of the inner iteration to stabilize the solution. These techniques are typically deactivated in later stages as the solution converges. Importantly, even if pseudo time step limiting and increment correction remain active, the unchanged convergence criterion ensures that the converged solution satisfies the nonlinear equation system with sufficient accuracy. As a result, these stabilization techniques in the inner iteration process do not compromise the accuracy of the converged solution.
 Furthermore, as noted earlier, the scaling limiter effectively preserves the 
-spatial accuracy of the reconstruction in smooth regions \cite{zhang2010positivity}.
+accuracy of the reconstruction in smooth regions \cite{zhang2010positivity}.
 
 In conclusion, the positivity-preserving algorithm preserves accuracy in both space and time. The accuracy-preserving property is demonstrated through an accuracy test on a smooth vortex problem in Section \ref{ssec:accuracy-test}.
 
@@ -25,7 +25,7 @@ In conclusion, the positivity-preserving algorithm preserves accuracy in both sp
 
 The positivity-preserving algorithm includes three important parameters, $\eta_t$, $\eta_{\tau}$, and $\eta_{\inc}$, which are used to control the allowable relative changes in the solution. These parameters are all defined in the range $(0,1)$. Larger values of $\eta_t$ and $\eta_{\tau}$ result in larger physical and pseudo time step sizes, respectively. Larger values of $\eta_{\inc}$ results in larger increments, which may lead to faster convergence in later iteration steps while higher stiffness in earlier iteration steps. 
 
-There is a upper bound for $\eta_t$ beyond which the time step limiting may fail to guarantee positivity of the future state, which is the solution at next time level. As mentioned in Section \ref{ssec:physical-limiting}, to ensure positivity of the future state, a lower bound is imposed on the estimated future state, and the lower bound must be larger than the estimation error. An analysis on the positivity preservation of density is performed to show the properties of the upper bound of $\eta_t$. The estimated future state is computed by using a simple linear approximation as below:
+There is an upper bound for $\eta_t$ beyond which the time step limiting may fail to guarantee positivity of the future state, which is the solution at the next time level. As mentioned in Section \ref{ssec:physical-limiting}, to ensure positivity of the future state, a lower bound is imposed on the estimated future state, and the lower bound must be larger than the estimation error. An analysis of the positivity preservation of density is performed to show the properties of the upper bound of $\eta_t$. The estimated future state is computed by using a simple linear approximation as below:
 \begin{equation} 
     \uu^{n+1,*}=\uu^n + \inc t^n \R^n,
 \end{equation}
@@ -52,7 +52,7 @@ which is simplified as
 \begin{equation}
     1-\eta_t > K_\rho \left(\eta_t\right)^2.
 \end{equation}
-Therefore, there is a critical upper bound $\eta^c_t$ that fulfills 
+Therefore, there is a critical upper bound $\eta^c_t$ that satisfies 
 \begin{equation}
     1-\eta^c_t = K_\rho \left(\eta^c_t\right)^2
     % ,\ \ 
@@ -91,11 +91,11 @@ iterative posteriori approach can be used to determine $\eta_t$ as follows:
 \begin{enumerate} [label=(\alph*)]
     \item initialize the parameter as $\eta_t= \eta^0_t \in \left(0,1\right)$;
     \item compute a limited time step size $\inc t^n$, and then perform one step time integration to obtain stage values $\uu^{(s)},s=2,3\dots6$ and updated solution $\uu^{n+1}$;
-    \item if $\uu^{(s)},s=2,3\dots6$ and $\uu^{n+1}$ all converged, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
+    \item if $\uu^{(s)},s=2,3\dots6$ with $\uu^{(6)}=\uu^{n+1}$ all converged, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
 \end{enumerate}
-Since the upper bound $\eta^c_t$ is of order $\mathcal{O}(1)$, a value of $\eta_t$ that preserves positivity can be found within a finite number of iterations. 
+Since the upper bound $\eta^c_t$ is of order $\mathcal{O}(1)$, a value of $\eta_t$ that preserves positivity can always be found within a finite number of iterations. 
 In the numerical experiments presented in Section~\ref{sec:Results}, the parameter is initialized as $\eta_t = 0.8$ for all test cases. 
-This choice does not lead to solution divergence, and therefore the iterative posteriori search for the parameter is not triggered.
+This choice does not lead to solution divergence and therefore the iterative posteriori search for this parameter is not triggered.
 
 \begin{figure}[htbp!]
     \centering
@@ -109,11 +109,11 @@ There is no upper bound required for the parameter $\eta_\tau$ to preserve posit
 as the pseudo-time step limiting is followed by an increment correction 
 that ensures the positivity of the updated intermediate states. 
 Similarly, no upper bound is needed for the parameter $\eta_{\inc}$, 
-since lower bounds are directly enforced on the updated intermediate states. 
-However, there exists asymptotic relation between $\eta_t$ and $\eta_\inc$,
+since the lower bounds are directly enforced on the updated intermediate states. 
+However, there exists an asymptotic relation between $\eta_t$ and $\eta_\inc$,
 which is discussed in Section \ref{ssec:analysis-time-step}.
-A preferable choice is to make $\eta_\inc > \eta_\tau$, so that 
-asymptotically increment correction does not take effect after 
+A preferable choice is to make $\eta_\inc > \eta_\tau$, so that,
+asymptotically, increment correction does not take effect after 
 pseudo time limiting and primarily act as a safe guard.
 In summary, the current work 
 chooses both $\eta_\tau$ and $\eta_{\inc}$ to be within the range $(0,1)$, 
@@ -131,7 +131,7 @@ increment correction is also investigated.
 \subsubsection{Lower bound for physical time step limiting}
 
 An analysis can be performed on the lower bound of the physical time step size.
-The right-hand-side of the semi-discrete finite volume scheme is computed by
+The right-hand side of the semi-discrete finite volume scheme is computed by
 \begin{equation}
     \label{eq:Semi-FV-1}
     \R_i = -\frac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \ \dd A.
@@ -502,7 +502,7 @@ the limited pseudo time step size $\inc \tau_{i,pp}$ is not infinitely small com
 % the lower bounds.
 % It can be concluded that, the limited pseudo time step size $\inc \tau_{i,pp}$ is not infinitely small compared to $\inc \tau_i$.
 
-\subsubsection{Analysis on increment correction}
+\subsubsection{Analysis of increment correction}
 
 A rigorous analysis of the lower bound of the relaxation factor $\alpha_{\inc,i}$ in the increment correction, computed according to \eqref{eq:alpha-inc}–\eqref{eq:alpha-inc-p}, is not feasible. 
 This is because the increment of the intermediate state is obtained using LU-SGS approximation, and therefore does not represent the exact solution of the linearized system \eqref{eq:linearTauUpdate}. 
@@ -649,16 +649,16 @@ The increment correction is typically activated during the early part of the inn
 % This algorithm is applicable to general implicit finite volume methods on unstructured grids for compressible flow simulations. While there is no restriction on the spatial discretization, an implicit dual-time discretization is essential.
 % This algorithm is applicable to a broad range of implicit finite volume methods on unstructured grids for compressible flow simulations. Although the spatial discretization can be arbitrary, the use of an implicit dual-time stepping approach is essential for its effective implementation.
 
-% The proposed positivity-preserving algorithm is applicable to a broad range of implicit finite volume methods on unstructured grids for compressible flow simulations. As the scaling limiter is designed to preserve positivity of reconstruction polynomials given an admissible cell-average, thus any polynomial reconstruction is compatible with the proposed positivity-preserving algorithm.
-% The procedures to preserve positivity of cell-averages are designed in the dual-time stepping framework. Therefore, the use of an implicit dual-time stepping approach is essential for applying the positivity-preserving algorithm. There is not restrictions on the time integration scheme, any implicit time integration scheme can be used in theory. However, we need to highlight that, the ESDIRK schemes are well-suited for the proposed positivity-preserving algorithm. Compared with other high-order implicit time integration methods, such as the singly-diagonally implicit Runge–Kutta (SDIRK) methods, the $L$-stable ESDIRK methods are more robust. Furthermore, the solution at next time level of ESDIRK is taken as the converged state of the final stage, which is well-suited for our positivity-preserving algorithm, in which the intermediate states are guaranteed admissible. 
+% The proposed positivity-preserving algorithm is applicable to a broad range of implicit finite volume methods on unstructured grids for compressible flow simulations. As the scaling limiter is designed to preserve positivity of reconstruction polynomials given admissible cell averages, thus any polynomial reconstruction is compatible with the proposed positivity-preserving algorithm.
+% The procedures to preserve positivity of cell averages are designed in the dual-time stepping framework. Therefore, the use of an implicit dual-time stepping approach is essential for applying the positivity-preserving algorithm. There is not restrictions on the time integration scheme, any implicit time integration scheme can be used in theory. However, we need to highlight that, the ESDIRK schemes are well-suited for the proposed positivity-preserving algorithm. Compared with other high-order implicit time integration methods, such as the singly-diagonally implicit Runge–Kutta (SDIRK) methods, the $L$-stable ESDIRK methods are more robust. Furthermore, the solution at next time level of ESDIRK is taken as the converged state of the final stage, which is well-suited for our positivity-preserving algorithm, in which the intermediate states are guaranteed admissible. 
 
-% The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. Regarding the spatial discretization, the only requirement is that a polynomial reconstruction needs to be used, since the scaling limiter is designed to preserve the positivity of reconstruction polynomials given an admissible cell average.
+% The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. Regarding the spatial discretization, the only requirement is that a polynomial reconstruction needs to be used, since the scaling limiter is designed to preserve the positivity of reconstruction polynomials given admissible cell averages.
 
 % Regarding time discretization, positivity preservation for cell averages is achieved within the dual-time stepping framework, making the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration schemes and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited for the proposed algorithm. Compared with other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, the ESDIRK methods which are $L$-stable, offer improved robustness. Furthermore, the solution at the next time level in ESDIRK methods is defined as the converged state of the final stage, which aligns naturally with our positivity-preserving algorithm, as admissibility is maintained throughout the intermediate stages.
 
-The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. For the spatial discretization, the only requirement is the use of a polynomial reconstruction, as the scaling limiter is specifically designed to preserve the positivity of reconstructed polynomials given an admissible cell-average.
+The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. For spatial discretization, the only requirement is the use of a polynomial reconstruction, since the scaling limiter is specifically designed to preserve the positivity of reconstructed polynomials given admissible cell averages.
 
-For the time discretization, positivity preservation of cell-averages is achieved within a dual-time stepping framework, which makes the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration scheme and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited to the proposed algorithm. Compared to other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, ESDIRK methods that are $L$-stable offer improved robustness. Moreover, the solution at the next time level in ESDIRK methods corresponds to the converged state of the final stage. This naturally aligns with the design of our algorithm, as admissibility is preserved throughout all intermediate stages.
+For time discretization, positivity preservation of cell averages is achieved within a dual-time stepping framework, which makes the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration scheme and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited to the proposed algorithm. Compared to other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, ESDIRK methods that are $L$-stable offer improved robustness. Moreover, the solution at the next time level in ESDIRK methods corresponds to the converged state of the final stage. This naturally aligns with the design of our algorithm, as admissibility is preserved throughout all intermediate stages.
 
 
 

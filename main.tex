@@ -95,16 +95,16 @@
     A frequently encountered issue in numerical simulations of complex compressible flows is the failure to preserve positivity of density or pressure, which leads to nonphysical solutions or numerical instabilities. It is a significant challenge to develop efficient and accurate positivity-preserving algorithms for numerical schemes with implicit time integration, where solutions are updated by solving nonlinear equations iteratively. To address this challenge, we propose a positivity-preserving algorithm for finite volume schemes with implicit time integration on unstructured grids. 
     \replaced[id=r2]
     {
-    In this algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution variations, 
+    In this algorithm, admissible cell averages are obtained by limiting time step sizes to control solution variations, 
     while increment correction is introduced to directly enforce positivity 
     during iteration.
     }
     {
-    In this algorithm, admissible cell-averages are obtained by limiting time step sizes to control solution variations.
+    In this algorithm, admissible cell averages are obtained by limiting time step sizes to control solution variations.
     }
     \replaced[id=r2]{
     To overcome the difficulty of unknown solution changes in time step limiting, we employ a simple linear approximation to estimate the future state, based on the available residual of the semi-discrete finite volume scheme.}
-    {To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states.} Allowable time step sizes are determined by constraining the relative solution changes to ensure the positivity of the updated solutions. Given positive cell-averages, admissible reconstruction polynomials are obtained by using a scaling limiter. Importantly, the proposed positivity-preserving algorithm is also accuracy-preserving. This algorithm is applied to a high-order variational finite volume method with explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration. Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution,
+    {To overcome the difficulty of unknown solution changes in time step limiting, we employ explicit time discretization to efficiently estimate future states.} Allowable time step sizes are determined by constraining the relative solution changes to ensure the positivity of the updated solutions. Given positive cell averages, admissible reconstruction polynomials are obtained by using a scaling limiter. Importantly, the proposed positivity-preserving algorithm is also accuracy-preserving. This algorithm is applied to a high-order variational finite volume method with explicit first stage singly diagonally implicit Runge-Kutta (ESDIRK) time integration. Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution,
     \added[id=r2]{
         high efficiency
     }

@@ -4,12 +4,12 @@
 \label{sec:Conclusions}
 
 This paper presents a positivity-preserving algorithm for finite volume methods using dual-time stepping for compressible flow simulations.
-In the positivity-preserving algorithm, admissible cell-averages are obtained by limiting solution changes,
+In the positivity-preserving algorithm, admissible cell averages are obtained by limiting solution changes,
 which is accomplished by controlling physical and pseudo time step sizes.
 To overcome the difficulty of unknown solution changes,
 we employ explicit time discretizations to obtain efficient estimations of future states.
 The allowable time step sizes are determined by limiting the relative solution changes.
-Given positive cell-averages,
+Given positive cell averages,
 admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter.
 The proposed positivity-preserving algorithm is accuracy-preserving.
 Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution and robustness of the positivity-preserving implicit high-order finite volume method.
