@@ -37,8 +37,8 @@ set as $\rho_0 = 10^{-10}$ and $p_0=10^{-10}$, respectively.
 
 The computational domain is defined as $[0,10]\times[0,10]$, with the vortex initially centered at $(x_0,y_0)=(5,5)$. Periodic boundary conditions are applied at the domain boundaries.  A set of successively refined rectangular meshes, with grid sizes $h=1/2$ to $h=1/32$, are used in the simulations. Following \cite{zhang2012positivity}, the final time is set as $t=0.01$. 
 \replaced[id=r2]
-{The maximum physical time step size is set to $\inc t_{max} = h/50$.
-However, numerical experiments show that the physical time step limiting is not activated, indicating that the physical time step remains at $\inc t= \inc t_{max} = h/50$.
+{The maximum physical-time step size is set to $\inc t_{max} = h/50$.
+However, numerical experiments show that the physical-time step limiting is not activated, indicating that the physical-time step remains at $\inc t= \inc t_{max} = h/50$.
 }{Pseudo-time step limiting, increment correction, and reconstruction polynomial 
 scaling are applied during the simulations. 
 Physical-time step limiting is disabled to maintain constant 
@@ -146,7 +146,7 @@ when small error is demanded.
 % \color{violet}
 % \textbf{
 % We also tested on large $\inc t_{max}$ to see the impact of 
-% physical time step limiting. 
+% physical-time step limiting. 
 % The termination time is changed to $t = 0.32$, and $\inc t_{max} =   0.64 h$ is used. 
 % The minimum number of time steps is then $N_{t,min} =1/(2h)$. 
 % This calculation uses 5 reconstruction iterations per evaluation of RHS, 
@@ -154,7 +154,7 @@ when small error is demanded.
 % Relative residual convergence threshold is set to $10^-6$.
 % Results are shown in Table \ref{tab:ivResultsLargeDt}. 
 % It can be seen in Table \ref{tab:ivResultsLargeDt} that the 
-% physical time step limiting is activated on fine girds, and on 
+% physical-time step limiting is activated on fine girds, and on 
 % coarse grids the time step size is not limited. 
 % As the average time step size still refines with grid nearly proportionally,
 % the order of accuracy in the results also satisfies design order approximately.
@@ -204,8 +204,8 @@ The initial conditions are
 \end{equation}
 \added[id=r1]{The ratio of specific heat is $\gamma = 5/3$.
 The computational domain is in $[0,9]$. 
-Two uniform meshes are employed, consisting of $N=800$ and $N=3200$ cells, respectively. Simulations are conducted up to a final physical time of $t=6$, using two maximum physical time step sizes, $\Delta t_{max} = 0.01$ and $0.1$.
-In each inner iteration, the CFL number for local pseudo time step, $\CFLtau$, is initiated as $0.5$ and increased gradually up to its maximum $10$ at the tenth iteration. 
+Two uniform meshes are employed, consisting of $N=800$ and $N=3200$ cells, respectively. Simulations are conducted up to a final physical time of $t=6$, using two maximum physical-time step sizes, $\Delta t_{max} = 0.01$ and $0.1$.
+In each inner iteration, the CFL number for local pseudo-time step, $\CFLtau$, is initiated as $0.5$ and increased gradually up to its maximum $10$ at the tenth iteration. 
 The reference density and pressure are set as $\rho_0=1$ and $p_0=2/3\times10^{-1}$, respectively.
 }
 
@@ -254,21 +254,21 @@ The numerical results from the four simulations, corresponding to two meshes and
 % Using smaller $\inc t_{max}$, the actual $\inc t$ often reaches $\inc t_{max}=0.01$ on both grids. 
 % With larger $\inc t_{max}=0.1$, the actual time step $\inc t$ is constrained by the grid size near strong discontinuities.
 % Figure \ref{sfig:leBlanc1_t} shows that smaller grid size imposes smaller time step size upper bound 
-% in physical time step size limiting.
+% in physical-time step size limiting.
 % The convergence history shown in Figure \ref{sfig:leBlanc1_res} indicates that the residuals
 % reduce to three orders of magnitude within certain number of iteration steps.
-Figure \ref{fig:leBlanc1} illustrates the history of the time step size and density residual. When using the smaller maximum time step size ($\Delta t_{max}=0.01$), the actual $\Delta t$ frequently reaches the imposed upper limit on both meshes. In contrast, with the larger $\Delta t_{max}=0.1$, the actual time step size is constrained by the grid spacing near regions with strong discontinuities. Figure \ref{sfig:leBlanc1_t} demonstrates that a smaller grid spacing imposes a stricter upper bound on the allowable physical time step size. Additionally, the convergence history presented in Figure \ref{sfig:leBlanc1_res} indicates that the residuals decrease by three orders of magnitude within a certain number of iteration steps.
+Figure \ref{fig:leBlanc1} illustrates the history of the time step size and density residual. When using the smaller maximum time step size ($\Delta t_{max}=0.01$), the actual $\Delta t$ frequently reaches the imposed upper limit on both meshes. In contrast, with the larger $\Delta t_{max}=0.1$, the actual time step size is constrained by the grid spacing near regions with strong discontinuities. Figure \ref{sfig:leBlanc1_t} demonstrates that a smaller grid spacing imposes a stricter upper bound on the allowable physical-time step size. Additionally, the convergence history presented in Figure \ref{sfig:leBlanc1_res} indicates that the residuals decrease by three orders of magnitude within a certain number of iteration steps.
 }
 
 \added[id=r2]{
 % In order to investigate the effect of changing 
 % relaxation parameters $\eta_t$, $\eta_\tau$ and $\eta_\Delta$,
-% which are used in physical time step limiting, pseudo time step limiting and 
+% which are used in physical-time step limiting, pseudo-time step limiting and 
 % increment correction respectively,
 % a series of experiments are conducted on the Le Blanc problem.
 % Based on the case $N=800$ and $\Delta t_{max}=0.1$, with
 % the default relaxation parameters $\eta_t=0.8$, $\eta_\tau=0.5$ and $\eta_\Delta=0.9$, a series of additional test runs are performed with their results shown in Table \ref{tab:leBlancParamTest} and Figure \ref{fig:leBlancParamTest}.
-To investigate the sensitivity of the positivity-preserving finite volume scheme to variations in the relaxation parameters $\eta_t$, $\eta_\tau$, and $\eta_\Delta$, which control physical time step limiting, pseudo time step limiting, and increment correction respectively, a series of numerical experiments are conducted using the Le Blanc shock tube problem. The baseline simulation is performed on the $N=800$ mesh, with default parameters $\eta_t=0.8$, $\eta_\tau=0.5$, and $\eta_\Delta=0.9$, using a maximum time step size of $\Delta t_{max}=0.1$. Additional simulations are performed by altering one parameter at a time from this baseline, enabling the assessment of sensitivity to each parameter. The statistical outcomes of these experiments are summarized in Table \ref{tab:leBlancParamTest}, while the corresponding numerical solutions are presented in Figure \ref{fig:leBlancParamTest}.
+To investigate the sensitivity of the positivity-preserving finite volume scheme to variations in the relaxation parameters $\eta_t$, $\eta_\tau$, and $\eta_\Delta$, which control physical-time step limiting, pseudo-time step limiting, and increment correction respectively, a series of numerical experiments are conducted using the Le Blanc shock tube problem. The baseline simulation is performed on the $N=800$ mesh, with default parameters $\eta_t=0.8$, $\eta_\tau=0.5$, and $\eta_\Delta=0.9$, using a maximum time step size of $\Delta t_{max}=0.1$. Additional simulations are performed by altering one parameter at a time from this baseline, enabling the assessment of sensitivity to each parameter. The statistical outcomes of these experiments are summarized in Table \ref{tab:leBlancParamTest}, while the corresponding numerical solutions are presented in Figure \ref{fig:leBlancParamTest}.
 }
 
 \added[id=r2]{
@@ -278,7 +278,7 @@ To investigate the sensitivity of the positivity-preserving finite volume scheme
 % A smaller $\eta_\tau$  increases $\overline{N_{iter}}$ while a larger $\eta_\tau$ decreases $\overline{N_{iter}}$ according to Table \ref{tab:leBlancParamTest}. 
 % Using $\eta_\tau=0.5$ significantly decreases $\overline{N_{iter}}$ and improves efficiency compared to $\eta_\tau=0.2$, 
 % and using $\eta_\tau=0.8$ does not improve efficiency much. 
-% According to Table \ref{tab:leBlancParamTest}, the relaxation parameter $\eta_t$ primarily influences physical time step size. 
+% According to Table \ref{tab:leBlancParamTest}, the relaxation parameter $\eta_t$ primarily influences physical-time step size. 
 % A larger $\eta_t$ allows for larger $\Delta t^i$ and therefore fewer time steps.
 % When $\eta_{t}=0.9$, $N_{step}$ decreases from $120$ to $114$, and with $\eta_t = 0.4$, $N_{step}$  is increased to $141$. 
 % The benefit of further increasing $\eta_t$ from baseline setup is marginal.
@@ -361,11 +361,11 @@ The computational domain is $[0,1]$.
 We perform a numerical simulation on a uniform mesh with a grid size of $\inc x = 1/400$, up to $t=0.1$
  using a maximum time step size of $\inc t_{max}= 5 \times 10 ^{-3}$.
 \added[id=r1]
-{The numerical results show that the physical time step limiting procedure does not reduce the time step in this case, resulting in a uniform $\Delta t$ throughout the simulation.}
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$ and
+{The numerical results show that the physical-time step limiting procedure does not reduce the time step in this case, resulting in a uniform $\Delta t$ throughout the simulation.}
+In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.1$ and
 increased gradually up to its maximum $10$ at the tenth iteration.
 The reference pressure and density values are set as $\rho_0=1$ and $p_0=0.1$, respectively.
-%The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
+%The convergence criterion for inner iteration is that the norm of the pseudo-time derivative decreases by three orders of magnitude. 
 The numerical results are presented in Figure \ref{fig:doubleRare}, which shows that the numerical solution is essentially oscillation-free and agrees well with the exact solution.
 \added[id=r1]
 {Figure \ref{fig:DRres} shows the convergence history of the inner iterations, indicating that convergence is achieved in just a few steps.
@@ -425,8 +425,8 @@ The reference density and pressure are set as $\rho_0=1$ and $p_0=4\times10^{-9}
 %Fourth order variational reconstruction finite volume with ESDIRK4
 % discretization is used. 
 %The relaxation parameters and internal CFL number are the same as 1-D problems.
-%Convergence threshold for pseudo time iteration is $10^{-3}$. 
-%The convergence criterion for inner iteration is that the norm of the pseudo time derivative decreases by three orders of magnitude. 
+%Convergence threshold for pseudo-time iteration is $10^{-3}$. 
+%The convergence criterion for inner iteration is that the norm of the pseudo-time derivative decreases by three orders of magnitude. 
 %Maximum time step sizes of $\inc t_{max}=10^{-6}$ and $\inc t_{max}=10^{-5}$
 %are tested. 
 %The computation takes 1026 steps with $\inc t_{max}=10^{-6}$, 
@@ -452,7 +452,7 @@ It is shown in Figure \ref{fig:sedovLine} that both numerical solutions agree we
 %solution appears slightly distorted, but the overall 
 %position and strength of the shock front is correct.
 
-A computational cost analysis is performed to validate the computational efficiency of the proposed positivity-preserving algorithm. Table \ref{tab:cpu-time-cost} reports the CPU time for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$, where the reconstruction polynomial scaling is performed on $22\%$ of the cells. As listed in Table \ref{tab:cpu-time-cost} that, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time.
+A computational cost analysis is performed to validate the computational efficiency of the proposed positivity-preserving algorithm. Table \ref{tab:cpu-time-cost} reports the CPU time for the final physical-time step in the case with $\Delta t_{\text{max}} = 10^{-5}$, where the reconstruction polynomial scaling is performed on $22\%$ of the cells. As listed in Table \ref{tab:cpu-time-cost} that, the positivity-preserving algorithm accounts for only $10\%$ of the total CPU time.
 This finding indicates that the algorithm incurs relatively small additional computational cost, thereby confirming its efficiency.
 
 \begin{figure}[htbp]
@@ -495,7 +495,7 @@ This finding indicates that the algorithm incurs relatively small additional com
 
 \begin{table}[htbp!]
     \centering
-    \caption{Computational cost for the final physical time step in the case with $\Delta t_{\text{max}} = 10^{-5}$.}
+    \caption{Computational cost for the final physical-time step in the case with $\Delta t_{\text{max}} = 10^{-5}$.}
     \label{tab:cpu-time-cost}
     % \footnotesize
     % \begin{tabular}{|c|c|c|c|c|}
@@ -546,8 +546,8 @@ Far-field boundary conditions are imposed on the upper, lower and right boundari
 The initial conditions are $(\rho,u,v,p)=(0.5,0,0,0.4127)$.
 The numerical simulations are performed on a uniform rectangular mesh with $800 \times 800$ cells, up to $t=10^{-3}$ using a maximum time step size of $\inc t_{max} = 1\times10^{-6}$.
 %$\CFLtau$ is initially $0.1$ at the beginning of each stage,
-%and reaches $2.0$ at the 10th pseudo time iteration. 
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+%and reaches $2.0$ at the 10th pseudo-time iteration. 
+In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
 The reference density and pressure are
 $\rho_0=0.5$ and $p_0=0.4127$, respectively.
@@ -598,7 +598,7 @@ the left side $x = 0$, $6\leq y \leq 11$ and other boundaries, respectively.
 %all other boundaries are set as inviscid wall.
 The simulation is performed on a rectangular mesh with grid size $\inc x = \inc y = 1/80$,
 up to $t=2.3$ with $\inc t_{max}=1\times 10^{-3}$.
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
 The reference density and pressure are $\rho_0=1.4$ and $p_0=1$, respectively.
 
@@ -649,7 +649,7 @@ A triangular mesh with grid size $h = 1/320$,
 shown in Figure \ref{fig:wedgeMesh}, is used in the simulations.
 The simulations are performed up to $t=0.245$ using
 a maximum time step size of $\inc t_{max}= 2\times10^{-4}$.
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
 The reference density and pressure values are $\rho_0=1.4$ and $p_0=1$, respectively.
 
@@ -705,12 +705,12 @@ The Mach 20 shock over a half cylinder test case \cite{gallice2022entropy,cossar
 Three numerical schemes are tested: first-, second-, and fourth-order finite volume methods, 
 using reconstruction polynomials of degree zero, one, and three, respectively. The degree-one and degree-three piecewise polynomials 
 are respectively obtained using the Green–Gauss and variational reconstructions.
-As described in Section \ref{ssec:application-to-steady-state}, for this steady-state problem, pseudo time step limiting, increment correction and reconstruction polynomial scaling are employed to preserve the positivity of density and pressure. 
-Physical time step limiting is not required in this context. 
+As described in Section \ref{ssec:application-to-steady-state}, for this steady-state problem, pseudo-time step limiting, increment correction and reconstruction polynomial scaling are employed to preserve the positivity of density and pressure. 
+Physical-time step limiting is not required in this context. 
 The inflow condition is $(\rho, u, v, p) = (1, 1, 0, 1.78571\times10^-3)$.
 The computational mesh consists of $40 \times 100$ quadrilateral cells, 
 as shown in Figure \ref{sfig:CylinderFront_mesh}.
-The CFL number for local pseudo time step is $\CFLtau=10$. 
+The CFL number for local pseudo-time step is $\CFLtau=10$. 
 The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times10^{-3}$, respectively.
 % A inviscid Ma 20 flow over a two-dimensional round head is tested in the 
 % current subsection following literature that investigated steady state positivity-preserving
@@ -720,10 +720,10 @@ The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times1
 % of current algorithm to directly handle steady state computation. 
 % In other words, the time-accurate time marching schemes like ESDIRK are replaced with 
 % a single implicit Euler step with infinite time step size.
-% All the iterations are in pseudo time and correspond to the inner iterations in the 
+% All the iterations are in pseudo-time and correspond to the inner iterations in the 
 % unsteady problems. 
-% Therefore, the physical time step limiting is not present in a steady state computation. 
-% Pseudo time step limiting, increment correction and polynomial scaling are the same 
+% Therefore, the physical-time step limiting is not present in a steady state computation. 
+% Pseudo-time step limiting, increment correction and polynomial scaling are the same 
 % as those in unsteady problems.
 }
 
@@ -832,7 +832,7 @@ Although the setup largely follows the reference study \cite{morgenstern1994hype
 % The reference density and pressure are set as $\rho_0=1$ and $p_0=1.7997\times10^{-2}$, respectively.
 % Maximum non-dimensional time step is set to $\inc t_{max}=0.01$ to capture most of the unsteady features 
 % according to previous results \cite{morgenstern1994hypersonic}. 
-% In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.5$
+% In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.5$
 % and increased gradually up to its maximum $10$ at the tenth iteration.
 % Although the conditions above are all derived from the reference 
 % computation \cite{morgenstern1994hypersonic}, there are still some ambiguities
@@ -859,8 +859,8 @@ The height of the first off-wall grid point is set to $10^{-4}D$, and the maximu
 A portion of the mesh is shown in Figure \ref{fig:Cavity_mesh}.
 The simulation is initialized with freestream conditions in the region $y \geq 0$. In the region $y < 0$, freestream pressure, wall temperature, and zero velocity are prescribed as the initial condition. The simulation proceeds until the initial transients have dissipated.
 The positivity-preserving fourth-order variational finite volume method, combined with ESDIRK4 time integration, is employed for this test.
-% All positivity-preserving algorithms, including physical time step limiting,
-% pseudo time step limiting, increment correction and reconstruction polynomial
+% All positivity-preserving algorithms, including physical-time step limiting,
+% pseudo-time step limiting, increment correction and reconstruction polynomial
 % scaling are applied. 
 The reference density and pressure are set to \(\rho_0 = 1\) and \(p_0 = 1.7997 \times 10^{-2}\), respectively.
 }
@@ -936,7 +936,7 @@ This discrepancy may be due to differences in flow conditions or setup details b
 % time steps and projected explicit time steps $\inc t_E$ are plotted in
 % Figure \ref{fig:Cavity_time}. 
 % The projected explicit time step size $\inc t_E$ is 
-% calculated explicit physical time step CFL constraint being
+% calculated explicit physical-time step CFL constraint being
 % \begin{equation}
 %     \label{eq:physical-time-step-CFL}
 %     \inc t_E = \min_i{\left\{
@@ -1083,7 +1083,7 @@ The analytic solution of density \cite{noh1987errors} is
 \end{equation}
 The simulation is performed on a uniform hexahedral mesh with a grid size of $\inc x = \inc y= \inc z = 10^{-3}$, using a maximum time step size of $\inc t_{max}=5 \times 10^{-4}$. The simulation is terminated at $t=0.6$ to ensure that the 
 shock does not reach the inflow boundaries. 
-In each inner iteration, the CFL number for local pseudo time step $\CFLtau$ is initiated as $0.1$
+In each inner iteration, the CFL number for local pseudo-time step $\CFLtau$ is initiated as $0.1$
 and increased gradually up to its maximum $2$ at the tenth iteration.
 The reference density and pressure values used in reconstruction polynomial scaling are $\rho_0=1$ and $p_0=10^{-6}$, respectively. 
 

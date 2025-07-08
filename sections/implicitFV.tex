@@ -729,7 +729,7 @@ In engineering CFD simulations, implicit time marching methods are commonly empl
 % Therefore, the current research focuses on positivity-preserving implicit time marching methods to extend the application of positivity-preserving
 % algorithms to engineering problems.
 Another motivation for adopting implicit time marching is the implicit nature of the variational reconstruction.}
-As mentioned in the previous subsection, the linear equation system of the variational reconstruction is solved iteratively. The reconstruction will be very expensive if the iteration needs to reach convergence at each single time step. A reconstruction and implicit dual-time stepping coupled iteration procedure has been proposed in \cite{wang2016compact1_VR} to address this computational efficiency issue. In the coupled iteration procedure, the reconstruction iteration is performed only once at each pseudo time step. The coupling between the reconstruction and the time integration makes these two procedures achieve convergence synchronously. By using the coupled iteration, the implicit nature of the variational reconstruction does not result in additional cost, thus ensuring the high computational efficiency of the variational finite volume method.
+As mentioned in the previous subsection, the linear equation system of the variational reconstruction is solved iteratively. The reconstruction will be very expensive if the iteration needs to reach convergence at each single time step. A reconstruction and implicit dual-time stepping coupled iteration procedure has been proposed in \cite{wang2016compact1_VR} to address this computational efficiency issue. In the coupled iteration procedure, the reconstruction iteration is performed only once at each pseudo-time step. The coupling between the reconstruction and the time integration makes these two procedures achieve convergence synchronously. By using the coupled iteration, the implicit nature of the variational reconstruction does not result in additional cost, thus ensuring the high computational efficiency of the variational finite volume method.
 
 \added[id=r1]{For unsteady flow simulations, achieving high-order accuracy requires both high-order spatial and temporal discretizations. Multi-stage implicit Runge-Kutta methods \cite{butcher1964implicit} are widely adopted for high-order time integration. In this paper, a fourth-order finite volume scheme is used to perform the numerical experiments presented in Section \ref{sec:Results}. Specifically, a cubic variational reconstruction is used to achieve fourth-order accuracy in space, and a six-stage, fourth-order explicit first stage singly diagonal implicit Runge-Kutta (ESDIRK4) \cite{bijl2002implicitBDFvESDIRK} method is used to achieve fourth-order accuracy in time. 
 The ESDIRK4 method is designed to be $L$-stable and stiffly accurate while maintaining relatively high-order accuracy \cite{kennedy2003additiveARK}. Among its six stages, the solution at the explicit first stage is directly set as the solution at the current time, whereas the solutions for the subsequent five stages are obtained implicitly. 
@@ -775,9 +775,9 @@ In the final five stages of the ESDIRK4 method, the stage equation \eqref{eq:esd
 \end{equation}
 needs to be solved iteratively, due to the implicit and nonlinear nature of $\R^{\left(s\right)}$. This is typically done using iterative methods such as the approximate-Newton iterative procedure \cite{rai1987navier} and the dual-time stepping approach \cite{jameson1991time,arnone1995integration,derango1997improvements}. Both methods employ inner (or sub-) iterations at each physical time level. 
 % The dual-time stepping method is the more general approach and the approximate-Newton method can be regarded as a subset of it \cite{venkateswaran1995dual}. 
-The dual-time stepping approach introduces a pseudo time derivative, in addition to the physical time derivative, to drive the solution toward steady-state at each stage. 
-% The approximate-Newton method is a special case of dual-time stepping, which offers greater flexibility by allowing the pseudo time to be tuned for improved convergence \cite{venkateswaran1995dual}.
-% % {\color{r2color}The advantage of dual-time stepping over the approximate Newton is that the pseudo time derivative may be chosen so as to optimize the convergence of the inner iterations \cite{venkateswaran1995dual}.}
+The dual-time stepping approach introduces a pseudo-time derivative, in addition to the physical time derivative, to drive the solution toward steady-state at each stage. 
+% The approximate-Newton method is a special case of dual-time stepping, which offers greater flexibility by allowing the pseudo-time to be tuned for improved convergence \cite{venkateswaran1995dual}.
+% % {\color{r2color}The advantage of dual-time stepping over the approximate Newton is that the pseudo-time derivative may be chosen so as to optimize the convergence of the inner iterations \cite{venkateswaran1995dual}.}
 This approach can be viewed within the broader context of pseudo-transient continuation techniques, which leverage the inherent time-dependent structure of PDEs to circumvent stagnation issues associated with local minima common in nonlinear solvers \cite{kelley1998convergence}.
 The approximate-Newton method can be regarded as a special case of dual-time stepping with an infinite pseudo-time step size \cite{venkateswaran1995dual}. By contrast, dual-time stepping provides greater flexibility, allowing the pseudo-time step size to be tuned for improved convergence. As a result, dual-time stepping has been widely adopted for implicit time integration in compressible flow simulations \cite{zhang2004block,jameson2009assessment,liu2018dynamic}.
 }
@@ -806,18 +806,18 @@ in \cite{bijl2002implicitBDFvESDIRK}.}
 
 \replaced[id=r1]{
 In this work, the stage equation is solved iteratively using the dual-time stepping technique. In this approach, a pseudo-time derivative is introduced alongside the physical-time derivative, modifying equation~\eqref{eq:stage-equation} into the following form:
-% In this work, the stage equation is solved iteratively using the dual-time stepping technique \cite{jameson1991time, jameson2009assessment}, wherein a pseudo time derivative is introduced in addition to the physical time derivative in \eqref{eq:stage-equation}:
+% In this work, the stage equation is solved iteratively using the dual-time stepping technique \cite{jameson1991time, jameson2009assessment}, wherein a pseudo-time derivative is introduced in addition to the physical time derivative in \eqref{eq:stage-equation}:
 \begin{equation}
 \label{eq:dual-time-stage-equation}
     \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} +\dfrac{\uu^{\left(s\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss} \R^{\left(s\right)}.
 \end{equation}
-An inner iteration is performed to advance the solution in the direction of pseudo time $\tau$. The intermediate solution at iteration step $m$ is denoted as $\uu^{\left(s,m\right)}$. 
-The pseudo time derivative can be discretized by using a simple backward difference as 
+An inner iteration is performed to advance the solution in the direction of pseudo-time $\tau$. The intermediate solution at iteration step $m$ is denoted as $\uu^{\left(s,m\right)}$. 
+The pseudo-time derivative can be discretized by using a simple backward difference as 
 \begin{equation}
 \label{eq:backward-euler-tau}
     \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} \approx \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m}.
 \end{equation}
-The solution at pseudo time step $m+1$ can be sought by solving the nonlinear equation system 
+The solution at pseudo-time step $m+1$ can be sought by solving the nonlinear equation system 
 \begin{equation}
     \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m} +\dfrac{\uu^{\left(s,m+1\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss}\R^{\left(s,m+1\right)}.
 \end{equation}
@@ -843,8 +843,8 @@ where
     a_{ss} \R^{\left(s,m\right)} - 
     \dfrac{\uu^{\left(s,m\right)} - \uu^{n}}{\inc t^n}.
 \end{equation}
-The linear equation system \eqref{eq:linearTauUpdate} is solved by using a matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo time until $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
-% When the pseudo time derivative vanishes, the intermediate solution $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$.
+The linear equation system \eqref{eq:linearTauUpdate} is solved by using a matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo-time until $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
+% When the pseudo-time derivative vanishes, the intermediate solution $\uu^{\left(s,m+1\right)}$ converges to the stage solution $\uu^{\left(s\right)}$.
 }
 {The implicit and nonlinear equation \eqref{eq:esdirk4-s} is solved iteratively using a dual-time stepping technique, in which a pseudo-time variable $\tau$ is introduced. The pseudo-time integration scheme is %for  \eqref{eq:esdirk4-s} is
 \begin{equation}
@@ -877,7 +877,7 @@ where
 The linear equation system \eqref{eq:linearTauUpdate} is solved by using the matrix-free LU-SGS approach \cite{luo1998fast}. The solution is advanced in pseudo-time until $\uu^{n,s,m+1}_{i}$ converges to $\uu^{n,s}_{i}$, forming an inner iteration at the $s$-th stage of ESDIRK4. The convergence criterion of the inner iteration is that the $L^1$ norm of the pseudo-time derivative decreases by a certain number of orders of magnitude.
 }
 
-\replaced[id=r1]{In dual-time stepping, the physical time step size $\inc t^n$ is usually a constant specified according to the time scale of the underlying flow problem. The pseudo time step size can be adjusted based on local flow characteristics. In this work, the local pseudo time step size is computed by
+\replaced[id=r1]{In dual-time stepping, the physical-time step size $\inc t^n$ is usually a constant specified according to the time scale of the underlying flow problem. The pseudo-time step size can be adjusted based on local flow characteristics. In this work, the local pseudo-time step size is computed by
 \begin{equation}
     \label{eq:local-pseudo-time-step}
     \inc \tau^m_{i} = \frac{\CFLtau \overline{\OO}_i }
@@ -918,7 +918,7 @@ where $\lambda_{f}$ is the spectral radius estimated on cell interface $f$ and $
 % can take advantage of the PDE's time-dependent structure  and 
 % overcome the local minima stagnation problems of general nonlinear
 % solving methods \cite{kelley1998convergence}.
-% Due to the usage of linearized implicit Euler method in pseudo time, 
+% Due to the usage of linearized implicit Euler method in pseudo-time, 
 % the iteration method \eqref{eq:linearTauUpdate} is a continuation of 
 % Newton-Raphson method. When $\inc\tau \rightarrow\infty$,  \eqref{eq:linearTauUpdate} becomes exactly the Newton-Raphson iteration.
 % Due to the algorithmic structure of dual time stepping, the solver can be directly extended to steady-state problems efficiently, with the positivity-preserving algorithms consistently extended to steady-state solving as well.
@@ -938,13 +938,13 @@ where $\lambda_{f}$ is the spectral radius estimated on cell interface $f$ and $
 % In Section \ref{sec:PP}, it will be shown that the addition of $\inc \tau$ to Newton-Raphson iteration provides a valuable opportunity to design positivity-preserving algorithms in the inner iterations.
 % }
 
-%The pseudo time step is determined locally on each cell to account for
+%The pseudo-time step is determined locally on each cell to account for
 %the different time scales in the computational region.
 %The current paper uses first order LLF approximate evaluation
 %of the Jacobian terms in \eeqref{eq:linearTauUpdate} and uses matrix-free
 %LU-SGS to solve the increment values \cite{luo1998fast,luo2001accurate},
 %which grants enough convergence in unsteady problems. 
-%The pseudo time iteration is stopped when
+%The pseudo-time iteration is stopped when
 %\begin{equation}
 %    \|\FF^{n,s,m}\| \leq \varE_{\tau} \|\FF^{n,s,0}\|
 %\end{equation}
