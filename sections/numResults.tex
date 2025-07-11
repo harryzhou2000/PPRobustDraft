@@ -743,7 +743,7 @@ The reference density and pressure are set as $\rho_0=1$ and $p_0=1.78571\times1
 
 \added[id=r1]
 {
-The convergence history is shown in Figure \ref{fig:CylinderFront_res}. The plots indicate that the first-order method converges rapidly, with the residual dropping to $10^{-8}$ of its peak value within 400 iterations. In contrast, the residual for the second-order method decreases by only five orders of magnitude, and for the fourth-order method by only three. Such slow or limited convergence is commonly observed when simulating shock-dominated flows using second- or higher-order methods with limiters.
+The convergence history is shown in Figure \ref{fig:CylinderFront_res}. The plots indicate that the first-order method converges rapidly, with the residual dropping to $10^{-8}$ of its peak value within 400 iterations. In contrast, the residual for the second-order method decreases by only five orders of magnitude, and for the fourth-order method by only three. Such slow or limited convergence is commonly observed when simulating shock-dominated steady flows using second- or higher-order methods with limiters.
 % The convergence history is displayed in Figure \ref{fig:CylinderFront_res}. It is observed from the convergence plots that, the first-order method converges rapidly and the residual decreases to $10^{-8}$ of the peak value within $400$ iterations.
 % Residual of the second-order method can only decrease by five orders of magnitude,
 % while the fourth-order one by only three.
@@ -875,7 +875,7 @@ The reference density and pressure are set to \(\rho_0 = 1\) and \(p_0 = 1.7997 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{pics/Cavity_P.png}
-    \caption{\added[id=r2]{Contour of time-averaged normalized pressure for the hypersonic flow past an open cavity. The normalized pressure is computed as $p/(\rho_\infty U_\infty^2)$. The The plot includes 27 contour lines ranging from 0.01 to 0.07.}}
+    \caption{\added[id=r2]{Contour of time-averaged normalized pressure for the hypersonic flow past an open cavity. The normalized pressure is computed as $p/(\rho_\infty U_\infty^2)$. The plot includes 27 contour lines ranging from 0.01 to 0.07.}}
     \label{fig:Cavity_P}
 \end{figure}
 
@@ -973,7 +973,7 @@ This discrepancy may be due to differences in flow conditions or setup details b
 A significant advantage of implicit time stepping over explicit time stepping is its ability to accommodate larger time steps, particularly for stiff problems such as high-Reynolds number flows on meshes with large aspect-ratio grids near the wall. To validate this benefit, we conduct two additional simulations of hypersonic flow over an open cavity using second-order finite volume methods with explicit and implicit time integration, respectively.
 Both methods employ Green-Gauss reconstruction. Variational reconstruction is not used due to its implicit nature, which requires iterative procedures at each time step, making it inefficient for explicit finite volume schemes due to increased computational cost.
 The explicit method uses the third-order strong stability preserving Runge-Kutta (SSPRK3) scheme, while the implicit method uses the fourth-order explicit first-stage, singly diagonally implicit Runge-Kutta (ESDIRK4) scheme. The positivity-preserving algorithm proposed in this work is applied to the implicit scheme, whereas the positivity-preserving algorithm proposed in \cite{zhang2017positivity} is applied to the explicit method.
-The algorithm in \cite{zhang2017positivity} employs an LLF-type positivity-preserving flux, a scaling limiter, and the SSPRK time integration ensure  a weak positivity property of finite volume type schemes for compressible Navier-Stokes equations. The time step size for the explicit finite volume scheme is computed as
+The algorithm in \cite{zhang2017positivity} employs an LLF-type positivity-preserving flux, a scaling limiter, and the SSPRK time integration to ensure a weak positivity property of finite volume type schemes for compressible Navier-Stokes equations. The time step size for the explicit finite volume scheme is computed as
 \begin{equation}
     \label{eq:physical-time-step-CFL}
     \inc t_E = \min_i{\left\{
@@ -981,7 +981,7 @@ The algorithm in \cite{zhang2017positivity} employs an LLF-type positivity-prese
     {\sum_{f \in \partial \OO_i}{A_f}\lambda_{f}}
     \right\}} ,
 \end{equation} 
-using a CFL number of $\CFL = 1$, where the spectral radius is computed as described in \eqref{eq:lambda-face-estimation}. According to the positivity-preserving algorithm in \cite{zhang2017positivity}, f negative values arise during the simulation, the time step is halved, and the entire SSPRK3 time integration for that step is recomputed.
+using a CFL number of $\CFL = 1$, where the spectral radius is computed as described in \eqref{eq:lambda-face-estimation}. According to the positivity-preserving algorithm in \cite{zhang2017positivity}, if negative values arise during the simulation, the time step is halved, and the entire SSPRK3 time integration for that step is recomputed.
 }
 
 \added[id=r2]

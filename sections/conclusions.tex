@@ -4,12 +4,20 @@
 \label{sec:Conclusions}
 
 This paper presents a positivity-preserving algorithm for finite volume methods using dual-time stepping for compressible flow simulations.
-In the positivity-preserving algorithm, admissible cell averages are obtained by limiting solution changes,
+\replaced[id=r2]{To preserve positivity of cell averages, physical-time step limiting is applied at each time step to ensure the existence of an admissible future state. Pseudo-time step limiting and increment correction are applied at each pseudo-time step to ensure the admissibility of the updated intermediate state. In time step limiting, the challenge of unknown solution increment at the beginning of a time step is addressed by employing a simple linear approximation. Admissibility of the future state is ensured by imposing a lower bound on the estimated state, with the lower bound exceeds the estimation error. 
+Given positive cell averages,
+admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter.
+}{In the positivity-preserving algorithm, admissible cell averages are obtained by limiting solution changes,
 which is accomplished by controlling physical and pseudo-time step sizes.
 To overcome the difficulty of unknown solution changes,
 we employ explicit time discretizations to obtain efficient estimations of future states.
 The allowable time step sizes are determined by limiting the relative solution changes.
 Given positive cell averages,
-admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter.
+admissible reconstruction polynomials can be obtained by applying a positivity-preserving scaling limiter.}
 The proposed positivity-preserving algorithm is accuracy-preserving.
 Numerical results for a series of benchmark test cases demonstrate the high accuracy, high resolution and robustness of the positivity-preserving implicit high-order finite volume method.
+% \added[id=r2]{
+% Combined with the proposed positivity-preserving algorithm, the implicit finite volume method exhibits high accuracy and resolution in positivity-preserving benchmark problems without sign of numerical failure.
+% Numerical accuracy tests indicate that the current method is able to reach fourth-order spatial and temporal accuracy as designed, which grants it significantly higher efficiency over second-order methods when the required error is small.
+% In the real-life cavity flow problem with high-Reynolds hypersonic flow, the proposed implicit method, compared with an explicit method, is able to accelerate the computation by a factor of 140. 
+% }

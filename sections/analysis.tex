@@ -3,6 +3,7 @@
 \color{r2color}
 
 \section{Analysis of the positivity-preserving algorithm}
+\label{sec:analysis-of-pp}
 
 This section analyzes the properties of the positivity-preserving algorithm introduced in Section \ref{sec:PP}, including its accuracy-preserving behavior, sensitivity to parameter selection, bounds on the time step size, and overall applicability.
 
@@ -31,10 +32,10 @@ There is an upper bound for $\eta_t$ beyond which the time step limiting may fai
 \end{equation}
 which has an error of order $\mathcal{O}\left(\left(\inc t^n\right)^2\right)$.
 As any time integration scheme with at least 
-1st order accuracy has truncation error 
-of order $\mathcal{O}\left(\left(\inc t^n\right)^k\right),k\geq2$
+first-order accuracy has truncation error 
+of order $\mathcal{O}\left(\left(\inc t^n\right)^k\right),\ k\geq2$
 (ESDIRK4's error being $\mathcal{O}\left(\left(\inc t^n\right)^5\right)$),
-the error between real numerical implicit solution and estimated
+the error between the actual numerical solution and the estimated
 solution is still $\mathcal{O}\left(\left(\inc t^n\right)^2\right)$.
 It is observed from \eqref{eq:alpha-t-rho} that, the limited time step size $\inc t^n$ is proportional to $\eta_t$ and $\inc t_{max}$. Therefore, the estimation error can be expressed as
 \begin{equation}
@@ -44,7 +45,7 @@ A lower bound is imposed on the density of the estimated future state, i.e.,
 \begin{equation}
     \rho\left(\uu^{n+1,*}\right) \geq \rho_{min}= \left(1-\eta_t\right) \rho\left(\uu^n\right).
 \end{equation}
-To ensure the positivity of the future state, it is required that
+To ensure the positivity of the actual future state, it is required that
 \begin{equation}
     \rho_{min}= \left(1-\eta_t\right) \rho\left(\uu^n\right) > E_\rho= K_\rho \left(\eta_t\right)^2 \rho\left(\uu^n\right),
 \end{equation}
@@ -54,7 +55,7 @@ which is simplified as
 \end{equation}
 Therefore, there is a critical upper bound $\eta^c_t$ that satisfies 
 \begin{equation}
-    1-\eta^c_t = K_\rho \left(\eta^c_t\right)^2
+    1-\eta^c_t = K_\rho \left(\eta^c_t\right)^2,
     % ,\ \ 
     % \eta_t^c = \frac{\sqrt{1 + 4K_\rho}-1}{2K_\rho}\approx1-K_\rho
 \end{equation}
@@ -69,7 +70,7 @@ order $\mathcal{O}\left(\left(\inc t_{max}\right)^2\right)$
 and $1-\eta_t^c\sim K_\rho$,
 the upper bound of $\eta_t$ is close to one, allowing an easy parameter selection. 
 A similar analysis can be performed to determine the upper bound of $\eta_t$ that can further ensure positivity of pressure. 
-In actual implementation, it is difficult to compute the solution dependent coefficient $K_\rho$, thus not feasible to obtain the exact upper bound $\eta_t$. 
+In actual implementation, it is difficult to compute the solution dependent coefficient $K_\rho$, thus not feasible to obtain the exact upper bound $\eta^c_t$. 
 Meanwhile, the real future state is 
 obtained through a series of positivity-preserving inner iterations,
 thus the only criterion for detecting an inadmissible real future 
@@ -82,16 +83,21 @@ and increment correction, the latest solution is always admissible,
 but exponentially growing pressure or density is observed, rendering the 
 solution non-physical. 
 Based on the fact that the upper bound is quite close to one, an 
-iterative posteriori approach can be used to determine $\eta_t$ as follows:
+iterative \emph{a posteriori} approach can be used to determine $\eta_t$ as follows:
 % \begin{enumerate} [label=(\alph*)]
 %     \item try a parameter value $\eta^0_t$ to perform one time step computation;
 %     \item if (a) fails, go back to the initial state, try with a halved parameter value;
 %     \item if (b) fails, try (b) again.
 % \end{enumerate}
+% \begin{enumerate} [label=(\alph*)]
+%     \item initialize the parameter as $\eta_t= \eta^0_t \in \left(0,1\right)$;
+%     \item compute a limited time step size $\inc t^n$, and then perform one step time integration to obtain stage values $\uu^{(s)},s=2,3\dots6$ and updated solution $\uu^{n+1}$;
+%     \item if $\uu^{(s)},s=2,3\dots6$ with $\uu^{(6)}=\uu^{n+1}$ all converged, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
+% \end{enumerate}
 \begin{enumerate} [label=(\alph*)]
-    \item initialize the parameter as $\eta_t= \eta^0_t \in \left(0,1\right)$;
-    \item compute a limited time step size $\inc t^n$, and then perform one step time integration to obtain stage values $\uu^{(s)},s=2,3\dots6$ and updated solution $\uu^{n+1}$;
-    \item if $\uu^{(s)},s=2,3\dots6$ with $\uu^{(6)}=\uu^{n+1}$ all converged, proceed to next step; otherwise, try (b) again with a halved $\eta_t$.
+\item Initialize the parameter with $\eta_t = \eta^0_t \in (0, 1)$.
+\item Compute a limited time step size $\inc t^n$, then perform a single time integration step to obtain the updated solution $\uu^{n+1}$.
+\item If step (b) succeeds without divergence, proceed to the next time step. Otherwise, repeat step (b) with $\eta_t$ halved.
 \end{enumerate}
 Since the upper bound $\eta^c_t$ is of order $\mathcal{O}(1)$, a value of $\eta_t$ that preserves positivity can always be found within a finite number of iterations. 
 In the numerical experiments presented in Section~\ref{sec:Results}, the parameter is initialized as $\eta_t = 0.8$ for all test cases. 
@@ -100,7 +106,7 @@ This choice does not lead to solution divergence and therefore the iterative pos
 \begin{figure}[htbp!]
     \centering
     \includegraphics[width=0.45\linewidth]{pics/eta-t-curves.pdf}
-    \caption{Lower and upper bounds of the parameter $\eta_t$.}
+    \caption{\added[id=r2]{Lower and upper bounds of the parameter $\eta_t$.}}
     \label{fig:eta-t-curves}
 \end{figure}
 
@@ -114,17 +120,15 @@ However, there exists an asymptotic relation between $\eta_t$ and $\eta_\inc$,
 which is discussed in Section \ref{ssec:analysis-time-step}.
 A preferable choice is to make $\eta_\inc > \eta_\tau$, so that,
 asymptotically, increment correction does not take effect after 
-pseudo-time step limiting and primarily act as a safe guard.
-In summary, the current work 
-chooses both $\eta_\tau$ and $\eta_{\inc}$ to be within the range $(0,1)$, 
-with $\eta_\inc > \eta_\tau$ required. 
+pseudo-time step limiting and primarily act as a safeguard.
+In summary, this work selects both $\eta_\tau$ and $\eta_{\inc}$ within the range $(0,1)$, with the additional requirement that $\eta_{\inc} > \eta_\tau$.
 
 \subsection{Time step size bounds}
 \label{ssec:analysis-time-step}
 In this subsection, we analyze the upper and lower bounds of the physical and pseudo-time step sizes. As mentioned in Section \ref{ssec:physical-limiting}, the upper bound of the limited physical-time step is the user-defined constant $\inc t_{max}$.
 It is observed from \eqref{eq:alpha-tau} that, the upper bound of the limited pseudo-time step for cell $i$ is the original pseudo-time step $\inc \tau_i$, which is computed according to \eqref{eq:local-pseudo-time-step}. 
-The following of this subsection analyzes the lower bounds
-of the physical-time step and pseudo-time step after positivity-preserving limiting. 
+The rest of this subsection analyzes the lower bounds
+of the limited physical- and pseudo-time step sizes. 
 Along with the pseudo-time step's lower bound, the effect of 
 increment correction is also investigated.
 
@@ -134,11 +138,11 @@ An analysis can be performed on the lower bound of the physical-time step size.
 The right-hand side of the semi-discrete finite volume scheme is computed by
 \begin{equation}
     \label{eq:Semi-FV-1}
-    \R_i = -\frac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \ \dd A.
+    \R_i = -\frac{1}{\overline{\OO}_i} \oint_{\partial \OO_i} \left(\tilde{\F} - \tilde{\F}_v \right) \ \dd A.
 \end{equation}
 On a cell interface $f$, a spectral radius $\tilde{\lambda}_f>0$ can be found such that
 \begin{equation}
-    \left\| \left(\tilde{\F} - \tilde{\F}_v \right) \cdot \n \right\| \leq \tilde{\lambda}_f \min \left\{\|\UM_L\|, \|\UM_R\| \right\},
+    \left\| \tilde{\F} - \tilde{\F}_v \right\| \leq \tilde{\lambda}_f \min \left\{\|\UM_L\|, \|\UM_R\| \right\},
 \end{equation}
 where $\|\cdot\|$ denotes the $L^2$ norm, if the ratio $\max \left\{\|\UM_L\|, \|\UM_R\| \right\}/\min \left\{\|\UM_L\|, \|\UM_R\| \right\}$ is bounded.
 Therefore, we have
@@ -153,7 +157,9 @@ Therefore, we have
     \frac{\CFL_i}{\inc t_{max}}\|\UM_i\|,
 \end{equation}
 where $\CFL_i= \inc t_{max}\sum_{f \in \partial \Omega_i} A_f \tilde{\lambda}_f/\overline{\OO}_i$. 
-Given that $\UM_i$ is finite and non-singular, we can find $\mathcal{O}(1)$ coefficients $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ such that
+This means the norm of the right-hand side is 
+bounded by CFL number and the current solution.
+Given that $\UM_i$ is finite and non-singular, we assume that we can find $\mathcal{O}(1)$ coefficients $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ such that
 \begin{equation}
     \begin{aligned}
     \label{eq:inc_upper_cond_const_coef}
@@ -165,10 +171,18 @@ Given that $\UM_i$ is finite and non-singular, we can find $\mathcal{O}(1)$ coef
         C^{\rho E}_i \CFL_i \rho E\left( \UM_i \right),\\
         \left\| \rho \uv\left( \inc t_{max} \R_i \right) \right\|
         & \leq 
-        C^{\rho \uv}_i \CFL_i  \left\| \rho \uv\left( \UM_i \right)              \right\|,\\
+        C^{\rho \uv}_i \CFL_i  
+        \left(
+        \left\| \rho \uv\left( \UM_i \right) \right\|
+        + \rho a\left(\UM_i \right)
+        \right) 
+        % \\ &=
+        % C^{\rho \uv}_i(1 + 1/Ma_i)\CFL_i \left\| \rho \uv\left( \UM_i \right) \right\|  
+        ,\\
     \end{aligned}
 \end{equation}
-where $\rho(\U)$, $\rho E(\U)$ and $\rho \uv(\U)$ are linear functions as they take directly the components of $\U$.
+where $\rho(\U)$, $\rho E(\U)$ and $\rho \uv(\U)$ are linear functions as they take directly the components of $\U$. $\rho a(\U)$ is determined by $\U$ with $a$ being the speed of sound. 
+The speed of sound term prevents $C_i^{\rho\uv}$ from being infinite under zero velocity.
 % $C^{\rho}_i$, $C^{\rho E}_i$ and $C^{\rho \uv}_i$ are $\mathcal{O}(1)$ coefficients determined by $\UM_i$.
 We can show that $\alpha_{t,i}^{\rho}$ has a lower bound.
 By substituting the following inequality 
@@ -198,8 +212,8 @@ By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
 \begin{equation}
     \begin{aligned}
         \dfrac{|\delta p_i^n|}{\gamma-1} 
-        &=  \dfrac{1}{\gamma-1} \left| p \left(\UM^n_i + \inc\U_i^{n,\rho}\right) -  p \left(\UM^n_i\right) \right| \\
-        &=  \left| \rho E\left( \uincT \right) 
+        = & \dfrac{1}{\gamma-1} \left| p \left(\UM^n_i + \inc\U_i^{n,\rho}\right) -  p \left(\UM^n_i\right) \right| \\
+        = & \left| \rho E\left( \uincT \right) 
          - \frac{
          \rho\uv\left(\uincT\right)^2
          +
@@ -211,7 +225,7 @@ By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
          }
          + \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)}
         \right| \\
-        &\leq  \left| \rho E\left( \uincT \right) \right|
+        \leq & \left| \rho E\left( \uincT \right) \right|
          +
          \dfrac{
          \rho\uv\left(\uincT\right)^2
@@ -224,7 +238,7 @@ By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
          }
          +
           \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
-        &\leq  \left| \rho E\left( \uincT \right) \right|
+        \leq &  \left| \rho E\left( \uincT \right) \right|
          +
          \frac{1}{1-\eta_t}
          \frac{
@@ -238,17 +252,61 @@ By applying the Cauchy-Schwarz inequality and the Triangle inequality, we obtain
          }
          +
           \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} \\
-        &\leq \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  \rho E\left( \UM^n_i \right) 
+        \leq & \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  \rho E\left( \UM^n_i \right) 
         +\left(
         \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
         +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
         + \frac{2-\eta_t}{1-\eta_t}
         \right)
-        \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)},
+        \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)}
+        \\  & +
+        \left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}
+        {1-\eta_t}
+        \left(\rho a\left( \UM^n_i \right)\right)^2
+        +
+        2 
+        \frac{\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i + (\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2
+       }
+       {1-\eta_t}
+        \rho a\left( \UM^n_i \right)
+        \left\| \rho\uv\left(\UM^n_i\right) \right\|
+           %  \gamma p 
+           % +  2\left\|\rho\uv\left(\UM^n_i\right)\right\| a
+        \right)
+        \frac{1}{2\rho\left(\UM^n_i\right)}
+        ,
     \end{aligned}
 \end{equation}
 % }
 where $\rho\uv()^2$ is the short form of $\rho\uv()\cdot\rho\uv()$.
+Considering $\rho a^2=\gamma p$ and $aMa=\|\uv\|$, we have
+\begin{equation}
+    \begin{aligned}
+        \dfrac{|\delta p_i^n|}{\gamma-1} 
+        \leq & \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  \rho E\left( \UM^n_i \right) 
+        +\left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t}
+        \right)
+        \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)}
+        \\  & +
+        \left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}
+        {1-\eta_t}
+        +
+        2 
+        \frac{\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i + (\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2
+       }
+       {1-\eta_t}Ma_i
+        \right)
+        \frac{\gamma p\left(\UM^n_i\right)}{2}
+        ,
+    \end{aligned}
+\end{equation}
+where $Ma_i$ is the Mach number based on $\UM^n_i$. 
+
 As $p\left(\UM^n_i\right) > 0$, we have
 \begin{equation}
     \frac{ \rho\uv\left(\UM^n_i\right)^2}{2\rho\left(\UM^n_i\right)} < \rho E\left(\UM^n_i\right),
@@ -265,63 +323,103 @@ and thus
         + \frac{2-\eta_t}{1-\eta_t}
         \right)
         \right]
-        \rho E\left( \UM^n_i \right).
+        \rho E\left( \UM^n_i \right)
+        \\  & +
+        \left(
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}
+        {1-\eta_t}
+        +
+        2 
+        \frac{\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i + (\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2
+       }
+       {1-\eta_t}Ma_i
+        \right)
+        \frac{\gamma(\gamma-1) }{2} p\left(\UM^n_i\right).
     \end{aligned}
 \end{equation}
-According to \eqref{eq:alpha-t-p}, we obtain
+For simplicity, we denote
+\begin{equation}
+\begin{aligned}
+    \mathcal{Q}_1 = & \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
+        +
+        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
+        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
+        + \frac{2-\eta_t}{1-\eta_t},
+        \\
+    \mathcal{Q}_2 = & 
+    \left(\frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}
+        {1-\eta_t}
+        +
+        2 
+        \frac{\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i + (\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2
+       }
+       {1-\eta_t}Ma_i 
+       \right)\frac{\gamma(\gamma-1) }{2},\\
+\end{aligned}
+\end{equation}
+so that
+\begin{equation}
+    \begin{aligned}
+        |\delta p_i^n| &\leq
+        \mathcal{Q}_1 (\gamma-1)
+        \rho E\left( \UM^n_i \right)
+        +
+        \mathcal{Q}_2  p\left(\UM^n_i\right).
+    \end{aligned}
+\end{equation}
+Assuming $Ma_i$ is finite and $\CFL_i\sim \ord(1)$, 
+$C^{\rho E}_i$ and $C^{\rho\uv}_i$ being $\ord(1)$, 
+$\eta_t\sim\mathcal{O}(1)$,
+$1-\eta_t\sim\mathcal{O}(1)$,
+with $\alpha_{t,i}^\rho$ having upper bound of $1$ and lower bound of $\ord(1)$ in \eqref{eq:alpha-t-rho-lb}, it is found that $\mathcal{Q}_1\sim\ord(1)$ and $\mathcal{Q}_2\sim\ord(1)$.
+
+
+According to \eqref{eq:alpha-t-p}, we have
 \begin{equation}
     \begin{aligned}
         \label{eq:alpha-t-p-lb}
         \alpha_{t,i}^{p} 
-        & \geq \dfrac{\eta_t}{\gamma-1} \frac{p\left(\UM^n_i\right)}{
-            \rho E\left(\UM^n_i\right)
+        \geq & \eta_t 
+        \frac{p\left(\UM^n_i\right)}
+        {
+        \mathcal{Q}_1
+        (\gamma-1)
+        \rho E\left(\UM^n_i\right)  + 
+        \mathcal{Q}_2 
+        p\left(\UM^n_i\right)
         }
-        \frac{1}{
-         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
-            +\left(
-            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
-            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
-            + \frac{2-\eta_t}{1-\eta_t}
-            \right)
-        } \\
-        & = \eta_t \frac{1}{
-           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
-        }
-        \frac{1}{
-         \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
-            +\left(
-            \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
-            +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
-            + \frac{2-\eta_t}{1-\eta_t}
-            \right)
+        \\
+        = &  
+        \frac{\eta_t }
+        {
+        \left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\mathcal{Q}_1
+        % \left(\UM^n_i\right)  +
+        +
+        \mathcal{Q}_2 
         },
     \end{aligned}
 \end{equation}
-where $Ma_i$ is the Mach number based on $\UM^n_i$. 
-Consequently, the global time step size is bounded below by
+Consequently, the global time step size is bounded by
 \begin{equation}
     \label{eq:delta-t-lb}
     \frac{\inc t^n}{\inc t_{max}} \geq 
     \eta_t^2
     \min_i
     \left\{
-    \frac{1}{
-           1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}
-        }
     \frac{1}{\CFL_i C_i^\rho}
-    \frac{1}{
-     \alpha_{t,i}^\rho\CFL_i C^{\rho E}_i  
-        +\left(
-        \frac{(\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i)^2}{1-\eta_t}
-        +\frac{2\alpha_{t,i}^\rho\CFL_i C^{\rho \uv}_i}{1-\eta_t}
-        + \frac{2-\eta_t}{1-\eta_t}
-        \right)
-    }
+    \frac{\eta_t }
+        {
+        \left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\mathcal{Q}_1  + 
+        \mathcal{Q}_2 
+        }
     \right\}.
 \end{equation}
 We assume that the state $\UM^n_i$ yields a finite Mach number $Ma_i$.
-Under the conditions that $\eta_t\sim\mathcal{O}(1)$, $1-\eta_t\sim\mathcal{O}(1)$,
-$\CFL_i\sim\mathcal{O}(1)$ and ${1}/\left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\sim\mathcal{O}(1)$,
+Under the conditions that $\eta_t\sim\mathcal{O}(1)$, 
+$\CFL_i\sim\mathcal{O}(1)$,
+$\mathcal{Q}_1\sim\ord(1)$,
+$\mathcal{Q}_2\sim\ord(1)$
+and ${1}/\left(1 + \frac{\gamma (\gamma-1) Ma_i^2}{2}\right)\sim\mathcal{O}(1)$,
 $\inc t^n$ is not infinitely small compared to $\inc t_{max}$.
 In other words, when the CFL number $\CFL_i$ based on $\inc t_{max}$ is $\mathcal{O}(1)$, 
 the CFL number determined by the scaled $\inc t^n$ also remains $\mathcal{O}(1)$.
@@ -330,9 +428,7 @@ the CFL number determined by the scaled $\inc t^n$ also remains $\mathcal{O}(1)$
 
 A similar analysis can be carried out for the lower bounds of the local pseudo-time step sizes. In this case, the residual $\R_i$ is simply replaced with $\tilde{\R}_i^{(s,m)}$, for which an inequality analogous to \eqref{eq:upper-bound-residual} can be derived in the same spirit. 
 
-For $\inc\tau$ analysis, 
-the implicit time-stepping  for stage $s$ in \eqref{eq:define-inc}
-has the form of
+For the analysis of $\inc\tau$, the residual in the pseudo-time direction in \eqref{eq:define-inc} is given by
 \begin{equation}
     \begin{aligned}
         \tilde{\R}_i\supsm & = \sum_{q=1}^{s-1} a_{sq} \R_i^{\left(q\right)} + 
@@ -343,9 +439,8 @@ has the form of
     + \hat{\R}_i,
     \end{aligned}
 \end{equation}
-where $\hat{\R}_i$ is the constant term independent of the unknown
-$\uu_i\supsm$. 
-Therefore, \eqref{eq:upper-bound-residual} becomes
+where $\hat{\R}_i$ is a constant term throughout the inner iteration process. 
+Therefore, we have
 \begin{equation}
 \label{eq:upper-bound-residual-tau}
 \begin{aligned}
@@ -375,12 +470,13 @@ with $\CFL_i$ being the CFL number corresponding to the limited
 physical-time step
 $\inc t^n$.
 Similar to \eqref{eq:inc_upper_cond_const_coef}, 
-the residual value for each conservative variable can be 
-bounded by the current values $\UM_i\supsm$ with additional 
-intercept values $\left| \rho\left(\hat\R_i\right) \right|$, 
-$\left | \rho E\left(\hat\R_i\right) \right|$, 
-$\left\|\rho\uv\left(\hat\R_i\right) \right\|$. 
-Non-singularity of the current state $\UM_i\supsm$ leads to 
+the residual for each conservative variable is 
+bounded. %by the current solution $\UM_i\supsm$ with additional 
+% intercept values $\left| \rho\left(\hat\R_i\right) \right|$, 
+% $\left | \rho E\left(\hat\R_i\right) \right|$, 
+% $\left\|\rho\uv\left(\hat\R_i\right) \right\|$. 
+The non-singularity of the current state $\UM_i\supsm$ leads to 
+an assumption
 \begin{equation}
     \begin{aligned}
     \label{eq:inc_upper_cond_const_coef_tau}
@@ -397,12 +493,16 @@ Non-singularity of the current state $\UM_i\supsm$ leads to
         \left\| \rho \uv\left( \inc\tau_i \tilde\R_i \right) \right\|
         & \leq
         C^{\rho \uv,\tau}_i \CFL_\tau(1 / \CFL_i + a_{ss})
-        \left\| \rho \uv\left( \UM_i\supsm \right)              \right\| + \left\|\rho\uv\left(\inc\tau_i\hat\R_i\right) \right\|\\
+        \left(
+        \left\| \rho \uv\left( \UM_i\supsm \right) \right\|
+        + \rho a\left(\UM_i\supsm\right)
+        \right)
+        + \left\|\rho\uv\left(\inc\tau_i\hat\R_i\right) \right\|,\\
     \end{aligned}
 \end{equation}
-with coefficients $C^{\rho ,\tau}_i$,$C^{\rho E,\tau}_i$ and $C^{\rho \uv,\tau}_i$
+with coefficients $C^{\rho ,\tau}_i$, $C^{\rho E,\tau}_i$ and $C^{\rho \uv,\tau}_i$
 of order $\ord(1)$.
-Making
+By defining
 \begin{equation}
     \begin{aligned}
     \label{eq:inc_upper_cond_const_coef_tau_recast_method}
@@ -422,12 +522,17 @@ Making
         & =
         C^{\rho \uv,\tau}_i (1 / \CFL_i + a_{ss})
         + \frac{\left\|\rho\uv\left(\inc\tau_i \hat\R_i\right) \right\|}
-        { \CFL_\tau\left\|\rho \uv\left( \UM_i\supsm \right)\right\|}
+        { \CFL_\tau
+        \left(
+        \left\|\rho \uv\left( \UM_i\supsm \right)\right\|
+        + \rho a\left(\UM_i\supsm\right)
+        \right)
+        }
         ,\\
     \end{aligned}
 \end{equation}
 the inequalities \eqref{eq:inc_upper_cond_const_coef_tau} can be 
-rewritten into 
+rewritten as
 \begin{equation}
     \begin{aligned}
     \label{eq:inc_upper_cond_const_coef_tau_recasted}
@@ -444,7 +549,10 @@ rewritten into
         \left\| \rho \uv\left( \inc\tau_i \tilde\R_i \right) \right\|
         & \leq
         D^{\rho \uv,\tau}_i \CFL_\tau
-        \left\| \rho \uv\left( \UM_i\supsm \right)              \right\| 
+        \left(
+        \left\| \rho \uv\left( \UM_i\supsm \right) \right\|
+         + \rho a \left( \UM_i\supsm \right)
+        \right)
         ,\\
     \end{aligned}
 \end{equation}
@@ -452,34 +560,40 @@ which is of the same form as \eqref{eq:inc_upper_cond_const_coef}.
 The constant term  $\hat{\R}_i$ is
 \begin{equation}
         \hat{\R}_i  = \sum_{q=1}^{s-1} a_{sq} \R_i^{\left(q\right)} +
-    \dfrac{\uu_i^{n}}{\inc t^n} 
+    \dfrac{\uu_i^{n}}{\inc t^n} ,
 \end{equation}
 and therefore
 \begin{equation}
         \inc\tau_i\hat{\R}_i  = \inc\tau_i\sum_{q=1}^{s-1} a_{sq} \R_i^{\left(q\right)} +
-    \dfrac{\CFL_\tau}{\CFL_i}\uu_i^{n} 
+    \dfrac{\CFL_\tau}{\CFL_i}\uu_i^{n} ,
 \end{equation}
 where $\CFL_i$ is determined by the already limited $\inc t^n$.
-Assuming the previous stage RHS terms are non-singular, while 
-last step solution $\UM_i^n$ and 
-latest current stage solution $\UM_i\supsm$ are non-singular, clearly the 
+Assuming the right-hand side terms of previous stages are non-singular, while 
+the last step solution $\UM_i^n$ and the
+latest current stage solution $\UM_i\supsm$ are non-singular, then clearly the 
 non-dimensional ratios 
 $\frac{\left| \rho\left(\inc\tau_i \hat\R_i\right) \right|}
 { \CFL_\tau\rho\left( \UM_i\supsm \right)}$,
 $\frac{\left| \rho E\left(\inc\tau_i \hat\R_i\right) \right|}
 { \CFL_\tau\rho E\left( \UM_i\supsm \right)}$ and 
 $\frac{\left\|\rho\uv\left(\inc\tau_i \hat\R_i\right) \right\|}
-{ \CFL_\tau\left\|\rho \uv\left( \UM_i\supsm \right)\right\|}$
+        { \CFL_\tau
+        \left(
+        \left\|\rho \uv\left( \UM_i\supsm \right)\right\|
+        + \rho a\left(\UM_i\supsm\right)
+        \right)
+        }$
+% $\frac{\left\|\rho\uv\left(\inc\tau_i \hat\R_i\right) \right\|}
+% { \CFL_\tau\left\|\rho \uv\left( \UM_i\supsm \right)\right\|}$
 are of order $\ord(1)$. 
-Moreover, we also know that physical and pseudo-time CFL number $\CFL_i$, $\CFL_\tau$ and 
-Runge-Kutta coefficient $a_{ii}$.
+Moreover, we also know that the physical and pseudo-time CFL numbers $\CFL_i$ and $\CFL_\tau$, and the Runge-Kutta coefficients $a_{ii}$ are of order $\ord(1)$.
 In summary, the new coefficients $D^{\rho,\tau}_i$, $D^{\rho E,\tau}_i$ 
 and $D^{\rho \uv,\tau}_i$ defined in \eqref{eq:inc_upper_cond_const_coef_tau_recast_method}
 are of order $\ord(1)$. 
 
 As the inequalities \eqref{eq:inc_upper_cond_const_coef_tau_recasted}
-are of the same form as \eqref{eq:inc_upper_cond_const_coef}, 
-subsequent analysis remains the same as that for $\inc t$ analysis. 
+are in the same form as \eqref{eq:inc_upper_cond_const_coef}, 
+subsequent analysis remains the same as that for the analysis of $\inc t$. 
 It can be derived that similar to $\inc t$, the CFL number 
 for $\inc \tau _i$ after limiting is still of order $\ord(1)$.
 In other words,
@@ -505,15 +619,14 @@ the limited pseudo-time step size $\inc \tau_{i,pp}$ is not infinitely small com
 \subsubsection{Analysis of increment correction}
 
 A rigorous analysis of the lower bound of the relaxation factor $\alpha_{\inc,i}$ in the increment correction, computed according to \eqref{eq:alpha-inc}–\eqref{eq:alpha-inc-p}, is not feasible. 
-This is because the increment of the intermediate state is obtained using LU-SGS approximation, and therefore does not represent the exact solution of the linearized system \eqref{eq:linearTauUpdate}. 
+This is because the increment of the intermediate state is obtained using a single LU-SGS iteration, and therefore does not represent the exact solution of the linearized system \eqref{eq:linearTauUpdate}. 
 The exact increment calculated by LU-SGS relies on 
 the ordering of cells, which is hard to analyze 
 for a general case.
 As a result, the discrepancy between the theoretical and actual increments cannot be accurately estimated. 
 Nevertheless, since the increment is computed using a limited pseudo-time step size, it remains inherently bounded. 
 
-Consider the increment defined in the linear system \eqref{eq:linearTauUpdate},
-which can be rewritten to a more precise expression
+The linear system \eqref{eq:linearTauUpdate} can be rewritten to a more precise expression
 \begin{equation}
     % \label{eq:pseudo-time-equation}
     \left(\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) + \frac{\eye}{\inc t^n} -a_{ss}\partialderivative{\R }{\uu} \right) \inc \uu^{\left(s,m\right)}
@@ -538,10 +651,10 @@ Then, the LU-SGS leads to the increment being
     \label{eq:linearTauUpdate_re_lusgs}
 \end{equation}
 where $L$, $U$ and $D$ are strict block-lower, strict block-upper and block-diagonal 
-parts of Jacobian $\partialderivative{\R }{\uu}$ and $\partialderivative{\R }{\uu} = L + D + U$.
+parts of the Jacobian $\partialderivative{\R }{\uu}$, i.e., $\partialderivative{\R }{\uu} = L + D + U$.
 The $\hat L$, $\hat U$ and $\hat D$ are strict block-lower, strict block upper and block-diagonal 
 parts of the Jacobian $-\partialderivative{\tilde\R }{\uu}$ in \eqref{eq:linearTauUpdate_re}.
-Taking partial derivative of $\inc\tau^m_{i,pp}$ on \eqref{eq:linearTauUpdate_re_lusgs} leads to
+Taking partial derivative of \eqref{eq:linearTauUpdate_re_lusgs} with respect to $\inc\tau^m_{i,pp}$ leads to
 \begin{equation}
     \begin{aligned}
        \pdv{\inc \uu^{\left(s,m\right)}}{\inc\tau^m_{i,pp}}
@@ -559,10 +672,10 @@ Taking partial derivative of $\inc\tau^m_{i,pp}$ on \eqref{eq:linearTauUpdate_re
 \end{equation}
 When $\inc\tau^m_{i,pp}\rightarrow 0^+$, clearly 
 $\hat D $, $\hat D + \hat L$ and $\hat D + \hat U$ all 
-approximate
+approach
 $\sum_i\left(\frac{\eye_{c,i}}{\inc \tau^m_{i,pp}}\right) $,
 and the inverse matrices  $(\hat D + \hat L)^{-1}$ and 
-$(\hat D + \hat U)^{-1}$ approximate $\sum_i\inc\tau^m_{i,pp}\eye_{c,i}$,
+$(\hat D + \hat U)^{-1}$ approach $\sum_i\inc\tau^m_{i,pp}\eye_{c,i}$,
 therefore
 \begin{equation}
     \begin{aligned}
@@ -582,7 +695,7 @@ there is
     =
     \sum_i{\inc\tau^m_{i,pp}\eye_{c,i}} \tilde\R^{\left(s,m\right)}
     +
-    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right)
+    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right),
 \end{equation}
 and for each cell
 \begin{equation}
@@ -592,20 +705,20 @@ and for each cell
     \inc\tau^m_{i,pp}
     \tilde\R^{\left(s,m\right)}_i
     +
-    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right)
+    \ord\left(\left(\inc\tau^m_{i,pp}\right)^2\right).
 \end{equation}
 
 Considering the limit in \eqref{eq:linearTauUpdate_re_lusgs_pdvtau_limit} 
 and \eqref{eq:linearTauUpdate_lusgs_expand_tau}
 when $\inc\tau_i\rightarrow 0$,
-the difference between LU-SGS increment and 
-Taylor expansion term \eqref{eq:estimation-dtau} used in pseudo-time step limiting
+the difference between LU-SGS increment and the
+linear approximation \eqref{eq:estimation-dtau} used in pseudo-time step limiting
 is of order $\ord(\inc\tau^2)$. 
 Meanwhile, when we use $\eta_\inc > \eta_\tau$,
 and $\eta_\inc - \eta_\tau \sim \ord(1)$,
 the margin between the 
-lower bound of 
-increment correction and pseudo-time limiting
+lower bounds of 
+increment correction and pseudo-time step limiting
 would be 
 \begin{equation}
 \rho_{min,\tau} - \rho_{min,\inc}= 
@@ -619,8 +732,7 @@ pressure state by the order of $\eta\inc\tau\tilde\R$.
 It would be appropriate to assume 
 $p\sim\ord(\inc\tau), \rho\sim\ord(1)$ 
 or $p\sim\ord(1), \rho\sim\ord(\inc\tau)$
-or $p\sim\ord(\inc\tau), \rho\sim\ord(\inc\tau)$
-is true.
+or $p\sim\ord(\inc\tau), \rho\sim\ord(\inc\tau)$ for the solution $\uu^{(m)}$.
 As a result,
 \begin{equation}
 \rho_{min,\tau} - \rho_{min,\inc} \gtrsim \ord (\inc \tau),\ \ 
@@ -631,17 +743,17 @@ the lower bound for density or pressure in pseudo-time step limiting
 is far larger than that of increment correction, 
 with a margin large enough to tolerate the error between 
 linear estimation and real LU-SGS increment expressed in \eqref{eq:linearTauUpdate_lusgs_expand_tau}.
-This means after pseudo-time limiting, 
+This means that, after pseudo-time limiting, 
 the increment is already positivity-preserving 
 in an asymptotic manner without the involvement of 
-increment limiting.
+increment correction.
 
 In practical computations, we use a finite $\inc \tau$, which 
-does not guarantee positivity-preserving without increment correction.
-However, when the solution converges, the 
-residual $\tilde\R$ and increment value $\inc\UM$ both tends to zero,
-which does not induce pseudo-time limiting or increment correction.
-The increment correction is typically activated during the early part of the inner iterations and tends to become inactive in later inner iterations. 
+does not guarantee a positivity-preserving property without increment correction.
+However, when the solution converges, both the 
+residual $\tilde\R$ and increment $\inc\UM$ tend to be zero,
+which does not induce pseudo-time step limiting or increment correction.
+The increment correction is typically activated during the early stages of the inner iterations and tends to become inactive in the later stages.
 
 
 \subsection{Applicability of the algorithm}
@@ -656,7 +768,7 @@ The increment correction is typically activated during the early part of the inn
 
 % Regarding time discretization, positivity preservation for cell averages is achieved within the dual-time stepping framework, making the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration schemes and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited for the proposed algorithm. Compared with other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, the ESDIRK methods which are $L$-stable, offer improved robustness. Furthermore, the solution at the next time level in ESDIRK methods is defined as the converged state of the final stage, which aligns naturally with our positivity-preserving algorithm, as admissibility is maintained throughout the intermediate stages.
 
-The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. For spatial discretization, the only requirement is the use of a polynomial reconstruction, since the scaling limiter is specifically designed to preserve the positivity of reconstructed polynomials given admissible cell averages.
+The proposed positivity-preserving algorithm is applicable to a wide range of implicit finite volume methods on unstructured grids for compressible flow simulations. For spatial discretization, the only requirement is the use of a polynomial reconstruction, since the scaling limiter is specifically designed to preserve the positivity of reconstruction polynomials given admissible cell averages.
 
 For time discretization, positivity preservation of cell averages is achieved within a dual-time stepping framework, which makes the use of an implicit dual-time stepping approach essential. Although there are no theoretical restrictions on the choice of time integration scheme and any implicit method can be used in principle, we emphasize that ESDIRK schemes are particularly well-suited to the proposed algorithm. Compared to other high-order implicit methods, such as singly diagonally implicit Runge–Kutta (SDIRK) schemes, ESDIRK methods that are $L$-stable offer improved robustness. Moreover, the solution at the next time level in ESDIRK methods corresponds to the converged state of the final stage. This naturally aligns with the design of our algorithm, as admissibility is preserved throughout all intermediate stages.
 

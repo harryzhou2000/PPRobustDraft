@@ -141,13 +141,11 @@ The numerical flux is computed by
     \label{eq:num-flux}
     % \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
     \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f \approx \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right),
-\end{equation}
-}{\begin{equation}
+\end{equation}}{\begin{equation}
     \label{eq:num-flux}
     % \left[\F \left(\U \left(\x_{f,g},t\right)\right) - \F_v \left(\U\left(\x_{f,g},t\right), \nabla \U \left(\x_{f,g},t\right)\right)\right] \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \nabla \U_L, \U_R, \nabla \U_R, \n_f\right),
     \left. \left(\F - \F_v \right)\right|_{\x=\x_{f,g}} \cdot \n_f = \tilde{\F} \left(\U_L, \U_R,\n_f\right)- \tilde{\F}_v \left(\U_L, \U_R, \nabla \U_L, \nabla \U_R, \n_f\right),
-\end{equation}}
-where $\tilde{\F}$ and $\tilde{\F}_v$ are the inviscid and viscous flux schemes, respectively, with the left and right states at the quadrature point defined by
+\end{equation}}where $\tilde{\F}$ and $\tilde{\F}_v$ are the inviscid and viscous flux schemes, respectively, with the left and right states at the quadrature point defined by
 \begin{equation}
     \begin{dcases}
          & \U_L= \U_i\left(\x_{f,g},t \right), \quad \nabla \U_L= \nabla \U_i\left(\x_{f,g},t \right),\\
@@ -610,29 +608,30 @@ rotational invariance of the reconstruction functional.
 }
 
 \added[id=r1]{
-The global linear system to be solved in variational reconstruction is
-tested on 4 meshes displayed in Figure \ref{fig:meshes_test_cond}.
-Fourth order variational reconstruction (cubic polynomial) with 
-periodic boundary conditions is applied to the meshes and 
-the global reconstruction matrix $\mathbf{A}$ from \eqref{eq:global-system} 
-is analyzed for condition number. 
-Meanwhile, spectral radius of the iteration matrix arising from block Gauss-Seidel iteration in \eqref{eq:gauss-seidel-iteration}, $\rho_{GS}$, is calculated on these meshes to investigate the convergence behavior of variational reconstruction. 
+The conditioning of the global reconstruction matrix $\mathbf{A}$ in \eqref{eq:global-system} is numerically investigated using the four meshes shown in Figure \ref{fig:meshes_test_cond}, with periodic boundary conditions applied. Cubic variational reconstruction is performed on each mesh. Additionally, the spectral radius $\rho_{GS}$ of the iteration matrix from the block Gauss-Seidel scheme in \eqref{eq:gauss-seidel-iteration} is computed to assess the convergence behavior of the variational reconstruction.
+The results for the condition number and spectral radius for each mesh are summarized in Table \ref{tab:cond_and_rho}. On regular meshes, both the condition number and the spectral radius are smaller, while on distorted meshes, both increase but remain within reasonable limits. In all cases, the spectral radius stays below $1$, consistent with the theoretical analysis of block Gauss-Seidel iteration for variational reconstruction \cite{wang2017compact_VR}.
 }
+% \added[id=r1]{
+% The conditioning of the global reconstruction matrix $\mathbf{A}$ in \eqref{eq:global-system} is numerically investigated on the four meshes displayed in Figure \ref{fig:meshes_test_cond}. Periodic boundary conditions are applied. 
+% % The global linear system to be solved in variational reconstruction is
+% % tested on 4 meshes displayed in Figure \ref{fig:meshes_test_cond}.
+% Cubic variational reconstruction is performed on the meshes. 
+% Meanwhile, the spectral radius of the iteration matrix arising from block Gauss-Seidel iteration in \eqref{eq:gauss-seidel-iteration}, $\rho_{GS}$, is calculated on these meshes to investigate the convergence behavior of variational reconstruction. 
+% }
 
-\added[id=r1]{
-Results of condition number and iteration spectral radius for meshes in Figure \ref{fig:meshes_test_cond} are shown in Table \ref{tab:cond_and_rho}. 
-It is shown that on regular meshes, 4th order (cubic) variational reconstruction has relatively lower global condition number and 
-lower spectral radius in block Gauss-Seidel iteration.
-On distorted meshes, the condition number and spectral radius are increased,
-but still remain in reasonable ranges. 
-The spectral radius results all stay below $1$ 
-agreeing with the general theoretical
-analysis of block Gauss-Seidel iteration in varitaional reconstruction\cite{wang2017compact_VR}.
-}
+% \added[id=r1]{
+% Results on condition number and spectral radius for meshes in Figure \ref{fig:meshes_test_cond} are listed in Table \ref{tab:cond_and_rho}. 
+% It is shown that on regular meshes, both the condition number of the global reconstruction matrix and the spectral radius of the iteration matrix are smaller.
+% On distorted meshes, the condition number and spectral radius are increased,
+% but still remain in reasonable ranges. 
+% The spectral radius results all stay below $1$,
+% agreeing with the general theoretical
+% analysis of block Gauss-Seidel iteration in varitaional reconstruction \cite{wang2017compact_VR}.
+% }
 
 \begin{table}[htbp!]
     \centering
-    \caption{}
+    \caption{\added[id=r1]{Condition numbers and spectral radii on the four meshes shown in Figure \ref{fig:meshes_test_cond}.}}
     \label{tab:cond_and_rho}
     % \footnotesize
     % \begin{tabular}{|c|c|c|c|c|}
@@ -653,23 +652,23 @@ analysis of block Gauss-Seidel iteration in varitaional reconstruction\cite{wang
    \centering
    \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/IV_10_10_Quad.png}
-       \caption[]{Quadrilateral elements}
+       \caption[]{Quadrilateral}
    \end{subfigure}
 %    \hfill
    \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/IV_10_10_Quad_Pert0.png}
-       \caption[]{Quadrilateral elements, distorted}
+       \caption[]{Quadrilateral, distorted}
    \end{subfigure}
    \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/IV_10_10_Tri.png}
-       \caption[]{Triangular elements}
+       \caption[]{Triangular}
    \end{subfigure}
 %    \hfill
    \begin{subfigure}{0.4\textwidth}
        \includegraphics[width=\textwidth]{pics/IV_10_10_Tri_Pert0.png}
-       \caption[]{Triangular elements, distorted}
+       \caption[]{Triangular, distorted}
    \end{subfigure}
-   \caption{Meshes used for condition number and iteration spectral radius test of variational reconstruction.}
+   \caption{\added[id=r1]{Meshes used for condition number and spectral radius tests of variational reconstruction.}}
    \label{fig:meshes_test_cond}
 \end{figure}
 
@@ -812,7 +811,7 @@ In this work, the stage equation is solved iteratively using the dual-time stepp
     \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} +\dfrac{\uu^{\left(s\right)} - \uu^{n}}{\inc t^n}= \sum_{q=1}^{s-1} a_{sq} \R^{\left(q\right)} + a_{ss} \R^{\left(s\right)}.
 \end{equation}
 An inner iteration is performed to advance the solution in the direction of pseudo-time $\tau$. The intermediate solution at iteration step $m$ is denoted as $\uu^{\left(s,m\right)}$. 
-The pseudo-time derivative can be discretized by using a simple backward difference as 
+The pseudo-time derivative is discretized using a simple first-order finite difference as follows:
 \begin{equation}
 \label{eq:backward-euler-tau}
     \dfrac{\partial \uu^{\left(s\right)}}{\partial \tau} \approx \dfrac{\uu^{\left(s,m+1\right)}-\uu^{\left(s,m\right)}}{\inc \tau^m}.
